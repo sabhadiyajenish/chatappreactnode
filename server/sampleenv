@@ -1,0 +1,15 @@
+PORT=5000
+MONGO_URI=mongodb+srv://raja:jenish@cluster0.tzpvn.mongodb.net
+CORS_ORIGIN=*
+ACCESS_TOKEN_SECRET=jenishbhaijagdishbhaibachubhaisabhadiya
+ACCESS_TOKEN_EXPIRE=1d
+REFRESH_TOKEN_SECRET=jagdishbhaibachubhairamjibhaidevjibhaisabhadiya
+REFRESH_TOKEN_EXPIRE=10d
+CLOUD_NAME=do0bsfskk
+CLOUD_API_KEY=673335253975921
+CLOUD_API_SECRET=u_Ir7mJExKsFN2uw6CfIOI9LSUM
+GOOGLE_CLIENT_ID=1014158697480-fi4p9dslfsharpdca55b470falchks9p.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/v1/user/google/callback
+EXPRESS_SESSION_SECRET=7fdOMCFRSLD9cv1k-5n3Dz5n3DmVmVHVIg9GG_OGTUkBfLNdgZAwKDNtoCJ0X0cyqaM0ogR80-zh9kx0Mkx
+CLIENT_SSO_REDIRECT_URL=http://localhost:5173/

@@ -1,0 +1,94 @@
+.main_chat_div{
+    width: 100%;
+    height: 100vh;
+    background-color: lightgray;
+    
+}
+.child1_chat_div{
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 30px 20px;
+}
+.all_chat_div{
+    width: 100%;
+    text-align: center;
+    height: 100vh;
+    border: 1px solid black;
+}
+.img_girls_icon{
+    width: 80px;
+    height: 80px;
+    border-radius: 100%;
+    border: 1px solid greenyellow;
+}
+.center_icon_div{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid grey;
+}
+.icon_text{
+    font-size: 20px;
+    font-family:'Times New Roman', Times, serif;
+    margin-left: 1rem;
+}
+.center_chat_div{
+    width: 100%;
+    margin-top: 1rem;
+    height: 79vh;
+    /* overflow-x: scroll; */
+    overflow-y: scroll;
+    border-bottom: 1px solid rgb(164, 185, 231);   
+}
+.you_chat{
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    margin-left: 10px;
+    margin-top: 0.8rem;
+    text-align: right;
+    
+}
+.you_chat_text{
+    background-color: aqua;
+    border-radius: 10px;
+    width: fit-content;
+    margin: 0px 5px 0px 5px;
+    padding: 5px 8px 5px 8px;
+    font-size: 20px;
+}
+.you_chat_div{
+    margin-top: 0.8rem;
+}
+.online_icon{
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 100%;
+    top: 3.5rem;
+    left: 3.8rem;
+}
+.online_icon_active{
+    background-color: green;
+}
+.online_icon_deactive{
+    background-color: grey;
+}
+.input_message{
+    width: 80%;
+    margin-top: 15px;
+    height: 30px; 
+    border-radius: 10px;
+    font-size: 17px;
+    padding: 0px 8px 0px 8px;
+}
+.message_button{
+    margin-left: 8px;
+    background-color: aqua;
+    color: black;
+    height: 30px;
+    border-radius: 10px;
+
+}
