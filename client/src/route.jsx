@@ -18,46 +18,53 @@ export const Router = createBrowserRouter([
         element: (
           <AuthLayout authentication>
             <Home />
-          </AuthLayout>),
+          </AuthLayout>
+        ),
       },
       {
         path: "/login",
         element: (
           <AuthLayout authentication={false}>
             <Login />
-          </AuthLayout>),
+          </AuthLayout>
+        ),
       },
       {
         path: "/register",
         element: (
           <AuthLayout authentication={false}>
             <Register />
-          </AuthLayout>),
+          </AuthLayout>
+        ),
       },
       {
         path: "/service",
-        element: <Service />,
-      }, {
+        element: (
+          <AuthLayout authentication>
+            <Service />
+          </AuthLayout>
+        ),
+      },
+      {
         path: "/about",
         element: <div>Hello about page!</div>,
       },
       {
         path: "/contact",
-        element: <Contact/>,
+        element: <Contact />,
       },
       {
         path: "/user",
         element: (
           <AuthLayout authentication>
             <User />
-          </AuthLayout>),
+          </AuthLayout>
+        ),
       },
       {
         path: "*",
         element: <div>No page found plz go home page!</div>,
       },
-    ]
-  }
-
+    ],
+  },
 ]);
-

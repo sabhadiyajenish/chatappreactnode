@@ -67,10 +67,13 @@ io.on("connection", (socket) => {
   socket.on("addMessage", ({ message, reciverId, senderId }) => {
     const receiver = users.find((dr) => dr.userId === reciverId);
     const myId = users.find((dr) => dr.userId === senderId);
+    console.log("users", users);
+    console.log("meeeee", myId);
+    console.log("receiver", receiver);
 
     if (receiver) {
-      io.to([receiver.socketId])
-        .to(myId.socketId)
+      io.to([receiver?.socketId])
+        .to(myId?.socketId)
         .emit("getMessage", [
           {
             message,
@@ -79,7 +82,7 @@ io.on("connection", (socket) => {
           },
         ]);
     } else {
-      io.to(myId.socketId).emit("getMessage", [
+      io.to(myId?.socketId).emit("getMessage", [
         {
           message,
           senderId,

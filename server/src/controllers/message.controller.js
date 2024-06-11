@@ -1,6 +1,6 @@
 import Message from "../models/message.model.js";
 import Coversation from "../models/conversation.model.js";
-import tagModel from "../models/message.model.js";
+import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";

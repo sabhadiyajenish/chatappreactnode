@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserMessage, getAllUser } from "./authApi";
+import { getUserMessage, getAllUser, getConversation } from "./authApi";
 const Message = createSlice({
   name: "message",
   initialState: {
-    data: [],
+    oneUserMessage: [],
     conversationData: [],
     userLists: [],
     loading: false,
@@ -16,7 +16,8 @@ const Message = createSlice({
       })
       .addCase(getUserMessage.fulfilled, (state, action) => {
         const { payload } = action;
-        state.data = payload?.data;
+        state.oneUserMessage = payload?.data;
+        state.loading = false;
       })
       .addCase(getUserMessage.rejected, (state) => {
         state.loading = false;
@@ -30,6 +31,17 @@ const Message = createSlice({
         state.loading = false;
       })
       .addCase(getAllUser.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(getConversation.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getConversation.fulfilled, (state, action) => {
+        const { payload } = action;
+        state.conversationData = payload?.data;
+        state.loading = false;
+      })
+      .addCase(getConversation.rejected, (state) => {
         state.loading = false;
       });
   },

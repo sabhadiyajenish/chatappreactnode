@@ -21,12 +21,13 @@ export const addUserMessage = createAsyncThunk(
 );
 export const getUserMessage = createAsyncThunk(
   "message/getUserMessage",
-  async () => {
+  async (data) => {
     try {
       const responce = await axios.post(
-        "http://localhost:5000/api/v1/messages/getmessage"
+        "http://localhost:5000/api/v1/messages/getmessage",
+        data
       );
-      console.log("data is", responce?.data);
+      // console.log("data user one messagwe is<<<<<>>> is", responce?.data);
       return responce?.data;
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);
@@ -38,12 +39,26 @@ export const getAllUser = createAsyncThunk("message/getAllUser", async () => {
     const responce = await axios.get(
       "http://localhost:5000/api/v1/user/get-Alluserdata"
     );
-    console.log("data is", responce?.data);
+    // console.log("data is", responce?.data);
     return responce?.data;
   } catch (error) {
     console.log("Error in Store Async thunk in Error Api Catch Block", error);
   }
 });
+export const getConversation = createAsyncThunk(
+  "message/getConversation",
+  async (data) => {
+    try {
+      const responce = await axios.get(
+        `http://localhost:5000/api/v1/messages/${data}`
+      );
+      console.log("data is user conversations...<<<<<", responce?.data);
+      return responce?.data;
+    } catch (error) {
+      console.log("Error in Store Async thunk in Error Api Catch Block", error);
+    }
+  }
+);
 export const LogoutUserFun = createAsyncThunk("auth/deleteData", async () => {
   try {
     const responce = await axios.get(USERS.LOGOUT_USER_API, {

@@ -7,13 +7,22 @@ import Glrs from "../../assets/image/grls.jpg";
 // import SendIcon from "@mui/icons-material/Send";
 
 // import { apiClient } from "../../../api/general";
-import { addUserMessage, getAllUser } from "../../store/Message/authApi";
+import {
+  addUserMessage,
+  getAllUser,
+  getConversation,
+  getUserMessage,
+} from "../../store/Message/authApi";
+import { getOneUser } from "../../store/Users/userApi";
 const SOCKET_URL = "http://localhost:2525";
 
 const Chatbox = () => {
-  const { tag, getMessageData, userLists } = useSelector(
+  const { tag } = useSelector((state) => state.messageData);
+  const { userOneData } = useSelector((state) => state.userAuthData);
+  const { oneUserMessage, loading, conversationData, userLists } = useSelector(
     (state) => state.messageData
   );
+
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
   const [userConversationData, setUserConversationDatas] = useState([]);
@@ -23,9 +32,15 @@ const Chatbox = () => {
   const [reciverEmailAddress, setReciverEmailaddress] = useState({
     email: "",
     reciverId: "",
+    avatar: "",
   });
+
+  const [reciverChatData, setReciverChatData] = useState("");
   // const [buttonMessage, setButtonMessage] = useState([]);
   const [getMessage, setGetMessage] = useState([]);
+  const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
+    online: false,
+  });
   const [ForData, setForData] = useState({
     userName: "",
     email: "",
@@ -33,27 +48,47 @@ const Chatbox = () => {
   });
   const messageDom = useRef(null);
   const dispatch = useDispatch();
-  // console.log(">>>data is>>>>", emailLocal.email);
+
   useEffect(() => {
-    if (userData.length === 0) {
+    setGetMessage(oneUserMessage);
+  }, [oneUserMessage]);
+
+  useEffect(() => {
+    if (userData?.length === 0) {
       setUserDatas(tag?.data);
     }
   }, [tag]);
 
   useEffect(() => {
-    setEmailLocal(JSON.parse(localStorage.getItem("user")));
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+
+    const getCurrentActiveUser = activeUser?.map(
+      (item, key) => item.userId === user?.userId
+    );
+    if (getCurrentActiveUser) {
+      setLoginActiveInfo({
+        online: true,
+      });
+    }
+  }, [activeUser]);
+
+  useEffect(() => {
+    setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
+    dispatch(getOneUser());
     dispatch(getAllUser());
-    // dispatch(getConversation(JSON.parse(localStorage.getItem("user"))));
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+    dispatch(getConversation(user?.userId));
   }, []);
   useEffect(() => {
-    setUserConversationDatas(getMessageData?.conversationData);
-  }, [getMessageData?.conversationData]);
+    setUserConversationDatas(conversationData);
+  }, [conversationData]);
   useEffect(() => {
     messageDom?.current?.scrollIntoView({ behavior: "smooth" });
   }, [getMessage]);
   useEffect(() => {
     setSocket(io(SOCKET_URL));
   }, []);
+
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
     socket?.on("getUser", (user) => {
@@ -70,7 +105,7 @@ const Chatbox = () => {
       console.log(cate);
       setUserDatas((mess) => mess.concat(cate));
     });
-    setEmailLocal(JSON.parse(localStorage.getItem("user")));
+    setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
   //   console.log(">>>>>>>>>>>", getMessage);
   // const handleSignup = (e) => {
@@ -84,7 +119,7 @@ const Chatbox = () => {
     e.preventDefault();
     if (e.target.name === "User") {
       if (message !== "") {
-        console.log("click.... messaged");
+        console.log("click.... messaged", emailLocal);
         socket?.emit("addMessage", {
           message: message,
           senderId: emailLocal?.userId,
@@ -101,12 +136,12 @@ const Chatbox = () => {
         setMessage("");
       }
     } else {
-      socket?.emit("addUserData", ForData);
-      const data = {
-        userName: ForData?.userName,
-        email: ForData?.email,
-        password: ForData?.password,
-      };
+      // socket?.emit("addUserData", ForData);
+      // const data = {
+      //   userName: ForData?.userName,
+      //   email: ForData?.email,
+      //   password: ForData?.password,
+      // };
       // dispatch(addTag(data));
     }
   };
@@ -116,24 +151,46 @@ const Chatbox = () => {
       <div className="main_chat_div">
         <div className="child1_chat_div">
           <div className="all_chat_div">
-            <h4 style={{ borderBottom: "1px solid black" }}>
-              {emailLocal?.email}
-            </h4>
+            <div
+              style={{ borderBottom: "1px solid black" }}
+              className="mt-2 p-4 flex justify-center items-center flex-wrap "
+            >
+              <div className=" relative">
+                <img
+                  alt="gdg"
+                  src={userOneData?.avatar ? userOneData?.avatar : Glrs}
+                  className=" w-16 h-16 rounded-full "
+                />
+                {seeLoginActiveInfo?.online && (
+                  <span className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"></span>
+                )}
+              </div>
+              <div className="md:ml-3 ml-1">
+                <h1 className="text-center p-2 font-bold ">Me</h1>
+                <h4>{emailLocal?.email}</h4>
+              </div>
+            </div>
+            <h1 className="mx-3 my-4 text-center font-medium">Your Chat</h1>
             {userConversationData?.map((dt, key) => {
               return (
                 <>
                   <div
-                    className="center_icon_div"
+                    className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
                     key={key}
                     onClick={async () => {
                       setReciverEmailaddress({
                         email: dt?.email,
                         reciverId: dt?._id,
+                        avatar: dt?.avatar,
                       });
-                      // const data1 = {
-                      //   senderId: emailLocal.userId,
-                      //   reciverId: dt._id,
-                      // };
+                      setReciverChatData(dt?._id);
+
+                      const data1 = {
+                        senderId: emailLocal?.userId,
+                        reciverId: dt._id,
+                      };
+                      dispatch(getUserMessage(data1));
+
                       // apiClient({
                       //   method: "POST",
                       //   url: `${API_URL.message.getMessage}`,
@@ -147,16 +204,23 @@ const Chatbox = () => {
                     }}
                   >
                     <div style={{ position: "relative" }}>
-                      <img alt="gdg" src={Glrs} className="img_girls_icon" />
+                      <img
+                        alt="gdg"
+                        src={dt?.avatar ? dt?.avatar : Glrs}
+                        className=" w-16 h-16 rounded-full "
+                      />
                       {activeUser.map((dr, key1) => {
                         return dr?.userId === dt?._id ? (
-                          <span className="online_icon online_icon_active"></span>
+                          <span
+                            className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                            key={key1}
+                          ></span>
                         ) : (
                           ""
                         );
                       })}
                     </div>
-                    <p className="icon_text">{dt?.email}</p>
+                    <p className="icon_text">{dt?.userName}</p>
                   </div>
                 </>
               );
@@ -164,19 +228,29 @@ const Chatbox = () => {
           </div>
           {reciverEmailAddress?.email === "" ? (
             <>
-              <div>
-                <h2>Chatting with people...</h2>
+              <div className="h-[80vh] flex justify-center items-center">
+                <h2 className=" text-4xl font-thin">Chatting with people...</h2>
               </div>
             </>
           ) : (
             <div className="all_chat_div">
               <div className="center_icon_div">
-                <img alt="gdg" src={Glrs} className="img_girls_icon" />
+                <img
+                  alt="gdg"
+                  src={reciverEmailAddress?.avatar}
+                  className="img_girls_icon"
+                />
                 <p className="icon_text">{reciverEmailAddress?.email}</p>
               </div>
               <div className="center_chat_div">
-                {getMessage?.length === 0 ? (
-                  <h3>No Chat Found..</h3>
+                {loading ? (
+                  <div className="h-[80vh] flex justify-center items-center">
+                    <h2 className=" text-4xl font-thin">Loading chat...</h2>
+                  </div>
+                ) : getMessage?.length === 0 ? (
+                  <div className="h-[80vh] flex justify-center items-center">
+                    <h2 className=" text-4xl font-thin">No Chat found</h2>
+                  </div>
                 ) : (
                   <>
                     {getMessage?.map((dt, key) => {
@@ -186,17 +260,17 @@ const Chatbox = () => {
                             <p className="you_chat_text">{dt?.message}</p>
                           </div>
                         </>
-                      ) : (
+                      ) : reciverChatData === dt?.senderId ? (
                         <>
                           <div
                             className="you_chat_div"
                             key={key}
                             ref={messageDom}
                           >
-                            <p className="you_chat_text">{dt?.message}</p>
+                            <p className="you_chat_text1 ">{dt?.message}</p>
                           </div>
                         </>
-                      );
+                      ) : null;
                     })}{" "}
                   </>
                 )}
@@ -213,58 +287,71 @@ const Chatbox = () => {
                   value="Send"
                   name="User"
                   onClick={handleSend}
-                  className="message_button"
+                  className="message_button px-3 py-1"
                 />
               </div>
             </div>
           )}
           <div className="all_chat_div">
-            <h4 style={{ borderBottom: "1px solid black" }}>All User List</h4>
+            <h4 className="mt-4 mb-4 font-bold">All User List</h4>
             {userLists?.map((dt, key) => {
               return (
                 <>
-                  <div
-                    className="center_icon_div"
-                    key={key}
-                    onClick={async () => {
-                      setReciverEmailaddress({
-                        email: dt.email,
-                        reciverId: dt._id,
-                      });
-                      setEmailLocal(dt?.email);
-                      // const data1 = {
-                      //   senderId: emailLocal.userId,
-                      //   reciverId: dt._id,
-                      // };
-                      // apiClient({
-                      //   method: "POST",
-                      //   url: `${API_URL.message.getMessage}`,
-                      //   data: data1,
-                      // })
-                      //   .then((response) => {
-                      //     console.log(">>>>>>data is>>>", response);
-                      //     setGetMessage(response?.data);
-                      //   })
-                      //   .catch((error) => {});
-                      // dispatch(getUserMessage(data));
-                    }}
-                  >
-                    <div style={{ position: "relative" }}>
-                      <img
-                        alt="gdg"
-                        src={dt?.avatar ? dt?.avatar : Glrs}
-                        className="img_girls_icon"
-                      />
-                      {activeUser.map((dr, key1) => {
-                        return dr.userId === dt._id ? (
-                          <span className="online_icon online_icon_active"></span>
-                        ) : (
-                          ""
-                        );
-                      })}
+                  {dt.email === emailLocal?.email ? null : (
+                    <div
+                      className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
+                      key={key}
+                      onClick={async () => {
+                        setReciverEmailaddress({
+                          email: dt.email,
+                          reciverId: dt._id,
+                          avatar: dt?.avatar,
+                        });
+                        setReciverChatData(dt?._id);
+                        const data1 = {
+                          senderId: emailLocal?.userId,
+                          reciverId: dt._id,
+                        };
+
+                        dispatch(getUserMessage(data1));
+                        // apiClient({
+                        //   method: "POST",
+                        //   url: `${API_URL.message.getMessage}`,
+                        //   data: data1,
+                        // })
+                        //   .then((response) => {
+                        //     console.log(">>>>>>data is>>>", response);
+                        //     setGetMessage(response?.data);
+                        //   })
+                        //   .catch((error) => {});
+                        // dispatch(getUserMessage(data));
+                      }}
+                    >
+                      <div style={{ position: "relative" }}>
+                        <img
+                          alt="gdg"
+                          src={dt?.avatar ? dt?.avatar : Glrs}
+                          className=" w-16 h-16 rounded-full "
+                        />
+                        {activeUser.map((dr, key1) => {
+                          return dr.userId === dt._id ? (
+                            <span
+                              className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                              key={key1}
+                            ></span>
+                          ) : (
+                            ""
+                          );
+                        })}
+                      </div>
+                      <div>
+                        <p className="icon_text">{dt?.email}</p>
+                        <p className=" text-start md:pl-4 pl-2 text-gray-600">
+                          {dt?.userName}
+                        </p>
+                      </div>
                     </div>
-                    <p className="icon_text">{dt?.email}</p>
-                  </div>
+                  )}
                 </>
               );
             })}

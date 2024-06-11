@@ -1,29 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { getOneUser } from "./userApi";
 const users = createSlice({
   name: "user",
   initialState: {
-    covid: [],
-    images: [],
+    userOneData: [],
     loading: false,
   },
   reducers: {
     //this is used for without calling apis directy send data into redux
-    addUsers: (state, param) => {
-      const { payload } = param;
-      state.covid = [...state.covid, payload];
-      console.log("city name>>", state.covid);
-    },
-    addImage: (state, action) => {
-      state.images = [...state.images, {
-        src: {
-          Img: action.payload,
-          name: "jenish",
-          email: "jenish@gmail.com"
-        }
-      }];
-    },
-  }
-
+  },
+  extraReducers(builder) {
+    builder
+      .addCase(getOneUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getOneUser.fulfilled, (state, action) => {
+        const { payload } = action;
+        state.userOneData = payload?.data;
+      })
+      .addCase(getOneUser.rejected, (state) => {
+        state.loading = false;
+      });
+  },
 });
 const { actions, reducer } = users;
 export const { addUsers, addImage } = actions;
