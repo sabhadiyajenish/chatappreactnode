@@ -8,10 +8,7 @@ export const addUserMessage = createAsyncThunk(
   "message/addUserMessage",
   async (data) => {
     try {
-      const responce = await axios.post(
-        "http://localhost:5000/api/v1/messages/",
-        data
-      );
+      const responce = await axios.post("/messages/", data);
       console.log("data is", responce?.data);
       return responce?.data;
     } catch (error) {
@@ -23,10 +20,7 @@ export const getUserMessage = createAsyncThunk(
   "message/getUserMessage",
   async (data) => {
     try {
-      const responce = await axios.post(
-        "http://localhost:5000/api/v1/messages/getmessage",
-        data
-      );
+      const responce = await axios.post(`/messages/getmessage`, data);
       // console.log("data user one messagwe is<<<<<>>> is", responce?.data);
       return responce?.data;
     } catch (error) {
@@ -36,9 +30,7 @@ export const getUserMessage = createAsyncThunk(
 );
 export const getAllUser = createAsyncThunk("message/getAllUser", async () => {
   try {
-    const responce = await axios.get(
-      "http://localhost:5000/api/v1/user/get-Alluserdata"
-    );
+    const responce = await axios.get("/user/get-Alluserdata");
     // console.log("data is", responce?.data);
     return responce?.data;
   } catch (error) {
@@ -49,9 +41,7 @@ export const getConversation = createAsyncThunk(
   "message/getConversation",
   async (data) => {
     try {
-      const responce = await axios.get(
-        `http://localhost:5000/api/v1/messages/${data}`
-      );
+      const responce = await axios.get(`/messages/${data}`);
       console.log("data is user conversations...<<<<<", responce?.data);
       return responce?.data;
     } catch (error) {

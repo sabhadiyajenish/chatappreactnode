@@ -37,6 +37,7 @@ const Chatbox = () => {
   ]);
   const [reciverChatData, setReciverChatData] = useState("");
   const [getMessage, setGetMessage] = useState([]);
+  const [datafunction, SetDataFunction] = useState("");
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -84,19 +85,21 @@ const Chatbox = () => {
   }, []);
 
   useEffect(() => {
-    socket?.emit("addUser", emailLocal?.userId);
-    socket?.on("getUser", (user) => {
-      //   console.log("user:=", user);
-      setActiveUser(user);
-    });
-    socket?.on("getMessage", (user1) => {
-      console.log("getMessage>>>:=", user1);
-      // setActiveUser(user);
-      setGetMessage((mess) => mess.concat(user1));
+    console.log(
+      "check status is<<<<<<<<<<<<<<<<<<<<<<<<<",
+      reciverEmailAddress?.reciverId === datafunction[0]?.reciverId,
+      reciverEmailAddress?.reciverId,
+      "datra is<<<",
+      datafunction[0]?.reciverId
+    );
+    if (reciverEmailAddress?.reciverId === datafunction[0]?.reciverId) {
+    } else {
       setCountMessage((prevMessages) => {
+        //reciverChatData is reciverId selected chat
+
         // Find if the reciverId already exists in the state
         const index = prevMessages.findIndex(
-          (msg) => msg.senderId === user1[0]?.senderId
+          (msg) => msg.senderId === datafunction[0]?.senderId
         );
 
         // If it exists, update the count
@@ -112,14 +115,27 @@ const Chatbox = () => {
           return [
             ...prevMessages,
             {
-              reciverId: user1[0]?.reciverId,
-              senderId: user1[0]?.senderId,
-              firstMessage: user1[0]?.message,
+              reciverId: datafunction[0]?.reciverId,
+              senderId: datafunction[0]?.senderId,
+              firstMessage: datafunction[0]?.message,
               count: 1,
             },
           ];
         }
       });
+    }
+  }, [datafunction]);
+
+  useEffect(() => {
+    socket?.emit("addUser", emailLocal?.userId);
+    socket?.on("getUser", (user) => {
+      //   console.log("user:=", user);
+      setActiveUser(user);
+    });
+    socket?.on("getMessage", (user1) => {
+      // setActiveUser(user);
+      setGetMessage((mess) => mess.concat(user1));
+      SetDataFunction(user1);
 
       // setCountMessage((prev) => [...prev,{reciverId:"",count: }]);
       // setButtonMessage((mes) => mes.concat(user1));

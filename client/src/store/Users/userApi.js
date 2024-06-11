@@ -3,9 +3,7 @@ import axios from "../../utils/commonAxios.jsx";
 
 export const getOneUser = createAsyncThunk("user/getOneUser", async () => {
   try {
-    const responce = await axios.get(
-      "http://localhost:5000/api/v1/user/get-userdata"
-    );
+    const responce = await axios.get("/user/get-userdata");
     // console.log("user one get data is", responce?.data);
     localStorage.setItem(
       "userInfo",
