@@ -17,11 +17,9 @@ import { getOneUser } from "../../store/Users/userApi";
 const SOCKET_URL = "http://localhost:2525";
 
 const Chatbox = () => {
-  const { tag } = useSelector((state) => state.messageData);
   const { userOneData } = useSelector((state) => state.userAuthData);
-  const { oneUserMessage, loading, conversationData, userLists } = useSelector(
-    (state) => state.messageData
-  );
+  const { tag, oneUserMessage, loading, conversationData, userLists } =
+    useSelector((state) => state.messageData);
 
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
@@ -34,17 +32,13 @@ const Chatbox = () => {
     reciverId: "",
     avatar: "",
   });
-
+  const [countMessage, setCountMessage] = useState([
+    { reciverId: "jenish", senderId: "jjs", firstMessage: "", count: 0 },
+  ]);
   const [reciverChatData, setReciverChatData] = useState("");
-  // const [buttonMessage, setButtonMessage] = useState([]);
   const [getMessage, setGetMessage] = useState([]);
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
-  });
-  const [ForData, setForData] = useState({
-    userName: "",
-    email: "",
-    password: "",
   });
   const messageDom = useRef(null);
   const dispatch = useDispatch();
@@ -58,7 +52,7 @@ const Chatbox = () => {
       setUserDatas(tag?.data);
     }
   }, [tag]);
-
+  console.log("use coutn isd<<<<<<<<<", countMessage);
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -99,6 +93,35 @@ const Chatbox = () => {
       console.log("getMessage>>>:=", user1);
       // setActiveUser(user);
       setGetMessage((mess) => mess.concat(user1));
+      setCountMessage((prevMessages) => {
+        // Find if the reciverId already exists in the state
+        const index = prevMessages.findIndex(
+          (msg) => msg.senderId === user1[0]?.senderId
+        );
+
+        // If it exists, update the count
+        if (index !== -1) {
+          const updatedMessages = [...prevMessages];
+          updatedMessages[index] = {
+            ...updatedMessages[index],
+            count: updatedMessages[index].count + 1,
+          };
+          return updatedMessages;
+        } else {
+          // If it doesn't exist, add a new entry
+          return [
+            ...prevMessages,
+            {
+              reciverId: user1[0]?.reciverId,
+              senderId: user1[0]?.senderId,
+              firstMessage: user1[0]?.message,
+              count: 1,
+            },
+          ];
+        }
+      });
+
+      // setCountMessage((prev) => [...prev,{reciverId:"",count: }]);
       // setButtonMessage((mes) => mes.concat(user1));
     });
     socket?.on("getUserData", (cate) => {
@@ -107,14 +130,7 @@ const Chatbox = () => {
     });
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
-  //   console.log(">>>>>>>>>>>", getMessage);
-  // const handleSignup = (e) => {
-  //   e.preventDefault();
-  //   setForData({
-  //     ...ForData,
-  //     [e.target.name]: e.target.value,
-  //   });
-  // };
+
   const handleSend = (e) => {
     e.preventDefault();
     if (e.target.name === "User") {
@@ -199,17 +215,10 @@ const Chatbox = () => {
                         reciverId: dt._id,
                       };
                       dispatch(getUserMessage(data1));
-
-                      // apiClient({
-                      //   method: "POST",
-                      //   url: `${API_URL.message.getMessage}`,
-                      //   data: data1,
-                      // })
-                      //   .then((response) => {
-                      //     setGetMessage(response?.data);
-                      //   })
-                      //   .catch((error) => {});
-                      // dispatch(getUserMessage(data));
+                      const setCount = countMessage?.filter(
+                        (datas) => datas?.senderId !== dt?._id
+                      );
+                      setCountMessage(setCount);
                     }}
                   >
                     <div style={{ position: "relative" }}>
@@ -229,10 +238,27 @@ const Chatbox = () => {
                         );
                       })}
                     </div>
-                    <p className="icon_text">
-                      {dt?.userName?.substring(0, 10)}
-                      {dt?.userName?.length <= 10 ? null : ".."}
-                    </p>
+                    <div>
+                      <p className="icon_text">
+                        {dt?.userName?.substring(0, 10)}
+                        {dt?.userName?.length <= 10 ? null : ".."}
+                      </p>
+                      {countMessage?.map((itm) => {
+                        return itm.senderId === dt._id ? (
+                          <p className="text-[#00C000]">
+                            {itm?.firstMessage?.substring(0, 10)}
+                            {itm?.firstMessage?.length <= 10 ? null : ".."}
+                          </p>
+                        ) : null;
+                      })}
+                    </div>
+                    {countMessage?.map((itm) => {
+                      return itm.senderId === dt._id ? (
+                        <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[18px]">
+                          {itm?.count}
+                        </h1>
+                      ) : null;
+                    })}
                   </div>
                 </>
               );

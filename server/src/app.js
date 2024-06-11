@@ -62,14 +62,14 @@ io.on("connection", (socket) => {
       users.push(us);
       io.emit("getUser", users);
     }
-    console.log("id is:=", users);
+    // console.log("id is:=", users);
   });
   socket.on("addMessage", ({ message, reciverId, senderId }) => {
     const receiver = users.find((dr) => dr.userId === reciverId);
     const myId = users.find((dr) => dr.userId === senderId);
-    console.log("users", users);
+    // console.log("users", users);
     console.log("meeeee", myId);
-    console.log("receiver", receiver);
+    console.log("receiver", reciverId);
 
     if (receiver) {
       io.to([receiver?.socketId])
@@ -78,6 +78,7 @@ io.on("connection", (socket) => {
           {
             message,
             senderId,
+            reciverId,
             createdAt: new Date(),
           },
         ]);
@@ -86,6 +87,7 @@ io.on("connection", (socket) => {
         {
           message,
           senderId,
+          reciverId,
           createdAt: new Date(),
         },
       ]);
@@ -103,7 +105,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     users = users.filter((id) => id.socketId !== socket.id);
     io.emit("getUser", users);
-    console.log("id is:=", users);
+    // console.log("id is:=", users);
   });
 });
 
