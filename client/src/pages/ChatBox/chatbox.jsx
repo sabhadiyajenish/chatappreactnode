@@ -145,7 +145,16 @@ const Chatbox = () => {
       // dispatch(addTag(data));
     }
   };
-
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    const ampm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Handle midnight
+    minutes = minutes < 10 ? "0" + minutes : minutes; // Add leading zero to minutes if less than 10
+    return hours + ":" + minutes + " " + ampm;
+  };
   return (
     <>
       <div className="main_chat_div">
@@ -220,7 +229,10 @@ const Chatbox = () => {
                         );
                       })}
                     </div>
-                    <p className="icon_text">{dt?.userName}</p>
+                    <p className="icon_text">
+                      {dt?.userName?.substring(0, 10)}
+                      {dt?.userName?.length <= 10 ? null : ".."}
+                    </p>
                   </div>
                 </>
               );
@@ -257,7 +269,12 @@ const Chatbox = () => {
                       return dt.senderId === emailLocal?.userId ? (
                         <>
                           <div className="you_chat" key={key} ref={messageDom}>
-                            <p className="you_chat_text">{dt?.message}</p>
+                            <p className="you_chat_text">
+                              {dt?.message}{" "}
+                              <span className="text-[11px] text-gray-200">
+                                {dt?.createdAt && formatDate(dt?.createdAt)}
+                              </span>
+                            </p>
                           </div>
                         </>
                       ) : reciverChatData === dt?.senderId ? (
@@ -267,7 +284,12 @@ const Chatbox = () => {
                             key={key}
                             ref={messageDom}
                           >
-                            <p className="you_chat_text1 ">{dt?.message}</p>
+                            <p className="you_chat_text1 ">
+                              {dt?.message}{" "}
+                              <span className="text-[11px] text-gray-200">
+                                {dt?.createdAt && formatDate(dt?.createdAt)}
+                              </span>
+                            </p>
                           </div>
                         </>
                       ) : null;
@@ -345,9 +367,13 @@ const Chatbox = () => {
                         })}
                       </div>
                       <div>
-                        <p className="icon_text">{dt?.email}</p>
+                        <p className="icon_text">
+                          {dt?.email?.substring(0, 15)}
+                          {dt?.email?.length <= 15 ? null : ".."}
+                        </p>
                         <p className=" text-start md:pl-4 pl-2 text-gray-600">
-                          {dt?.userName}
+                          {dt?.userName?.substring(0, 15)}
+                          {dt?.userName?.length <= 15 ? null : ".."}
                         </p>
                       </div>
                     </div>
