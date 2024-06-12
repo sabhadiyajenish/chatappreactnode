@@ -76,12 +76,16 @@ const Chatbox = () => {
   }, [activeUser]);
 
   useEffect(() => {
-    setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
+    const user = localStorage.getItem("userInfo");
+    if (user !== undefined) {
+      setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
+      dispatch(getConversation(JSON.parse(user)?.userId || ""));
+    }
     dispatch(getOneUser());
     dispatch(getAllUser());
-    const user = JSON.parse(localStorage.getItem("userInfo"));
-    dispatch(getConversation(user?.userId));
-    setCountMessage(JSON.parse(localStorage.getItem("userCountInfo")));
+
+    const userInfo = localStorage.getItem("userCountInfo");
+    userInfo !== undefined ? setCountMessage(JSON.parse(userInfo)) : null;
   }, []);
   useEffect(() => {
     setUserConversationDatas(conversationData);
@@ -293,7 +297,7 @@ const Chatbox = () => {
                       setCountMessage(setCount);
                       localStorage.setItem(
                         "userCountInfo",
-                        JSON.stringify(setCount)
+                        JSON.stringify(setCount !== undefined ? setCount : [])
                       );
                     }}
                   >
@@ -473,7 +477,7 @@ const Chatbox = () => {
                         setCountMessage(setCount);
                         localStorage.setItem(
                           "userCountInfo",
-                          JSON.stringify(setCount)
+                          JSON.stringify(setCount !== undefined ? setCount : [])
                         );
                         dispatch(getUserMessage(data1));
                         // apiClient({

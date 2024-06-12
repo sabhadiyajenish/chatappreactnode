@@ -28,6 +28,7 @@ export default function NavBar() {
 
   const LogoutUser = () => {
     localStorage.removeItem("token");
+
     dispatch(LogoutUserFun());
   };
 

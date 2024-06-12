@@ -39,6 +39,7 @@ const Auth = createSlice({
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userInfo");
+        localStorage.removeItem("userCountInfo");
 
         state.authTokenGet = "";
         state.userLoggedIn = false;
