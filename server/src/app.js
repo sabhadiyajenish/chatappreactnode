@@ -6,7 +6,7 @@ import passport from "passport";
 import session from "express-session";
 const io = new Server(2525, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: true,
   },
 });
 const app = express();
@@ -54,26 +54,27 @@ import messageRoutes from "./routes/message.route.js";
 
 let users = [];
 io.on("connection", (socket) => {
+  console.log(`New connection: ${socket.id}`);
+
   socket.on("addUser", (userId) => {
     socket.userId = userId;
-    const isUser = users.find((id) => id.userId === userId);
+    const isUser = users.find((user) => user.userId === userId);
+
     if (!isUser) {
-      const us = { userId, socketId: socket.id };
-      users.push(us);
+      const user = { userId, socketId: socket.id };
+      users.push(user);
       io.emit("getUser", users);
     }
-    // console.log("id is:=", users);
+    console.log("Connected users:", users);
   });
+
   socket.on("addMessage", ({ message, reciverId, senderId }) => {
-    const receiver = users.find((dr) => dr.userId === reciverId);
-    const myId = users.find((dr) => dr.userId === senderId);
-    // console.log("users", users);
-    console.log("meeeee", myId);
-    console.log("receiver", reciverId);
+    const receiver = users.find((user) => user.userId === reciverId);
+    const sender = users.find((user) => user.userId === senderId);
 
     if (receiver) {
-      io.to([receiver?.socketId])
-        .to(myId?.socketId)
+      io.to(receiver.socketId)
+        .to(sender.socketId)
         .emit("getMessage", [
           {
             message,
@@ -83,7 +84,7 @@ io.on("connection", (socket) => {
           },
         ]);
     } else {
-      io.to(myId?.socketId).emit("getMessage", [
+      io.to(sender.socketId).emit("getMessage", [
         {
           message,
           senderId,
@@ -93,6 +94,7 @@ io.on("connection", (socket) => {
       ]);
     }
   });
+
   socket.on("addUserData", ({ userName, email, password }) => {
     io.emit("getUserData", [
       {
@@ -102,10 +104,12 @@ io.on("connection", (socket) => {
       },
     ]);
   });
+
   socket.on("disconnect", () => {
-    users = users.filter((id) => id.socketId !== socket.id);
+    users = users.filter((user) => user.socketId !== socket.id);
     io.emit("getUser", users);
-    // console.log("id is:=", users);
+    console.log(`User disconnected: ${socket.id}`);
+    console.log("Remaining users:", users);
   });
 });
 

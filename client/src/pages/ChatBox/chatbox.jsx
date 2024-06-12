@@ -14,7 +14,7 @@ import {
   getUserMessage,
 } from "../../store/Message/authApi";
 import { getOneUser } from "../../store/Users/userApi";
-const SOCKET_URL = "http://localhost:2525";
+import { SOCKET_URL } from "../../utils/constant";
 
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
@@ -85,15 +85,15 @@ const Chatbox = () => {
   }, []);
 
   useEffect(() => {
+    if (!datafunction || !reciverEmailAddress) return;
     console.log(
       "check status is<<<<<<<<<<<<<<<<<<<<<<<<<",
-      reciverEmailAddress?.reciverId === datafunction[0]?.reciverId,
+      reciverEmailAddress?.reciverId === datafunction[0]?.senderId,
       reciverEmailAddress?.reciverId,
       "datra is<<<",
       datafunction[0]?.reciverId
     );
-    if (reciverEmailAddress?.reciverId === datafunction[0]?.reciverId) {
-    } else {
+    if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
       setCountMessage((prevMessages) => {
         //reciverChatData is reciverId selected chat
 

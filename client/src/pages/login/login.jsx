@@ -19,6 +19,7 @@ import {
   EmailValidate,
   PasswordValidate,
 } from "../../utils/validation/RegisterValidate.jsx";
+import { USERS } from "../../utils/constant.jsx";
 
 const Login = () => {
   const {
@@ -37,10 +38,7 @@ const Login = () => {
   });
 
   const LoginUser = async (logData) => {
-    const res = await axios.post(
-      "http://localhost:5000/api/v1/user/login",
-      logData
-    );
+    const res = await axios.post(USERS.LOGIN_USER_API, logData);
     console.log("res", res);
     if (res && res?.data?.success) {
       localStorage.setItem("accessToken", res?.data?.data?.accessToken);
