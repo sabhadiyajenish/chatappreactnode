@@ -56,13 +56,21 @@ const getMessage = asyncHandler(async (req, res, next) => {
       .status(200)
       .json(new ApiResponse(500, "something is wrong in conversation id"));
   }
-  console.log(">>>", userData);
+  // console.log(">>>", userData);
   const allMessages = await Message.find({
     conversationId: userData[0]?._id,
-  });
+  })
+    .sort({ _id: -1 }) // Sort in descending order by createdAt
+    .limit(50);
   return res
     .status(200)
-    .json(new ApiResponse(200, allMessages, "get all message successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        allMessages.reverse(),
+        "get all message successfully"
+      )
+    );
 });
 
 const getConversation = asyncHandler(async (req, res, next) => {

@@ -15,6 +15,7 @@ import {
 } from "../../store/Message/authApi";
 import { getOneUser } from "../../store/Users/userApi";
 import { SOCKET_URL } from "../../utils/constant";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
@@ -36,13 +37,20 @@ const Chatbox = () => {
     { reciverId: "jenish", senderId: "jjs", firstMessage: "", count: 0 },
   ]);
   const [reciverChatData, setReciverChatData] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [getMessage, setGetMessage] = useState([]);
   const [datafunction, SetDataFunction] = useState("");
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
+  const [page, setPage] = useState(1);
+
   const messageDom = useRef(null);
   const dispatch = useDispatch();
+
+  // useEffect(() => {
+
+  // }, [isTyping]);
 
   useEffect(() => {
     setGetMessage(oneUserMessage);
@@ -73,6 +81,7 @@ const Chatbox = () => {
     dispatch(getAllUser());
     const user = JSON.parse(localStorage.getItem("userInfo"));
     dispatch(getConversation(user?.userId));
+    setCountMessage(JSON.parse(localStorage.getItem("userCountInfo")));
   }, []);
   useEffect(() => {
     setUserConversationDatas(conversationData);
@@ -109,9 +118,26 @@ const Chatbox = () => {
             ...updatedMessages[index],
             count: updatedMessages[index].count + 1,
           };
+          localStorage.setItem(
+            "userCountInfo",
+            JSON.stringify(updatedMessages)
+          );
           return updatedMessages;
         } else {
           // If it doesn't exist, add a new entry
+          localStorage.setItem(
+            "userCountInfo",
+            JSON.stringify([
+              ...prevMessages,
+              {
+                reciverId: datafunction[0]?.reciverId,
+                senderId: datafunction[0]?.senderId,
+                firstMessage: datafunction[0]?.message,
+                count: 1,
+              },
+            ])
+          );
+
           return [
             ...prevMessages,
             {
@@ -139,6 +165,13 @@ const Chatbox = () => {
 
       // setCountMessage((prev) => [...prev,{reciverId:"",count: }]);
       // setButtonMessage((mes) => mes.concat(user1));
+    });
+    socket?.on("getUserTypingStatus", (userStatus) => {
+      setIsTyping(userStatus[0]);
+      console.log(
+        "checkm user status is<<<<<<<<<<<<<<<<<<<<<",
+        userStatus[0]?.status
+      );
     });
     socket?.on("getUserData", (cate) => {
       console.log(cate);
@@ -187,6 +220,29 @@ const Chatbox = () => {
     minutes = minutes < 10 ? "0" + minutes : minutes; // Add leading zero to minutes if less than 10
     return hours + ":" + minutes + " " + ampm;
   };
+  let typingTimeout;
+
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    socket?.emit("addUserTypingStatus", {
+      status: true,
+      senderId: emailLocal?.userId,
+      reciverId: reciverEmailAddress?.reciverId,
+    });
+    typingTimeout = setTimeout(() => {
+      socket?.emit("addUserTypingStatus", {
+        status: false,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+      });
+    }, 2000); // Reset typing status after 1 second of inactivity
+    return () => clearTimeout(typingTimeout); // Clear previous timeout if any
+  };
+  const isUserOnline = activeUser?.some(
+    (dr) => dr.userId === reciverEmailAddress?.reciverId
+  );
+  const isUserTyping =
+    reciverEmailAddress?.reciverId === isTyping?.senderId && isTyping?.status;
   return (
     <>
       <div className="main_chat_div">
@@ -235,6 +291,10 @@ const Chatbox = () => {
                         (datas) => datas?.senderId !== dt?._id
                       );
                       setCountMessage(setCount);
+                      localStorage.setItem(
+                        "userCountInfo",
+                        JSON.stringify(setCount)
+                      );
                     }}
                   >
                     <div style={{ position: "relative" }}>
@@ -294,7 +354,34 @@ const Chatbox = () => {
                   src={reciverEmailAddress?.avatar}
                   className="img_girls_icon"
                 />
-                <p className="icon_text">{reciverEmailAddress?.email}</p>
+                <div>
+                  <p className="icon_text">{reciverEmailAddress?.email}</p>
+                  {isUserOnline && !isUserTyping && (
+                    <p className="text-[15px] text-green-500 text-start ml-4">
+                      online
+                    </p>
+                  )}
+                  {isUserOnline && isUserTyping && (
+                    <p className="text-[15px] text-blue-500 text-start ml-4">
+                      Typing...
+                    </p>
+                  )}
+
+                  {/* {activeUser.map((dr, key1) => {
+                    return dr.userId === reciverEmailAddress?.reciverId ? (
+                      <p className="text-[15px] text-green-500 text-start ml-4">
+                        online
+                      </p>
+                    ) : (
+                      reciverEmailAddress?.reciverId === isTyping?.senderId &&
+                        isTyping?.status && (
+                          <p className="text-[15px] text-blue-500 text-start ml-4">
+                            Typping..
+                          </p>
+                        )
+                    );
+                  })} */}
+                </div>
               </div>
               <div className="center_chat_div">
                 {loading ? (
@@ -310,8 +397,12 @@ const Chatbox = () => {
                     {getMessage?.map((dt, key) => {
                       return dt.senderId === emailLocal?.userId ? (
                         <>
-                          <div className="you_chat" key={key} ref={messageDom}>
-                            <p className="you_chat_text">
+                          <div
+                            className="you_chat md:pl-20 pl-5 "
+                            key={key}
+                            ref={messageDom}
+                          >
+                            <p className="you_chat_text pl-2 text-start pr-2 py-1">
                               {dt?.message}{" "}
                               <span className="text-[11px] text-gray-200">
                                 {dt?.createdAt && formatDate(dt?.createdAt)}
@@ -322,11 +413,11 @@ const Chatbox = () => {
                       ) : reciverChatData === dt?.senderId ? (
                         <>
                           <div
-                            className="you_chat_div"
+                            className="you_chat_div md:mr-20 mr-5"
                             key={key}
                             ref={messageDom}
                           >
-                            <p className="you_chat_text1 ">
+                            <p className="you_chat_text1 text-start">
                               {dt?.message}{" "}
                               <span className="text-[11px] text-gray-200">
                                 {dt?.createdAt && formatDate(dt?.createdAt)}
@@ -342,7 +433,7 @@ const Chatbox = () => {
               <div className="center_input_div">
                 <input
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleTyping}
                   className="input_message"
                   placeholder="Enter Message here..."
                 />
@@ -376,7 +467,14 @@ const Chatbox = () => {
                           senderId: emailLocal?.userId,
                           reciverId: dt._id,
                         };
-
+                        const setCount = countMessage?.filter(
+                          (datas) => datas?.senderId !== dt?._id
+                        );
+                        setCountMessage(setCount);
+                        localStorage.setItem(
+                          "userCountInfo",
+                          JSON.stringify(setCount)
+                        );
                         dispatch(getUserMessage(data1));
                         // apiClient({
                         //   method: "POST",

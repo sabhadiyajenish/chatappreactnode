@@ -95,6 +95,20 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("addUserTypingStatus", ({ status, reciverId, senderId }) => {
+    const receiver = users.find((user) => user.userId === reciverId);
+    const sender = users.find((user) => user.userId === senderId);
+    if (receiver) {
+      io.to(receiver.socketId).emit("getUserTypingStatus", [
+        {
+          status,
+          senderId,
+          reciverId,
+        },
+      ]);
+    }
+  });
+
   socket.on("addUserData", ({ userName, email, password }) => {
     io.emit("getUserData", [
       {
