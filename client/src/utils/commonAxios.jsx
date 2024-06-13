@@ -10,11 +10,23 @@ const instance = axios.create({
   headers: {
     "Access-Control-Allow-Origin": "*",
     "Content-type": "Application/json",
-    Authorization: `Bearer ${accessTokenFromStorage}`,
+    // Authorization: `Bearer ${accessTokenFromStorage}`,
   },
   withCredentials: true,
 });
 
+instance.interceptors.request.use(
+  (config) => {
+    const accessTokenFromStorage = localStorage.getItem("accessToken");
+    if (accessTokenFromStorage) {
+      config.headers.Authorization = `Bearer ${accessTokenFromStorage}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 export const Abort = axios.CancelToken.source();
 
 export default instance;

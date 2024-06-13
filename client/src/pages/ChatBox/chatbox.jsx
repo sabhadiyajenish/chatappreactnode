@@ -16,6 +16,11 @@ import {
 import { getOneUser } from "../../store/Users/userApi";
 import { SOCKET_URL } from "../../utils/constant";
 import InfiniteScroll from "react-infinite-scroll-component";
+import EmojiPicker from "emoji-picker-react";
+import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Fragment } from "react";
+import { MdEmojiEmotions } from "react-icons/md";
+import { Disclosure, Menu, Transition } from "@headlessui/react";
 
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
@@ -32,6 +37,7 @@ const Chatbox = () => {
     email: "",
     reciverId: "",
     avatar: "",
+    userName: "",
   });
   const [countMessage, setCountMessage] = useState([
     { reciverId: "jenish", senderId: "jjs", firstMessage: "", count: 0 },
@@ -40,6 +46,8 @@ const Chatbox = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [getMessage, setGetMessage] = useState([]);
   const [datafunction, SetDataFunction] = useState("");
+  const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
+
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -47,10 +55,6 @@ const Chatbox = () => {
 
   const messageDom = useRef(null);
   const dispatch = useDispatch();
-
-  // useEffect(() => {
-
-  // }, [isTyping]);
 
   useEffect(() => {
     setGetMessage(oneUserMessage);
@@ -76,16 +80,13 @@ const Chatbox = () => {
   }, [activeUser]);
 
   useEffect(() => {
-    const user = localStorage.getItem("userInfo");
-    if (user !== undefined) {
-      setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
-      dispatch(getConversation(JSON.parse(user)?.userId || ""));
-    }
     dispatch(getOneUser());
     dispatch(getAllUser());
 
     const userInfo = localStorage.getItem("userCountInfo");
-    userInfo !== undefined ? setCountMessage(JSON.parse(userInfo)) : null;
+    userInfo !== undefined && userInfo?.length !== 0
+      ? setCountMessage(JSON.parse(userInfo))
+      : null;
   }, []);
   useEffect(() => {
     setUserConversationDatas(conversationData);
@@ -95,20 +96,21 @@ const Chatbox = () => {
   }, [getMessage]);
   useEffect(() => {
     setSocket(io(SOCKET_URL));
+
+    const user = localStorage.getItem("userInfo");
+    if (user !== undefined) {
+      setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
+      dispatch(getConversation(JSON.parse(user)?.userId || ""));
+    }
   }, []);
 
   useEffect(() => {
     if (!datafunction || !reciverEmailAddress) return;
-    console.log(
-      "check status is<<<<<<<<<<<<<<<<<<<<<<<<<",
-      reciverEmailAddress?.reciverId === datafunction[0]?.senderId,
-      reciverEmailAddress?.reciverId,
-      "datra is<<<",
-      datafunction[0]?.reciverId
-    );
+
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
       setCountMessage((prevMessages) => {
-        //reciverChatData is reciverId selected chat
+        // Initialize prevMessages as an empty array if it's null or undefined
+        prevMessages = prevMessages || [];
 
         // Find if the reciverId already exists in the state
         const index = prevMessages.findIndex(
@@ -122,10 +124,12 @@ const Chatbox = () => {
             ...updatedMessages[index],
             count: updatedMessages[index].count + 1,
           };
-          localStorage.setItem(
-            "userCountInfo",
-            JSON.stringify(updatedMessages)
-          );
+          if (Array.isArray(updatedMessages) && updatedMessages?.length !== 0) {
+            localStorage.setItem(
+              "userCountInfo",
+              JSON.stringify(updatedMessages)
+            );
+          }
           return updatedMessages;
         } else {
           // If it doesn't exist, add a new entry
@@ -166,9 +170,6 @@ const Chatbox = () => {
       // setActiveUser(user);
       setGetMessage((mess) => mess.concat(user1));
       SetDataFunction(user1);
-
-      // setCountMessage((prev) => [...prev,{reciverId:"",count: }]);
-      // setButtonMessage((mes) => mes.concat(user1));
     });
     socket?.on("getUserTypingStatus", (userStatus) => {
       setIsTyping(userStatus[0]);
@@ -205,13 +206,6 @@ const Chatbox = () => {
         setMessage("");
       }
     } else {
-      // socket?.emit("addUserData", ForData);
-      // const data = {
-      //   userName: ForData?.userName,
-      //   email: ForData?.email,
-      //   password: ForData?.password,
-      // };
-      // dispatch(addTag(data));
     }
   };
   const formatDate = (dateString) => {
@@ -283,6 +277,8 @@ const Chatbox = () => {
                         email: dt?.email,
                         reciverId: dt?._id,
                         avatar: dt?.avatar,
+                        userName: dt?.userName,
+                        _id: dt?._id,
                       });
                       setReciverChatData(dt?._id);
 
@@ -295,10 +291,28 @@ const Chatbox = () => {
                         (datas) => datas?.senderId !== dt?._id
                       );
                       setCountMessage(setCount);
-                      localStorage.setItem(
-                        "userCountInfo",
-                        JSON.stringify(setCount !== undefined ? setCount : [])
-                      );
+                      if (Array.isArray(setCount) && setCount?.length !== 0) {
+                        localStorage.setItem(
+                          "userCountInfo",
+                          JSON.stringify(setCount)
+                        );
+                      } else {
+                        localStorage.setItem(
+                          "userCountInfo",
+                          JSON.stringify([
+                            {
+                              reciverId: "jenish",
+                              senderId: "jjs",
+                              firstMessage: "",
+                              count: 0,
+                            },
+                          ])
+                        );
+                      }
+                      // localStorage.setItem(
+                      //   "userCountInfo",
+                      //   JSON.stringify(setCount !== undefined ? setCount : [])
+                      // );
                     }}
                   >
                     <div style={{ position: "relative" }}>
@@ -434,7 +448,11 @@ const Chatbox = () => {
                   </>
                 )}
               </div>
-              <div className="center_input_div">
+              <div className="center_input_div flex justify-center cursor-pointer items-center">
+                <MdEmojiEmotions
+                  className="w-8 h-8 md:ml-1 ml-3 mr-3 mt-3"
+                  onClick={() => setHandleOpenEmoji((prev) => !prev)}
+                />
                 <input
                   value={message}
                   onChange={handleTyping}
@@ -446,8 +464,74 @@ const Chatbox = () => {
                   value="Send"
                   name="User"
                   onClick={handleSend}
-                  className="message_button px-3 py-1"
+                  className="message_button px-3 py-1 mt-3 md:mr-1 mr-3"
                 />
+
+                {handleOpenEmoji && (
+                  <div
+                    id="default-modal"
+                    tabIndex="-1"
+                    aria-hidden="true"
+                    className="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
+                  >
+                    <div className="relative p-4 w-full max-w-[25rem]">
+                      <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            Terms of Service
+                          </h3>
+                          <button
+                            onClick={() => setHandleOpenEmoji((prev) => !prev)}
+                            type="button"
+                            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              aria-hidden="true"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 14 14"
+                            >
+                              <path
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                              />
+                            </svg>
+                            <span className="sr-only">Close modal</span>
+                          </button>
+                        </div>
+                        {/* Modal body */}
+                        <EmojiPicker
+                          open={handleOpenEmoji}
+                          onEmojiClick={(e) => {
+                            console.log("emoji<<<<<<", e.emoji);
+                            setMessage((prev) => prev + e.emoji);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* <div
+                  id="default-modal"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  className={`${
+                    handleOpenEmoji ? null : "hidden"
+                  } overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full`}
+                >
+                  <EmojiPicker
+                    open={handleOpenEmoji}
+                    onEmojiClick={(e) => {
+                      console.log("emoji<<<<<<", e.emoji);
+                      setMessage((prev) => prev + e.emoji);
+                    }}
+                  />
+                </div> */}
               </div>
             </div>
           )}
@@ -465,6 +549,8 @@ const Chatbox = () => {
                           email: dt.email,
                           reciverId: dt._id,
                           avatar: dt?.avatar,
+                          userName: dt?.userName,
+                          _id: dt?._id,
                         });
                         setReciverChatData(dt?._id);
                         const data1 = {
@@ -475,11 +561,30 @@ const Chatbox = () => {
                           (datas) => datas?.senderId !== dt?._id
                         );
                         setCountMessage(setCount);
-                        localStorage.setItem(
-                          "userCountInfo",
-                          JSON.stringify(setCount !== undefined ? setCount : [])
-                        );
+                        // localStorage.setItem(
+                        //   "userCountInfo",
+                        //   JSON.stringify(setCount !== undefined ? setCount : [])
+                        // );
+                        if (Array.isArray(setCount) && setCount?.length !== 0) {
+                          localStorage.setItem(
+                            "userCountInfo",
+                            JSON.stringify(setCount)
+                          );
+                        } else {
+                          localStorage.setItem(
+                            "userCountInfo",
+                            JSON.stringify([
+                              {
+                                reciverId: "jenish",
+                                senderId: "jjs",
+                                firstMessage: "",
+                                count: 0,
+                              },
+                            ])
+                          );
+                        }
                         dispatch(getUserMessage(data1));
+
                         // apiClient({
                         //   method: "POST",
                         //   url: `${API_URL.message.getMessage}`,

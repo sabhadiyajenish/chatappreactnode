@@ -19,7 +19,8 @@ import {
   EmailValidate,
   PasswordValidate,
 } from "../../utils/validation/RegisterValidate.jsx";
-import { USERS } from "../../utils/constant.jsx";
+import { LOCAL_PATH, USERS } from "../../utils/constant.jsx";
+import { getOneUser } from "../../store/Users/userApi.js";
 
 const Login = () => {
   const {
@@ -43,7 +44,13 @@ const Login = () => {
     if (res && res?.data?.success) {
       localStorage.setItem("accessToken", res?.data?.data?.accessToken);
       localStorage.setItem("refreshToken", res?.data?.data?.refreshToken);
+      const userInfo = {
+        email: res?.data?.data?.user?.email,
+        userId: res?.data?.data?.user?._id,
+      };
+      localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
       dispatch(SetLoginAuth(res?.data?.data));
+      dispatch(getOneUser());
       navigate("/");
       alert(res?.data?.message);
     } else {
@@ -132,8 +139,7 @@ const Login = () => {
 
             <button
               onClick={() =>
-                (window.location.href =
-                  "http://localhost:5000/api/v1/user/google")
+                (window.location.href = `${LOCAL_PATH}/user/google`)
               }
               className="w-full block bg-gray-200 hover:bg-gray-100 focus:bg-gray-100 text-gray-900 font-semibold rounded-lg px-4 py-2.5 border border-gray-300"
             >

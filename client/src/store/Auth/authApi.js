@@ -6,9 +6,13 @@ import { useNavigate } from "react-router-dom";
 
 export const getUserData = createAsyncThunk("auth/setDatas", async () => {
   try {
-    const responce = await axios.get(USERS.GET_USER_API);
-    console.log("data is", responce?.data);
-    return responce?.data;
+    const userStatus = localStorage.getItem("accessToken");
+    if (userStatus && userStatus !== "") {
+      const responce = await axios.get(USERS.GET_USER_API);
+      console.log("data is", responce?.data);
+      return responce?.data;
+    }
+    return null;
   } catch (error) {
     console.log("Error in Store Async thunk in Error Api Catch Block", error);
   }

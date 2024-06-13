@@ -108,7 +108,33 @@ io.on("connection", (socket) => {
       ]);
     }
   });
+  socket.on(
+    "addUserNew",
+    ({ email, _id, avatar, userName, senderId, reciverId }) => {
+      const receiver = users.find((user) => user.userId === reciverId);
+      const sender = users.find((user) => user.userId === senderId);
 
+      if (receiver) {
+        io.to(receiver.socketId).to(sender.socketId).emit("getNewUserData", {
+          _id,
+          email,
+          avatar,
+          userName,
+          senderId,
+          reciverId,
+        });
+      } else {
+        io.to(sender.socketId).emit("getNewUserData", {
+          _id,
+          email,
+          avatar,
+          userName,
+          senderId,
+          reciverId,
+        });
+      }
+    }
+  );
   socket.on("addUserData", ({ userName, email, password }) => {
     io.emit("getUserData", [
       {

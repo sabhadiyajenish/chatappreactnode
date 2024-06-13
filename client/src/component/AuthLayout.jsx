@@ -14,7 +14,7 @@ const AuthLayout = ({ children, authentication = true }) => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  console.log("authentication status is<<<<<<,", userLoggedIn);
   useEffect(() => {
     if (authentication && userLoggedIn !== authentication) {
       navigate("/login");
