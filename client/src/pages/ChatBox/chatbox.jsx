@@ -44,7 +44,7 @@ const Chatbox = () => {
   ]);
   const [reciverChatData, setReciverChatData] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [getMessage, setGetMessage] = useState([]);
+  const [getMessage, setGetMessage] = useState({});
   const [datafunction, SetDataFunction] = useState("");
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
 
@@ -55,6 +55,14 @@ const Chatbox = () => {
 
   const messageDom = useRef(null);
   const modalRef = useRef(null);
+  const messageRef = useRef(null);
+
+  const todayDate = new Date();
+  const TodayDateOnly = todayDate.toISOString().split("T")[0];
+  const yesterday = new Date(todayDate);
+  yesterday.setDate(todayDate.getDate() - 1);
+  const yesterdayDate = yesterday.toISOString().split("T")[0];
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -66,7 +74,7 @@ const Chatbox = () => {
       setUserDatas(tag?.data);
     }
   }, [tag]);
-  console.log("use coutn isd<<<<<<<<<", countMessage);
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -90,14 +98,21 @@ const Chatbox = () => {
       : null;
   }, []);
   useEffect(() => {
+    const socket = io(SOCKET_URL); // Initialize socket connection
+    setSocket(socket); // Set the socket state
+
+    // Clean up function to disconnect the socket when the component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+  useEffect(() => {
     setUserConversationDatas(conversationData);
   }, [conversationData]);
   useEffect(() => {
     messageDom?.current?.scrollIntoView({ behavior: "smooth" });
   }, [getMessage]);
   useEffect(() => {
-    setSocket(io(SOCKET_URL));
-
     const user = localStorage.getItem("userInfo");
     if (user !== undefined) {
       setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
@@ -161,23 +176,42 @@ const Chatbox = () => {
     }
   }, [datafunction]);
 
+  const getCurrentDate = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Adding 1 because months are zero-indexed
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
     socket?.on("getUser", (user) => {
-      //   console.log("user:=", user);
+      console.log("getActiveuser:=", user);
       setActiveUser(user);
     });
     socket?.on("getMessage", (user1) => {
       // setActiveUser(user);
-      setGetMessage((mess) => mess.concat(user1));
+      const date = user1[0].createdAt.split("T")[0]; // Extract date from createdAt
+      const currentDate = date; // You need to define a function to get the current date
+      setGetMessage((prevState) => {
+        return {
+          ...prevState,
+          [currentDate]: [...(prevState[currentDate] || []), user1[0]],
+        };
+      });
+      // setGetMessage((prevMessagesByDate) => {
+      //   const newMessagesByDate = { ...prevMessagesByDate };
+      //   if (!newMessagesByDate[date]) {
+      //     newMessagesByDate[date] = [];
+      //   }
+      //   newMessagesByDate[date].push(user1[0]);
+      //   return newMessagesByDate;
+      // });
+      // setGetMessage((mess) => mess.concat(user1));
       SetDataFunction(user1);
     });
     socket?.on("getUserTypingStatus", (userStatus) => {
       setIsTyping(userStatus[0]);
-      console.log(
-        "checkm user status is<<<<<<<<<<<<<<<<<<<<<",
-        userStatus[0]?.status
-      );
     });
     socket?.on("getUserData", (cate) => {
       console.log(cate);
@@ -204,25 +238,27 @@ const Chatbox = () => {
   }, [handleOpenEmoji]);
   const handleSend = (e) => {
     e.preventDefault();
-    if (e.target.name === "User") {
-      if (message !== "") {
-        console.log("click.... messaged", emailLocal);
-        socket?.emit("addMessage", {
-          message: message,
-          senderId: emailLocal?.userId,
-          reciverId: reciverEmailAddress?.reciverId,
-        });
+    if (message !== "") {
+      socket?.emit("addMessage", {
+        message: message,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+      });
 
-        const data = {
-          senderId: emailLocal?.userId,
-          conversationId: "",
-          reciverId: reciverEmailAddress?.reciverId,
-          message: message,
-        };
-        dispatch(addUserMessage(data));
-        setMessage("");
-      }
-    } else {
+      const data = {
+        senderId: emailLocal?.userId,
+        conversationId: "",
+        reciverId: reciverEmailAddress?.reciverId,
+        message: message,
+      };
+      dispatch(addUserMessage(data));
+      setMessage("");
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSend(event);
     }
   };
   const formatDate = (dateString) => {
@@ -253,6 +289,7 @@ const Chatbox = () => {
     }, 2000); // Reset typing status after 1 second of inactivity
     return () => clearTimeout(typingTimeout); // Clear previous timeout if any
   };
+
   const isUserOnline = activeUser?.some(
     (dr) => dr.userId === reciverEmailAddress?.reciverId
   );
@@ -290,46 +327,48 @@ const Chatbox = () => {
                     className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
                     key={key}
                     onClick={async () => {
-                      setReciverEmailaddress({
-                        email: dt?.email,
-                        reciverId: dt?._id,
-                        avatar: dt?.avatar,
-                        userName: dt?.userName,
-                        _id: dt?._id,
-                      });
-                      setReciverChatData(dt?._id);
+                      if (reciverEmailAddress?.email !== dt?.email) {
+                        setReciverEmailaddress({
+                          email: dt?.email,
+                          reciverId: dt?._id,
+                          avatar: dt?.avatar,
+                          userName: dt?.userName,
+                          _id: dt?._id,
+                        });
+                        setReciverChatData(dt?._id);
 
-                      const data1 = {
-                        senderId: emailLocal?.userId,
-                        reciverId: dt._id,
-                      };
-                      dispatch(getUserMessage(data1));
-                      const setCount = countMessage?.filter(
-                        (datas) => datas?.senderId !== dt?._id
-                      );
-                      setCountMessage(setCount);
-                      if (Array.isArray(setCount) && setCount?.length !== 0) {
-                        localStorage.setItem(
-                          "userCountInfo",
-                          JSON.stringify(setCount)
+                        const data1 = {
+                          senderId: emailLocal?.userId,
+                          reciverId: dt._id,
+                        };
+                        dispatch(getUserMessage(data1));
+                        const setCount = countMessage?.filter(
+                          (datas) => datas?.senderId !== dt?._id
                         );
-                      } else {
-                        localStorage.setItem(
-                          "userCountInfo",
-                          JSON.stringify([
-                            {
-                              reciverId: "jenish",
-                              senderId: "jjs",
-                              firstMessage: "",
-                              count: 0,
-                            },
-                          ])
-                        );
+                        setCountMessage(setCount);
+                        if (Array.isArray(setCount) && setCount?.length !== 0) {
+                          localStorage.setItem(
+                            "userCountInfo",
+                            JSON.stringify(setCount)
+                          );
+                        } else {
+                          localStorage.setItem(
+                            "userCountInfo",
+                            JSON.stringify([
+                              {
+                                reciverId: "jenish",
+                                senderId: "jjs",
+                                firstMessage: "",
+                                count: 0,
+                              },
+                            ])
+                          );
+                        }
+                        // localStorage.setItem(
+                        //   "userCountInfo",
+                        //   JSON.stringify(setCount !== undefined ? setCount : [])
+                        // );
                       }
-                      // localStorage.setItem(
-                      //   "userCountInfo",
-                      //   JSON.stringify(setCount !== undefined ? setCount : [])
-                      // );
                     }}
                   >
                     <div style={{ position: "relative" }}>
@@ -365,8 +404,8 @@ const Chatbox = () => {
                     </div>
                     {countMessage?.map((itm) => {
                       return itm.senderId === dt._id ? (
-                        <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[18px]">
-                          {itm?.count}
+                        <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
+                          {itm?.count < 10 ? itm?.count : "9+"}
                         </h1>
                       ) : null;
                     })}
@@ -403,19 +442,19 @@ const Chatbox = () => {
                   )}
 
                   {/* {activeUser.map((dr, key1) => {
-                    return dr.userId === reciverEmailAddress?.reciverId ? (
-                      <p className="text-[15px] text-green-500 text-start ml-4">
-                        online
-                      </p>
-                    ) : (
-                      reciverEmailAddress?.reciverId === isTyping?.senderId &&
-                        isTyping?.status && (
-                          <p className="text-[15px] text-blue-500 text-start ml-4">
-                            Typping..
-                          </p>
-                        )
-                    );
-                  })} */}
+                      return dr.userId === reciverEmailAddress?.reciverId ? (
+                        <p className="text-[15px] text-green-500 text-start ml-4">
+                          online
+                        </p>
+                      ) : (
+                        reciverEmailAddress?.reciverId === isTyping?.senderId &&
+                          isTyping?.status && (
+                            <p className="text-[15px] text-blue-500 text-start ml-4">
+                              Typping..
+                            </p>
+                          )
+                      );
+                    })} */}
                 </div>
               </div>
               <div className="center_chat_div">
@@ -423,45 +462,58 @@ const Chatbox = () => {
                   <div className="h-[80vh] flex justify-center items-center">
                     <h2 className=" text-4xl font-thin">Loading chat...</h2>
                   </div>
-                ) : getMessage?.length === 0 ? (
+                ) : Object.keys(getMessage)?.length === 0 ? (
                   <div className="h-[80vh] flex justify-center items-center">
                     <h2 className=" text-4xl font-thin">No Chat found</h2>
                   </div>
                 ) : (
                   <>
-                    {getMessage?.map((dt, key) => {
-                      return dt.senderId === emailLocal?.userId ? (
-                        <>
-                          <div
-                            className="you_chat md:pl-20 pl-5 "
-                            key={key}
-                            ref={messageDom}
-                          >
-                            <p className="you_chat_text pl-2 text-start pr-2 py-1">
-                              {dt?.message}{" "}
-                              <span className="text-[11px] text-gray-200">
-                                {dt?.createdAt && formatDate(dt?.createdAt)}
-                              </span>
-                            </p>
-                          </div>
-                        </>
-                      ) : reciverChatData === dt?.senderId ? (
-                        <>
-                          <div
-                            className="you_chat_div md:mr-20 mr-5"
-                            key={key}
-                            ref={messageDom}
-                          >
-                            <p className="you_chat_text1 text-start">
-                              {dt?.message}{" "}
-                              <span className="text-[11px] text-gray-200">
-                                {dt?.createdAt && formatDate(dt?.createdAt)}
-                              </span>
-                            </p>
-                          </div>
-                        </>
-                      ) : null;
-                    })}{" "}
+                    {Object.keys(getMessage).map((date) => (
+                      <div key={date}>
+                        <div className="text-center flex justify-center my-4">
+                          <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
+                            {TodayDateOnly === date
+                              ? "Today"
+                              : yesterdayDate === date
+                              ? "Yesterday"
+                              : date}
+                          </h2>
+                        </div>
+                        {getMessage[date]?.map((dt, key) => {
+                          return dt.senderId === emailLocal?.userId ? (
+                            <>
+                              <div
+                                className="you_chat md:pl-20 pl-5 "
+                                key={key}
+                                ref={messageDom}
+                              >
+                                <p className="you_chat_text pl-2 text-start pr-2 py-1">
+                                  {dt?.message}{" "}
+                                  <span className="text-[11px] text-gray-200">
+                                    {dt?.createdAt && formatDate(dt?.createdAt)}
+                                  </span>
+                                </p>
+                              </div>
+                            </>
+                          ) : reciverChatData === dt?.senderId ? (
+                            <>
+                              <div
+                                className="you_chat_div md:mr-20 mr-5"
+                                key={key}
+                                ref={messageDom}
+                              >
+                                <p className="you_chat_text1 text-start">
+                                  {dt?.message}{" "}
+                                  <span className="text-[11px] text-gray-200">
+                                    {dt?.createdAt && formatDate(dt?.createdAt)}
+                                  </span>
+                                </p>
+                              </div>
+                            </>
+                          ) : null;
+                        })}
+                      </div>
+                    ))}
                   </>
                 )}
               </div>
@@ -471,6 +523,8 @@ const Chatbox = () => {
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
                 />
                 <input
+                  ref={messageRef} // Attach the ref here
+                  onKeyDown={handleKeyDown}
                   value={message}
                   onChange={handleTyping}
                   className="input_message"
@@ -537,21 +591,21 @@ const Chatbox = () => {
                   </div>
                 )}
                 {/* <div
-                  id="default-modal"
-                  tabindex="-1"
-                  aria-hidden="true"
-                  className={`${
-                    handleOpenEmoji ? null : "hidden"
-                  } overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full`}
-                >
-                  <EmojiPicker
-                    open={handleOpenEmoji}
-                    onEmojiClick={(e) => {
-                      console.log("emoji<<<<<<", e.emoji);
-                      setMessage((prev) => prev + e.emoji);
-                    }}
-                  />
-                </div> */}
+                    id="default-modal"
+                    tabindex="-1"
+                    aria-hidden="true"
+                    className={`${
+                      handleOpenEmoji ? null : "hidden"
+                    } overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full`}
+                  >
+                    <EmojiPicker
+                      open={handleOpenEmoji}
+                      onEmojiClick={(e) => {
+                        console.log("emoji<<<<<<", e.emoji);
+                        setMessage((prev) => prev + e.emoji);
+                      }}
+                    />
+                  </div> */}
               </div>
             </div>
           )}
@@ -565,57 +619,62 @@ const Chatbox = () => {
                       className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
                       key={key}
                       onClick={async () => {
-                        setReciverEmailaddress({
-                          email: dt.email,
-                          reciverId: dt._id,
-                          avatar: dt?.avatar,
-                          userName: dt?.userName,
-                          _id: dt?._id,
-                        });
-                        setReciverChatData(dt?._id);
-                        const data1 = {
-                          senderId: emailLocal?.userId,
-                          reciverId: dt._id,
-                        };
-                        const setCount = countMessage?.filter(
-                          (datas) => datas?.senderId !== dt?._id
-                        );
-                        setCountMessage(setCount);
-                        // localStorage.setItem(
-                        //   "userCountInfo",
-                        //   JSON.stringify(setCount !== undefined ? setCount : [])
-                        // );
-                        if (Array.isArray(setCount) && setCount?.length !== 0) {
-                          localStorage.setItem(
-                            "userCountInfo",
-                            JSON.stringify(setCount)
+                        if (reciverEmailAddress?.email !== dt?.email) {
+                          setReciverEmailaddress({
+                            email: dt.email,
+                            reciverId: dt._id,
+                            avatar: dt?.avatar,
+                            userName: dt?.userName,
+                            _id: dt?._id,
+                          });
+                          setReciverChatData(dt?._id);
+                          const data1 = {
+                            senderId: emailLocal?.userId,
+                            reciverId: dt._id,
+                          };
+                          const setCount = countMessage?.filter(
+                            (datas) => datas?.senderId !== dt?._id
                           );
-                        } else {
-                          localStorage.setItem(
-                            "userCountInfo",
-                            JSON.stringify([
-                              {
-                                reciverId: "jenish",
-                                senderId: "jjs",
-                                firstMessage: "",
-                                count: 0,
-                              },
-                            ])
-                          );
-                        }
-                        dispatch(getUserMessage(data1));
+                          setCountMessage(setCount);
+                          // localStorage.setItem(
+                          //   "userCountInfo",
+                          //   JSON.stringify(setCount !== undefined ? setCount : [])
+                          // );
+                          if (
+                            Array.isArray(setCount) &&
+                            setCount?.length !== 0
+                          ) {
+                            localStorage.setItem(
+                              "userCountInfo",
+                              JSON.stringify(setCount)
+                            );
+                          } else {
+                            localStorage.setItem(
+                              "userCountInfo",
+                              JSON.stringify([
+                                {
+                                  reciverId: "jenish",
+                                  senderId: "jjs",
+                                  firstMessage: "",
+                                  count: 0,
+                                },
+                              ])
+                            );
+                          }
+                          dispatch(getUserMessage(data1));
 
-                        // apiClient({
-                        //   method: "POST",
-                        //   url: `${API_URL.message.getMessage}`,
-                        //   data: data1,
-                        // })
-                        //   .then((response) => {
-                        //     console.log(">>>>>>data is>>>", response);
-                        //     setGetMessage(response?.data);
-                        //   })
-                        //   .catch((error) => {});
-                        // dispatch(getUserMessage(data));
+                          // apiClient({
+                          //   method: "POST",
+                          //   url: `${API_URL.message.getMessage}`,
+                          //   data: data1,
+                          // })
+                          //   .then((response) => {
+                          //     console.log(">>>>>>data is>>>", response);
+                          //     setGetMessage(response?.data);
+                          //   })
+                          //   .catch((error) => {});
+                          // dispatch(getUserMessage(data));
+                        }
                       }}
                     >
                       <div style={{ position: "relative" }}>
@@ -654,52 +713,52 @@ const Chatbox = () => {
         </div>
       </div>
       {/* <div>
-        <div>
-          <input
-            name="userName"
-            placeholder="userName"
-            value={ForData.userName}
-            onChange={handleSignup}
-          />
-          <input
-            name="email"
-            placeholder="email"
-            value={ForData.email}
-            onChange={handleSignup}
-          />
-          <input
-            name="password"
-            placeholder="Password"
-            value={ForData.password}
-            onChange={handleSignup}
-          />
-          <input
-            type="button"
-            value="submit"
-            name="Login"
-            onClick={handleSend}
-          />
-        </div>
-        <div className="mt-5">
-          <input value={message} onChange={(e) => setMessage(e.target.value)} />
-          <input
-            type="button"
-            value="submit"
-            name="User"
-            onClick={handleSend}
-          />
-        </div>
-        <div>
-          <h1 style={{ color: "red" }}>User is := {emailLocal.email}</h1>
-        </div>
-        <div>
-          <p>This is all Accouts here</p>
-          {userData?.map((dt, key) => {
-            // console.log("map log>>>>", dt);
-            return <h3>{dt.email}</h3>;
-          })}
-        </div>
-      </div> */}
+          <div>
+            <input
+              name="userName"
+              placeholder="userName"
+              value={ForData.userName}
+              onChange={handleSignup}
+            />
+            <input
+              name="email"
+              placeholder="email"
+              value={ForData.email}
+              onChange={handleSignup}
+            />
+            <input
+              name="password"
+              placeholder="Password"
+              value={ForData.password}
+              onChange={handleSignup}
+            />
+            <input
+              type="button"
+              value="submit"
+              name="Login"
+              onClick={handleSend}
+            />
+          </div>
+          <div className="mt-5">
+            <input value={message} onChange={(e) => setMessage(e.target.value)} />
+            <input
+              type="button"
+              value="submit"
+              name="User"
+              onClick={handleSend}
+            />
+          </div>
+          <div>
+            <h1 style={{ color: "red" }}>User is := {emailLocal.email}</h1>
+          </div>
+          <div>
+            <p>This is all Accouts here</p>
+            {userData?.map((dt, key) => {
+              // console.log("map log>>>>", dt);
+              return <h3>{dt.email}</h3>;
+            })}
+          </div>
+        </div> */}
     </>
   );
 };

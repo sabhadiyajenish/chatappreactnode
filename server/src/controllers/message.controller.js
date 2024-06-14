@@ -60,17 +60,29 @@ const getMessage = asyncHandler(async (req, res, next) => {
   const allMessages = await Message.find({
     conversationId: userData[0]?._id,
   })
-    .sort({ _id: -1 }) // Sort in descending order by createdAt
+    .sort({ createdAt: -1 }) // Sort in descending order by createdAt
     .limit(50);
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        allMessages.reverse(),
-        "get all message successfully"
-      )
-    );
+
+  const formatDate = (date) => date.toISOString().split("T")[0];
+
+  // Organize messages by date
+  const messagesByDate = allMessages.reverse().reduce((acc, message) => {
+    const date = formatDate(new Date(message.createdAt));
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(message);
+    return acc;
+  }, {});
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      // allMessages.reverse(),
+      messagesByDate,
+      "get all message successfully"
+    )
+  );
 });
 
 const getConversation = asyncHandler(async (req, res, next) => {
