@@ -54,6 +54,7 @@ const Chatbox = () => {
   const [page, setPage] = useState(1);
 
   const messageDom = useRef(null);
+  const modalRef = useRef(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -184,7 +185,23 @@ const Chatbox = () => {
     });
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setHandleOpenEmoji(false);
+      }
+    };
 
+    if (handleOpenEmoji) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [handleOpenEmoji]);
   const handleSend = (e) => {
     e.preventDefault();
     if (e.target.name === "User") {
@@ -474,7 +491,10 @@ const Chatbox = () => {
                     aria-hidden="true"
                     className="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
                   >
-                    <div className="relative p-4 w-full max-w-[25rem]">
+                    <div
+                      className="relative p-4 w-full max-w-[25rem]"
+                      ref={modalRef}
+                    >
                       <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
                         {/* Modal header */}
                         <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">

@@ -6,6 +6,7 @@ import NavBar from "./pages/NavBarX";
 import { getUserData } from "./store/Auth/authApi";
 import { Login } from "./store/Auth/auth.slice";
 import axios, { Abort } from "./utils/commonAxios";
+import { LOCAL_PATH } from "./utils/constant";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -20,7 +21,7 @@ const App = () => {
   useEffect(() => {
     axios
       .get(
-        "http://localhost:5000/api/v1/user/get-userdata"
+        `${LOCAL_PATH}/user/get-userdata`
         // {
         //   cancelToken: Abort.token,
         // }

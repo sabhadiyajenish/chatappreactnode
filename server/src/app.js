@@ -73,8 +73,8 @@ io.on("connection", (socket) => {
     const sender = users.find((user) => user.userId === senderId);
 
     if (receiver) {
-      io.to(receiver.socketId)
-        .to(sender.socketId)
+      io.to(receiver?.socketId)
+        .to(sender?.socketId)
         .emit("getMessage", [
           {
             message,
@@ -84,7 +84,7 @@ io.on("connection", (socket) => {
           },
         ]);
     } else {
-      io.to(sender.socketId).emit("getMessage", [
+      io.to(sender?.socketId).emit("getMessage", [
         {
           message,
           senderId,
