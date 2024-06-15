@@ -210,6 +210,23 @@ const Chatbox = () => {
       // setGetMessage((mess) => mess.concat(user1));
       SetDataFunction(user1);
     });
+    socket?.on("getNewUserData", (userStatus) => {
+      const CheckUserCon = userConversationData?.find(
+        (dr) => dr?._id === reciverEmailAddress?.reciverId
+      );
+      if (CheckUserCon === undefined) {
+        setUserConversationDatas((prev) => [
+          ...prev,
+          {
+            email: userStatus.email,
+            _id: userStatus._id,
+            avatar: userStatus?.avatar,
+            userName: userStatus?.userName,
+          },
+        ]);
+        console.log("check user conv if have<<<<", CheckUserCon);
+      }
+    });
     socket?.on("getUserTypingStatus", (userStatus) => {
       setIsTyping(userStatus[0]);
     });
@@ -244,7 +261,19 @@ const Chatbox = () => {
         senderId: emailLocal?.userId,
         reciverId: reciverEmailAddress?.reciverId,
       });
-
+      const CheckUserCon = userConversationData?.find(
+        (dr) => dr?._id === reciverEmailAddress?.reciverId
+      );
+      if (CheckUserCon === undefined) {
+        socket?.emit("addUserNew", {
+          _id: reciverEmailAddress?.reciverId,
+          email: reciverEmailAddress?.email,
+          avatar: reciverEmailAddress?.avatar,
+          userName: reciverEmailAddress?.userName,
+          senderId: emailLocal?.userId,
+          reciverId: reciverEmailAddress?.reciverId,
+        });
+      }
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
@@ -635,6 +664,7 @@ const Chatbox = () => {
                           const setCount = countMessage?.filter(
                             (datas) => datas?.senderId !== dt?._id
                           );
+
                           setCountMessage(setCount);
                           // localStorage.setItem(
                           //   "userCountInfo",
