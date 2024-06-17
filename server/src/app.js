@@ -68,32 +68,41 @@ io.on("connection", (socket) => {
     console.log("Connected users:", users);
   });
 
-  socket.on("addMessage", ({ message, reciverId, senderId }) => {
-    const receiver = users.find((user) => user.userId === reciverId);
-    const sender = users.find((user) => user.userId === senderId);
+  socket.on(
+    "addMessage",
+    ({ message, reciverId, senderId, userDelete, reciverDelete, uniqueId }) => {
+      const receiver = users.find((user) => user.userId === reciverId);
+      const sender = users.find((user) => user.userId === senderId);
 
-    if (receiver) {
-      io.to(receiver?.socketId)
-        .to(sender?.socketId)
-        .emit("getMessage", [
+      if (receiver) {
+        io.to(receiver?.socketId)
+          .to(sender?.socketId)
+          .emit("getMessage", [
+            {
+              message,
+              senderId,
+              reciverId,
+              userDelete,
+              reciverDelete,
+              uniqueId,
+              createdAt: new Date(),
+            },
+          ]);
+      } else {
+        io.to(sender?.socketId).emit("getMessage", [
           {
             message,
             senderId,
             reciverId,
+            userDelete,
+            reciverDelete,
+            uniqueId,
             createdAt: new Date(),
           },
         ]);
-    } else {
-      io.to(sender?.socketId).emit("getMessage", [
-        {
-          message,
-          senderId,
-          reciverId,
-          createdAt: new Date(),
-        },
-      ]);
+      }
     }
-  });
+  );
 
   socket.on("addUserTypingStatus", ({ status, reciverId, senderId }) => {
     const receiver = users.find((user) => user.userId === reciverId);
@@ -135,6 +144,33 @@ io.on("connection", (socket) => {
       }
     }
   );
+
+  socket.on(
+    "deleteMessageFromBoth",
+    ({ date, uniqueId, senderId, reciverId }) => {
+      const receiver = users.find((user) => user.userId === reciverId);
+      const sender = users.find((user) => user.userId === senderId);
+
+      if (receiver) {
+        io.to(receiver?.socketId)
+          .to(sender?.socketId)
+          .emit("GetdeleteMessageFromBoth", {
+            uniqueId,
+            date,
+            senderId,
+            reciverId,
+          });
+      } else {
+        io.to(sender?.socketId).emit("GetdeleteMessageFromBoth", {
+          uniqueId,
+          date,
+          senderId,
+          reciverId,
+        });
+      }
+    }
+  );
+
   socket.on("addUserData", ({ userName, email, password }) => {
     io.emit("getUserData", [
       {

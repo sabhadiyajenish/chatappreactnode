@@ -5,10 +5,11 @@ import { io } from "socket.io-client";
 import "./chatbox.css";
 import Glrs from "../../assets/image/grls.jpg";
 // import SendIcon from "@mui/icons-material/Send";
-
+import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
 import {
   addUserMessage,
+  deleteMessageData,
   getAllUser,
   getConversation,
   getUserMessage,
@@ -21,7 +22,14 @@ import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
 import { MdEmojiEmotions } from "react-icons/md";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
+import EmojiModel from "./emoji/emojiModel";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import DeleteModel from "./deleteModel/deleteModel";
+import axios from "../../utils/commonAxios.jsx";
 
+function classNames(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
   const { tag, oneUserMessage, loading, conversationData, userLists } =
@@ -29,6 +37,8 @@ const Chatbox = () => {
 
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
+  const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
+
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
   const [message, setMessage] = useState("");
@@ -47,7 +57,7 @@ const Chatbox = () => {
   const [getMessage, setGetMessage] = useState({});
   const [datafunction, SetDataFunction] = useState("");
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
-
+  const [reloadUserConversation, setReloadUserCon] = useState(false);
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -68,6 +78,8 @@ const Chatbox = () => {
   useEffect(() => {
     setGetMessage(oneUserMessage);
   }, [oneUserMessage]);
+  console.log("getMessage", getMessage);
+  console.log("ApicomeMessage", oneUserMessage);
 
   useEffect(() => {
     if (userData?.length === 0) {
@@ -118,8 +130,10 @@ const Chatbox = () => {
       setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
       dispatch(getConversation(JSON.parse(user)?.userId || ""));
     }
-  }, []);
-
+  }, [reloadUserConversation]);
+  function generateUniqueId(length = 30) {
+    return uuidv4().replace(/-/g, "").slice(0, length);
+  }
   useEffect(() => {
     if (!datafunction || !reciverEmailAddress) return;
 
@@ -176,13 +190,36 @@ const Chatbox = () => {
     }
   }, [datafunction]);
 
-  const getCurrentDate = () => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Adding 1 because months are zero-indexed
-    const day = String(currentDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  useEffect(() => {
+    if (deleteMessageForUpdated !== null && deleteMessageForUpdated) {
+      if (
+        getMessage[deleteMessageForUpdated?.date] &&
+        Array.isArray(getMessage[deleteMessageForUpdated?.date])
+      ) {
+        const uniqueData = getMessage[deleteMessageForUpdated?.date].filter(
+          (item) => item?.uniqueId !== deleteMessageForUpdated?.uniqueId
+        );
+        console.log("Filtered message data:", uniqueData);
+
+        // Update state immutably
+        setGetMessage((prevState) => ({
+          ...prevState,
+          [deleteMessageForUpdated.date || ""]: uniqueData,
+        }));
+        const data = {
+          messageId: deleteMessageForUpdated?.uniqueId,
+          title: "All",
+          senderId: deleteMessageForUpdated?.senderId,
+        };
+        dispatch(deleteMessageData(data));
+        setDeleteMessageForUpdated(false);
+      } else {
+        console.log(`getMessage[${date}] is not an array or does not exist.`);
+        setDeleteMessageForUpdated(false);
+      }
+    }
+  }, [deleteMessageForUpdated]);
+
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
     socket?.on("getUser", (user) => {
@@ -210,20 +247,30 @@ const Chatbox = () => {
       // setGetMessage((mess) => mess.concat(user1));
       SetDataFunction(user1);
     });
+
+    socket?.on("GetdeleteMessageFromBoth", (userDatas) => {
+      setDeleteMessageForUpdated(userDatas);
+    });
+
     socket?.on("getNewUserData", (userStatus) => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
       );
       if (CheckUserCon === undefined) {
-        setUserConversationDatas((prev) => [
-          ...prev,
-          {
-            email: userStatus.email,
-            _id: userStatus._id,
-            avatar: userStatus?.avatar,
-            userName: userStatus?.userName,
-          },
-        ]);
+        setTimeout(() => {
+          dispatch(getConversation(emailLocal?.userId || ""));
+        }, 500);
+        // setReloadUserCon((prev) => !prev);
+        // setUserConversationDatas((prev) => [
+        //   ...prev,
+        //   {
+        //     email: userStatus.email,
+        //     _id: userStatus._id,
+        //     avatar: userStatus?.avatar,
+        //     userName: userStatus?.userName,
+        //   },
+        // ]);
+
         console.log("check user conv if have<<<<", CheckUserCon);
       }
     });
@@ -253,13 +300,18 @@ const Chatbox = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleOpenEmoji]);
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (message !== "") {
+      const uniqueId = generateUniqueId();
+
       socket?.emit("addMessage", {
         message: message,
         senderId: emailLocal?.userId,
         reciverId: reciverEmailAddress?.reciverId,
+        userDelete: false,
+        reciverDelete: false,
+        uniqueId: uniqueId,
       });
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
@@ -278,6 +330,7 @@ const Chatbox = () => {
         senderId: emailLocal?.userId,
         conversationId: "",
         reciverId: reciverEmailAddress?.reciverId,
+        uniqueId: uniqueId,
         message: message,
       };
       dispatch(addUserMessage(data));
@@ -509,7 +562,8 @@ const Chatbox = () => {
                           </h2>
                         </div>
                         {getMessage[date]?.map((dt, key) => {
-                          return dt.senderId === emailLocal?.userId ? (
+                          return dt.senderId === emailLocal?.userId &&
+                            dt?.userDelete === false ? (
                             <>
                               <div
                                 className="you_chat md:pl-20 pl-5 "
@@ -522,16 +576,154 @@ const Chatbox = () => {
                                     {dt?.createdAt && formatDate(dt?.createdAt)}
                                   </span>
                                 </p>
+                                <Menu as="div" className="relative">
+                                  <Menu.Button>
+                                    <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
+                                  </Menu.Button>
+
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-100"
+                                    enterFrom="transform opacity-0 scale-95"
+                                    enterTo="transform opacity-100 scale-100"
+                                    leave="transition ease-in duration-75"
+                                    leaveFrom="transform opacity-100 scale-100"
+                                    leaveTo="transform opacity-0 scale-95"
+                                  >
+                                    <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            className={classNames(
+                                              active
+                                                ? "w-full bg-gray-100"
+                                                : "",
+                                              "w-full block px-2 py-2 text-sm text-gray-700"
+                                            )}
+                                            onClick={() => {
+                                              const uniqueData = getMessage[
+                                                date
+                                              ]?.filter(
+                                                (items) =>
+                                                  items?.uniqueId !==
+                                                  dt?.uniqueId
+                                              );
+
+                                              setGetMessage((prevState) => {
+                                                return {
+                                                  ...prevState,
+                                                  [date]: uniqueData,
+                                                };
+                                              });
+
+                                              const data = {
+                                                messageId: dt?.uniqueId,
+                                                title: "Me",
+                                                senderId: emailLocal?.userId,
+                                              };
+                                              dispatch(deleteMessageData(data));
+                                            }}
+                                          >
+                                            delete for Me
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                      <hr />
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            className={classNames(
+                                              active
+                                                ? "w-full bg-gray-100"
+                                                : "",
+                                              "w-full block px-4 py-2 text-sm text-gray-700"
+                                            )}
+                                            onClick={() => {
+                                              socket?.emit(
+                                                "deleteMessageFromBoth",
+                                                {
+                                                  senderId: emailLocal?.userId,
+                                                  reciverId:
+                                                    reciverEmailAddress?.reciverId,
+                                                  date: date,
+                                                  uniqueId: dt?.uniqueId,
+                                                }
+                                              );
+                                            }}
+                                          >
+                                            delete both
+                                          </button>
+                                        )}
+                                      </Menu.Item>{" "}
+                                    </Menu.Items>
+                                  </Transition>
+                                </Menu>
                               </div>
                             </>
-                          ) : reciverChatData === dt?.senderId ? (
+                          ) : reciverChatData === dt?.senderId &&
+                            dt?.reciverDelete === false ? (
                             <>
                               <div
-                                className="you_chat_div md:mr-20 mr-5"
+                                className="you_chat_div md:mr-20 mr-5 flex"
                                 key={key}
                                 ref={messageDom}
                               >
-                                <p className="you_chat_text1 text-start">
+                                {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
+                                <Menu as="div" className="relative">
+                                  <Menu.Button>
+                                    <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
+                                  </Menu.Button>
+
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-100"
+                                    enterFrom="transform opacity-0 scale-95"
+                                    enterTo="transform opacity-100 scale-100"
+                                    leave="transition ease-in duration-75"
+                                    leaveFrom="transform opacity-100 scale-100"
+                                    leaveTo="transform opacity-0 scale-95"
+                                  >
+                                    <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            className={classNames(
+                                              active
+                                                ? "w-full bg-gray-100"
+                                                : "",
+                                              "w-full block px-2 py-2 text-sm text-gray-700"
+                                            )}
+                                            onClick={() => {
+                                              const uniqueData = getMessage[
+                                                date
+                                              ]?.filter(
+                                                (items) =>
+                                                  items?.uniqueId !==
+                                                  dt?.uniqueId
+                                              );
+
+                                              setGetMessage((prevState) => {
+                                                return {
+                                                  ...prevState,
+                                                  [date]: uniqueData,
+                                                };
+                                              });
+
+                                              const data = {
+                                                messageId: dt?.uniqueId,
+                                                title: "Me",
+                                              };
+                                              dispatch(deleteMessageData(data));
+                                            }}
+                                          >
+                                            delete for Me
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                    </Menu.Items>
+                                  </Transition>
+                                </Menu>
+                                <p className="you_chat_text1 text-start ">
                                   {dt?.message}{" "}
                                   <span className="text-[11px] text-gray-200">
                                     {dt?.createdAt && formatDate(dt?.createdAt)}
@@ -566,75 +758,14 @@ const Chatbox = () => {
                   onClick={handleSend}
                   className="message_button px-3 py-1 mt-3 md:mr-1 mr-3"
                 />
-
                 {handleOpenEmoji && (
-                  <div
-                    id="default-modal"
-                    tabIndex="-1"
-                    aria-hidden="true"
-                    className="fixed top-0 right-0 bottom-0 left-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
-                  >
-                    <div
-                      className="relative p-4 w-full max-w-[25rem]"
-                      ref={modalRef}
-                    >
-                      <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
-                        {/* Modal header */}
-                        <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            Terms of Service
-                          </h3>
-                          <button
-                            onClick={() => setHandleOpenEmoji((prev) => !prev)}
-                            type="button"
-                            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              aria-hidden="true"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 14 14"
-                            >
-                              <path
-                                stroke="currentColor"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                              />
-                            </svg>
-                            <span className="sr-only">Close modal</span>
-                          </button>
-                        </div>
-                        {/* Modal body */}
-                        <EmojiPicker
-                          open={handleOpenEmoji}
-                          onEmojiClick={(e) => {
-                            console.log("emoji<<<<<<", e.emoji);
-                            setMessage((prev) => prev + e.emoji);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <EmojiModel
+                    emojiRef={modalRef}
+                    addHandleEmoji={setHandleOpenEmoji}
+                    open={handleOpenEmoji}
+                    emojiAddInMessage={setMessage}
+                  />
                 )}
-                {/* <div
-                    id="default-modal"
-                    tabindex="-1"
-                    aria-hidden="true"
-                    className={`${
-                      handleOpenEmoji ? null : "hidden"
-                    } overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full`}
-                  >
-                    <EmojiPicker
-                      open={handleOpenEmoji}
-                      onEmojiClick={(e) => {
-                        console.log("emoji<<<<<<", e.emoji);
-                        setMessage((prev) => prev + e.emoji);
-                      }}
-                    />
-                  </div> */}
               </div>
             </div>
           )}
@@ -666,10 +797,7 @@ const Chatbox = () => {
                           );
 
                           setCountMessage(setCount);
-                          // localStorage.setItem(
-                          //   "userCountInfo",
-                          //   JSON.stringify(setCount !== undefined ? setCount : [])
-                          // );
+
                           if (
                             Array.isArray(setCount) &&
                             setCount?.length !== 0
@@ -692,18 +820,6 @@ const Chatbox = () => {
                             );
                           }
                           dispatch(getUserMessage(data1));
-
-                          // apiClient({
-                          //   method: "POST",
-                          //   url: `${API_URL.message.getMessage}`,
-                          //   data: data1,
-                          // })
-                          //   .then((response) => {
-                          //     console.log(">>>>>>data is>>>", response);
-                          //     setGetMessage(response?.data);
-                          //   })
-                          //   .catch((error) => {});
-                          // dispatch(getUserMessage(data));
                         }
                       }}
                     >
@@ -742,53 +858,6 @@ const Chatbox = () => {
           </div>
         </div>
       </div>
-      {/* <div>
-          <div>
-            <input
-              name="userName"
-              placeholder="userName"
-              value={ForData.userName}
-              onChange={handleSignup}
-            />
-            <input
-              name="email"
-              placeholder="email"
-              value={ForData.email}
-              onChange={handleSignup}
-            />
-            <input
-              name="password"
-              placeholder="Password"
-              value={ForData.password}
-              onChange={handleSignup}
-            />
-            <input
-              type="button"
-              value="submit"
-              name="Login"
-              onClick={handleSend}
-            />
-          </div>
-          <div className="mt-5">
-            <input value={message} onChange={(e) => setMessage(e.target.value)} />
-            <input
-              type="button"
-              value="submit"
-              name="User"
-              onClick={handleSend}
-            />
-          </div>
-          <div>
-            <h1 style={{ color: "red" }}>User is := {emailLocal.email}</h1>
-          </div>
-          <div>
-            <p>This is all Accouts here</p>
-            {userData?.map((dt, key) => {
-              // console.log("map log>>>>", dt);
-              return <h3>{dt.email}</h3>;
-            })}
-          </div>
-        </div> */}
     </>
   );
 };

@@ -10,6 +10,10 @@ const MessageSchema = mongoose.Schema({
     ref: ConId,
     required: true,
   },
+  uniqueId: {
+    type: String,
+    required: true,
+  },
   senderId: {
     type: ObjectId,
     ref: UserSchema,
@@ -18,6 +22,14 @@ const MessageSchema = mongoose.Schema({
   message: {
     type: String,
     required: true,
+  },
+  userDelete: {
+    type: Boolean,
+    default: false,
+  },
+  reciverDelete: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,
