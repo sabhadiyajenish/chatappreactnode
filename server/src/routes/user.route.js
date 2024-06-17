@@ -40,7 +40,7 @@ routes.route("/refresh-token").post(refreshAccessToken);
 routes.route("/logout").get(authMiddleWare, LogoutUser);
 
 routes.route("/get-userdata").get(authMiddleWare, getUserData);
-routes.route("/get-Alluserdata").get(getAllUserData);
+routes.route("/get-Alluserdata").get(authMiddleWare, getAllUserData);
 
 // SSO routes
 routes.route("/google").get(

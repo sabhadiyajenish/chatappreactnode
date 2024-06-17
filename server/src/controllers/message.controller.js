@@ -67,22 +67,25 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
   if (title === "Me") {
     if (userMessage.senderId.equals(Sender)) {
       console.log("sender come in if part<<<", userMessage?.senderId, Sender);
-      userMessage.userDelete = true;
-      await userMessage.save();
-    } else {
-      console.log(
-        "sender come in else part<<<",
-        userMessage?.senderId === Sender,
-        userMessage?.senderId,
-        Sender,
-        userMessage
-      );
 
+      if (userMessage.userDelete === true) {
+        await Message.findByIdAndDelete({
+          _id: userMessage?._id,
+        });
+      } else if (userMessage.reciverDelete === true) {
+        await Message.findByIdAndDelete({
+          _id: userMessage?._id,
+        });
+      } else {
+        userMessage.userDelete = true;
+        await userMessage.save();
+      }
+    } else {
       userMessage.reciverDelete = true;
       await userMessage.save();
     }
   } else {
-    const userMessageDelete = await Message.findByIdAndDelete({
+    await Message.findByIdAndDelete({
       _id: userMessage?._id,
     });
   }

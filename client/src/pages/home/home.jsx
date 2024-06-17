@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getUserData } from "../../store/Auth/authApi";
+import NotificationComponent from "../../component/Notification";
 
 const Home = () => {
   const [searchParams] = useSearchParams();
@@ -20,6 +21,7 @@ const Home = () => {
   return (
     <>
       <h1>Home pages</h1>
+      <NotificationComponent />
     </>
   );
 };

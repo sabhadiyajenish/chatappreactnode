@@ -88,6 +88,17 @@ io.on("connection", (socket) => {
               createdAt: new Date(),
             },
           ]);
+        io.to(receiver?.socketId).emit("getMessageNotification", [
+          {
+            message,
+            senderId,
+            reciverId,
+            userDelete,
+            reciverDelete,
+            uniqueId,
+            createdAt: new Date(),
+          },
+        ]);
       } else {
         io.to(sender?.socketId).emit("getMessage", [
           {
@@ -124,7 +135,7 @@ io.on("connection", (socket) => {
       const sender = users.find((user) => user.userId === senderId);
 
       if (receiver) {
-        io.to(receiver.socketId).to(sender.socketId).emit("getNewUserData", {
+        io.to(receiver?.socketId).to(sender?.socketId).emit("getNewUserData", {
           _id,
           email,
           avatar,
@@ -133,7 +144,7 @@ io.on("connection", (socket) => {
           reciverId,
         });
       } else {
-        io.to(sender.socketId).emit("getNewUserData", {
+        io.to(sender?.socketId).emit("getNewUserData", {
           _id,
           email,
           avatar,

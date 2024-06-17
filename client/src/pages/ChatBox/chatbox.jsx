@@ -58,6 +58,8 @@ const Chatbox = () => {
   const [datafunction, SetDataFunction] = useState("");
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
   const [reloadUserConversation, setReloadUserCon] = useState(false);
+  const [reloadUserNotification, setreloadUserNotification] = useState(false);
+
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -189,6 +191,38 @@ const Chatbox = () => {
       });
     }
   }, [datafunction]);
+  // const playNotificationSound = () => {
+  //   const audio = new Audio("../../../public/iphone_sound.mp3");
+  //   audio.play();
+  // };
+  useEffect(() => {
+    if (!reciverEmailAddress || !reloadUserNotification) return;
+    if (reciverEmailAddress?.reciverId !== reloadUserNotification?.senderId) {
+      console.log(
+        "user come in notification parts<<<<<<<<<,",
+        reciverEmailAddress?.reciverId
+        // reloadUserNotification?.senderId
+      );
+      if ("Notification" in window) {
+        // Check if permission is already granted
+        if (Notification.permission === "granted") {
+          // If granted, show the notification
+          // playNotificationSound();
+          new Notification(reloadUserNotification?.message);
+        } else if (Notification.permission !== "denied") {
+          // Otherwise, request permission from the user
+          Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+              // playNotificationSound();
+
+              new Notification(reloadUserNotification?.message);
+            }
+          });
+        }
+      }
+      setreloadUserNotification(false);
+    }
+  }, [reloadUserNotification]);
 
   useEffect(() => {
     if (deleteMessageForUpdated !== null && deleteMessageForUpdated) {
@@ -250,6 +284,10 @@ const Chatbox = () => {
 
     socket?.on("GetdeleteMessageFromBoth", (userDatas) => {
       setDeleteMessageForUpdated(userDatas);
+    });
+
+    socket?.on("getMessageNotification", (userDatas) => {
+      setreloadUserNotification(userDatas[0]);
     });
 
     socket?.on("getNewUserData", (userStatus) => {
@@ -571,7 +609,7 @@ const Chatbox = () => {
                                 ref={messageDom}
                               >
                                 <p className="you_chat_text pl-2 text-start pr-2 py-1">
-                                  {dt?.message}{" "}
+                                  {dt?.message}
                                   <span className="text-[11px] text-gray-200">
                                     {dt?.createdAt && formatDate(dt?.createdAt)}
                                   </span>
@@ -629,32 +667,35 @@ const Chatbox = () => {
                                         )}
                                       </Menu.Item>
                                       <hr />
-                                      <Menu.Item>
-                                        {({ active }) => (
-                                          <button
-                                            className={classNames(
-                                              active
-                                                ? "w-full bg-gray-100"
-                                                : "",
-                                              "w-full block px-4 py-2 text-sm text-gray-700"
-                                            )}
-                                            onClick={() => {
-                                              socket?.emit(
-                                                "deleteMessageFromBoth",
-                                                {
-                                                  senderId: emailLocal?.userId,
-                                                  reciverId:
-                                                    reciverEmailAddress?.reciverId,
-                                                  date: date,
-                                                  uniqueId: dt?.uniqueId,
-                                                }
-                                              );
-                                            }}
-                                          >
-                                            delete both
-                                          </button>
-                                        )}
-                                      </Menu.Item>{" "}
+                                      {TodayDateOnly === date && (
+                                        <Menu.Item>
+                                          {({ active }) => (
+                                            <button
+                                              className={classNames(
+                                                active
+                                                  ? "w-full bg-gray-100"
+                                                  : "",
+                                                "w-full block px-4 py-2 text-sm text-gray-700"
+                                              )}
+                                              onClick={() => {
+                                                socket?.emit(
+                                                  "deleteMessageFromBoth",
+                                                  {
+                                                    senderId:
+                                                      emailLocal?.userId,
+                                                    reciverId:
+                                                      reciverEmailAddress?.reciverId,
+                                                    date: date,
+                                                    uniqueId: dt?.uniqueId,
+                                                  }
+                                                );
+                                              }}
+                                            >
+                                              delete both
+                                            </button>
+                                          )}
+                                        </Menu.Item>
+                                      )}
                                     </Menu.Items>
                                   </Transition>
                                 </Menu>
