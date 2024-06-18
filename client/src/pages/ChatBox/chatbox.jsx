@@ -80,9 +80,6 @@ const Chatbox = () => {
   useEffect(() => {
     setGetMessage(oneUserMessage);
   }, [oneUserMessage]);
-  console.log("getMessage", getMessage);
-  console.log("ApicomeMessage", oneUserMessage);
-
   useEffect(() => {
     if (userData?.length === 0) {
       setUserDatas(tag?.data);
@@ -198,11 +195,6 @@ const Chatbox = () => {
   useEffect(() => {
     if (!reciverEmailAddress || !reloadUserNotification) return;
     if (reciverEmailAddress?.reciverId !== reloadUserNotification?.senderId) {
-      console.log(
-        "user come in notification parts<<<<<<<<<,",
-        reciverEmailAddress?.reciverId
-        // reloadUserNotification?.senderId
-      );
       if ("Notification" in window) {
         // Check if permission is already granted
         if (Notification.permission === "granted") {
@@ -233,7 +225,6 @@ const Chatbox = () => {
         const uniqueData = getMessage[deleteMessageForUpdated?.date].filter(
           (item) => item?.uniqueId !== deleteMessageForUpdated?.uniqueId
         );
-        console.log("Filtered message data:", uniqueData);
 
         // Update state immutably
         setGetMessage((prevState) => ({
@@ -257,7 +248,6 @@ const Chatbox = () => {
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
     socket?.on("getUser", (user) => {
-      console.log("getActiveuser:=", user);
       setActiveUser(user);
     });
     socket?.on("getMessage", (user1) => {
@@ -298,18 +288,6 @@ const Chatbox = () => {
         setTimeout(() => {
           dispatch(getConversation(emailLocal?.userId || ""));
         }, 500);
-        // setReloadUserCon((prev) => !prev);
-        // setUserConversationDatas((prev) => [
-        //   ...prev,
-        //   {
-        //     email: userStatus.email,
-        //     _id: userStatus._id,
-        //     avatar: userStatus?.avatar,
-        //     userName: userStatus?.userName,
-        //   },
-        // ]);
-
-        console.log("check user conv if have<<<<", CheckUserCon);
       }
     });
     socket?.on("getUserTypingStatus", (userStatus) => {
@@ -560,21 +538,52 @@ const Chatbox = () => {
                       Typing...
                     </p>
                   )}
+                </div>
+                <div>
+                  <Menu as="div" className="relative">
+                    <Menu.Button>
+                      <HiOutlineDotsVertical className="mt-[10px] ml-8 cursor-pointer " />
+                    </Menu.Button>
 
-                  {/* {activeUser.map((dr, key1) => {
-                      return dr.userId === reciverEmailAddress?.reciverId ? (
-                        <p className="text-[15px] text-green-500 text-start ml-4">
-                          online
-                        </p>
-                      ) : (
-                        reciverEmailAddress?.reciverId === isTyping?.senderId &&
-                          isTyping?.status && (
-                            <p className="text-[15px] text-blue-500 text-start ml-4">
-                              Typping..
-                            </p>
-                          )
-                      );
-                    })} */}
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-100"
+                      enterFrom="transform opacity-0 scale-95"
+                      enterTo="transform opacity-100 scale-100"
+                      leave="transition ease-in duration-75"
+                      leaveFrom="transform opacity-100 scale-100"
+                      leaveTo="transform opacity-0 scale-95"
+                    >
+                      <Menu.Items className="absolute  top-7 right-1 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              className={classNames(
+                                active ? "w-full bg-gray-100" : "",
+                                "w-full block px-2 py-2 text-sm text-gray-700"
+                              )}
+                            >
+                              Clear Chat
+                            </button>
+                          )}
+                        </Menu.Item>
+                        <hr />
+
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              className={classNames(
+                                active ? "w-full bg-gray-100" : "",
+                                "w-full block px-4 py-2 text-sm text-gray-700"
+                              )}
+                            >
+                              Export Chat
+                            </button>
+                          )}
+                        </Menu.Item>
+                      </Menu.Items>
+                    </Transition>
+                  </Menu>
                 </div>
               </div>
               <div className="center_chat_div">
@@ -588,86 +597,64 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
-                    {Object.keys(getMessage).map((date) => (
-                      <div key={date}>
-                        <div className="text-center flex justify-center my-4">
-                          <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
-                            {TodayDateOnly === date
-                              ? "Today"
-                              : yesterdayDate === date
-                              ? "Yesterday"
-                              : date}
-                          </h2>
-                        </div>
-                        {getMessage[date]?.map((dt, key) => {
-                          return dt.senderId === emailLocal?.userId &&
-                            dt?.userDelete === false ? (
-                            <>
-                              <div
-                                className="you_chat md:pl-20 pl-5 "
-                                key={key}
-                                ref={messageDom}
-                              >
-                                <p className="you_chat_text pl-2 text-start pr-2 py-1">
-                                  {dt?.message}
-                                  <span className="text-[11px] text-gray-200">
-                                    {dt?.createdAt && formatDate(dt?.createdAt)}
-                                  </span>
-                                </p>
-                                <Menu as="div" className="relative">
-                                  <Menu.Button>
-                                    <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
-                                  </Menu.Button>
+                    {Object.keys(getMessage).map((date) => {
+                      const CheckFilterDate = !getMessage[date].every(
+                        (obj) =>
+                          obj.userDelete === true &&
+                          obj.senderId === emailLocal?.userId
+                      );
+                      console.log(
+                        "I am looking what is come from this",
+                        date,
+                        CheckFilterDate
+                      );
+                      return (
+                        <div key={date}>
+                          {/* {emailLocal?.userId !==
+                          reciverEmailAddress?.reciverId ? ( */}
+                          <div className="text-center flex justify-center my-4">
+                            {CheckFilterDate && (
+                              <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
+                                {TodayDateOnly === date
+                                  ? "Today"
+                                  : yesterdayDate === date
+                                  ? "Yesterday"
+                                  : date}
+                              </h2>
+                            )}
+                          </div>
+                          {/* ) : null} */}
+                          {getMessage[date]?.map((dt, key) => {
+                            return dt.senderId === emailLocal?.userId &&
+                              dt?.userDelete === false ? (
+                              <>
+                                <div
+                                  className="you_chat md:pl-20 pl-5 "
+                                  key={key}
+                                  ref={messageDom}
+                                >
+                                  <p className="you_chat_text pl-2 text-start pr-2 py-1">
+                                    {dt?.message}
+                                    <span className="text-[11px] text-gray-200">
+                                      {dt?.createdAt &&
+                                        formatDate(dt?.createdAt)}
+                                    </span>
+                                  </p>
+                                  <Menu as="div" className="relative">
+                                    <Menu.Button>
+                                      <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
+                                    </Menu.Button>
 
-                                  <Transition
-                                    as={Fragment}
-                                    enter="transition ease-out duration-100"
-                                    enterFrom="transform opacity-0 scale-95"
-                                    enterTo="transform opacity-100 scale-100"
-                                    leave="transition ease-in duration-75"
-                                    leaveFrom="transform opacity-100 scale-100"
-                                    leaveTo="transform opacity-0 scale-95"
-                                  >
-                                    <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                      <Menu.Item>
-                                        {({ active }) => (
-                                          <button
-                                            className={classNames(
-                                              active
-                                                ? "w-full bg-gray-100"
-                                                : "",
-                                              "w-full block px-2 py-2 text-sm text-gray-700"
-                                            )}
-                                            onClick={() => {
-                                              const uniqueData = getMessage[
-                                                date
-                                              ]?.filter(
-                                                (items) =>
-                                                  items?.uniqueId !==
-                                                  dt?.uniqueId
-                                              );
-
-                                              setGetMessage((prevState) => {
-                                                return {
-                                                  ...prevState,
-                                                  [date]: uniqueData,
-                                                };
-                                              });
-
-                                              const data = {
-                                                messageId: dt?.uniqueId,
-                                                title: "Me",
-                                                senderId: emailLocal?.userId,
-                                              };
-                                              dispatch(deleteMessageData(data));
-                                            }}
-                                          >
-                                            delete for Me
-                                          </button>
-                                        )}
-                                      </Menu.Item>
-                                      <hr />
-                                      {TodayDateOnly === date && (
+                                    <Transition
+                                      as={Fragment}
+                                      enter="transition ease-out duration-100"
+                                      enterFrom="transform opacity-0 scale-95"
+                                      enterTo="transform opacity-100 scale-100"
+                                      leave="transition ease-in duration-75"
+                                      leaveFrom="transform opacity-100 scale-100"
+                                      leaveTo="transform opacity-0 scale-95"
+                                    >
+                                      <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <Menu.Item>
                                           {({ active }) => (
                                             <button
@@ -675,107 +662,152 @@ const Chatbox = () => {
                                                 active
                                                   ? "w-full bg-gray-100"
                                                   : "",
-                                                "w-full block px-4 py-2 text-sm text-gray-700"
+                                                "w-full block px-2 py-2 text-sm text-gray-700"
                                               )}
                                               onClick={() => {
-                                                socket?.emit(
-                                                  "deleteMessageFromBoth",
-                                                  {
-                                                    senderId:
-                                                      emailLocal?.userId,
-                                                    reciverId:
-                                                      reciverEmailAddress?.reciverId,
-                                                    date: date,
-                                                    uniqueId: dt?.uniqueId,
-                                                  }
+                                                const uniqueData = getMessage[
+                                                  date
+                                                ]?.filter(
+                                                  (items) =>
+                                                    items?.uniqueId !==
+                                                    dt?.uniqueId
+                                                );
+
+                                                setGetMessage((prevState) => {
+                                                  return {
+                                                    ...prevState,
+                                                    [date]: uniqueData,
+                                                  };
+                                                });
+
+                                                const data = {
+                                                  messageId: dt?.uniqueId,
+                                                  title: "Me",
+                                                  senderId: emailLocal?.userId,
+                                                };
+                                                dispatch(
+                                                  deleteMessageData(data)
                                                 );
                                               }}
                                             >
-                                              delete both
+                                              delete for Me
                                             </button>
                                           )}
                                         </Menu.Item>
-                                      )}
-                                    </Menu.Items>
-                                  </Transition>
-                                </Menu>
-                              </div>
-                            </>
-                          ) : reciverChatData === dt?.senderId &&
-                            dt?.reciverDelete === false ? (
-                            <>
-                              <div
-                                className="you_chat_div md:mr-20 mr-5 flex"
-                                key={key}
-                                ref={messageDom}
-                              >
-                                {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
-                                <Menu as="div" className="relative">
-                                  <Menu.Button>
-                                    <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
-                                  </Menu.Button>
-
-                                  <Transition
-                                    as={Fragment}
-                                    enter="transition ease-out duration-100"
-                                    enterFrom="transform opacity-0 scale-95"
-                                    enterTo="transform opacity-100 scale-100"
-                                    leave="transition ease-in duration-75"
-                                    leaveFrom="transform opacity-100 scale-100"
-                                    leaveTo="transform opacity-0 scale-95"
-                                  >
-                                    <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                      <Menu.Item>
-                                        {({ active }) => (
-                                          <button
-                                            className={classNames(
-                                              active
-                                                ? "w-full bg-gray-100"
-                                                : "",
-                                              "w-full block px-2 py-2 text-sm text-gray-700"
+                                        <hr />
+                                        {TodayDateOnly === date && (
+                                          <Menu.Item>
+                                            {({ active }) => (
+                                              <button
+                                                className={classNames(
+                                                  active
+                                                    ? "w-full bg-gray-100"
+                                                    : "",
+                                                  "w-full block px-4 py-2 text-sm text-gray-700"
+                                                )}
+                                                onClick={() => {
+                                                  socket?.emit(
+                                                    "deleteMessageFromBoth",
+                                                    {
+                                                      senderId:
+                                                        emailLocal?.userId,
+                                                      reciverId:
+                                                        reciverEmailAddress?.reciverId,
+                                                      date: date,
+                                                      uniqueId: dt?.uniqueId,
+                                                    }
+                                                  );
+                                                }}
+                                              >
+                                                delete both
+                                              </button>
                                             )}
-                                            onClick={() => {
-                                              const uniqueData = getMessage[
-                                                date
-                                              ]?.filter(
-                                                (items) =>
-                                                  items?.uniqueId !==
-                                                  dt?.uniqueId
-                                              );
-
-                                              setGetMessage((prevState) => {
-                                                return {
-                                                  ...prevState,
-                                                  [date]: uniqueData,
-                                                };
-                                              });
-
-                                              const data = {
-                                                messageId: dt?.uniqueId,
-                                                title: "Me",
-                                              };
-                                              dispatch(deleteMessageData(data));
-                                            }}
-                                          >
-                                            delete for Me
-                                          </button>
+                                          </Menu.Item>
                                         )}
-                                      </Menu.Item>
-                                    </Menu.Items>
-                                  </Transition>
-                                </Menu>
-                                <p className="you_chat_text1 text-start ">
-                                  {dt?.message}{" "}
-                                  <span className="text-[11px] text-gray-200">
-                                    {dt?.createdAt && formatDate(dt?.createdAt)}
-                                  </span>
-                                </p>
-                              </div>
-                            </>
-                          ) : null;
-                        })}
-                      </div>
-                    ))}
+                                      </Menu.Items>
+                                    </Transition>
+                                  </Menu>
+                                </div>
+                              </>
+                            ) : reciverChatData === dt?.senderId &&
+                              dt?.reciverDelete === false ? (
+                              <>
+                                <div
+                                  className="you_chat_div md:mr-20 mr-5 flex"
+                                  key={key}
+                                  ref={messageDom}
+                                >
+                                  {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
+                                  <Menu as="div" className="relative">
+                                    <Menu.Button>
+                                      <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
+                                    </Menu.Button>
+
+                                    <Transition
+                                      as={Fragment}
+                                      enter="transition ease-out duration-100"
+                                      enterFrom="transform opacity-0 scale-95"
+                                      enterTo="transform opacity-100 scale-100"
+                                      leave="transition ease-in duration-75"
+                                      leaveFrom="transform opacity-100 scale-100"
+                                      leaveTo="transform opacity-0 scale-95"
+                                    >
+                                      <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <Menu.Item>
+                                          {({ active }) => (
+                                            <button
+                                              className={classNames(
+                                                active
+                                                  ? "w-full bg-gray-100"
+                                                  : "",
+                                                "w-full block px-2 py-2 text-sm text-gray-700"
+                                              )}
+                                              onClick={() => {
+                                                const uniqueData = getMessage[
+                                                  date
+                                                ]?.filter(
+                                                  (items) =>
+                                                    items?.uniqueId !==
+                                                    dt?.uniqueId
+                                                );
+
+                                                setGetMessage((prevState) => {
+                                                  return {
+                                                    ...prevState,
+                                                    [date]: uniqueData,
+                                                  };
+                                                });
+
+                                                const data = {
+                                                  messageId: dt?.uniqueId,
+                                                  title: "Me",
+                                                };
+                                                dispatch(
+                                                  deleteMessageData(data)
+                                                );
+                                              }}
+                                            >
+                                              delete for Me
+                                            </button>
+                                          )}
+                                        </Menu.Item>
+                                      </Menu.Items>
+                                    </Transition>
+                                  </Menu>
+                                  <p className="you_chat_text1 text-start ">
+                                    {dt?.message}{" "}
+                                    <span className="text-[11px] text-gray-200">
+                                      {dt?.createdAt &&
+                                        formatDate(dt?.createdAt)}
+                                    </span>
+                                  </p>
+                                </div>
+                              </>
+                            ) : null;
+                          })}
+                        </div>
+                      );
+                    })}
                   </>
                 )}
               </div>
