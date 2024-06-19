@@ -77,6 +77,8 @@ io.on("connection", (socket) => {
       userDelete,
       reciverDelete,
       uniqueId,
+      seen,
+      seenAt,
       userName,
     }) => {
       const receiver = users.find((user) => user.userId === reciverId);
@@ -93,6 +95,8 @@ io.on("connection", (socket) => {
               userDelete,
               reciverDelete,
               uniqueId,
+              seen,
+              seenAt,
               createdAt: new Date(),
             },
           ]);
@@ -105,6 +109,8 @@ io.on("connection", (socket) => {
             reciverDelete,
             uniqueId,
             userName,
+            seen,
+            seenAt,
             createdAt: new Date(),
           },
         ]);
@@ -117,6 +123,8 @@ io.on("connection", (socket) => {
             userDelete,
             reciverDelete,
             uniqueId,
+            seen,
+            seenAt,
             createdAt: new Date(),
           },
         ]);

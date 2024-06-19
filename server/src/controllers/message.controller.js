@@ -93,7 +93,25 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, {}, "message Deleted successfully"));
 });
-
+const updateSeenStatus = asyncHandler(async (req, res, next) => {
+  const { messageId } = req.body;
+  const messages = await Message.find({
+    uniqueId: messageId,
+  });
+  if (messages.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(500, "something is wrong in message id"));
+  }
+  for (const message of messages) {
+    message.seen = true;
+    message.seenAt = new Date();
+    await message.save();
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "message Seen successfully"));
+});
 const getMessage = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId } = req.body;
 
@@ -207,4 +225,5 @@ export {
   getAllUser,
   deleteMessage,
   clearChatMessage,
+  updateSeenStatus,
 };

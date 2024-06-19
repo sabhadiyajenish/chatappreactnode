@@ -23,6 +23,8 @@ const MessageSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  seen: { type: Boolean, default: false },
+  seenAt: { type: Date },
   userDelete: {
     type: Boolean,
     default: false,
