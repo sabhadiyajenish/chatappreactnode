@@ -25,8 +25,8 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import EmojiModel from "./emoji/emojiModel";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import DeleteModel from "./deleteModel/deleteModel";
 import axios from "../../utils/commonAxios.jsx";
+import ChatMessage from "./chatMessage/chatMessage.jsx";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -369,6 +369,55 @@ const Chatbox = () => {
       handleSend(event);
     }
   };
+
+  const downloadTxtFile = () => {
+    // Create an array to hold formatted messages
+    const formattedMessages = [];
+
+    // Iterate over each date in the data object
+    Object.keys(getMessage)?.forEach((date) => {
+      // Iterate over each message on this date
+      formattedMessages.push(`\n${date}`);
+
+      getMessage[date]?.forEach((item) => {
+        // Format each message
+        if (
+          item?.senderId === emailLocal?.userId &&
+          item?.userDelete === false
+        ) {
+          const formattedMessage = `You :- message: "${
+            item?.message
+          }" time:- ${new Date(item?.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+          formattedMessages.push(formattedMessage);
+        } else if (
+          reciverChatData === item?.senderId &&
+          item?.reciverDelete === false
+        ) {
+          const formattedMessage = `${
+            reciverEmailAddress?.userName
+          } :- message: "${item?.message}" time:- ${new Date(
+            item?.createdAt
+          ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+          formattedMessages.push(formattedMessage);
+        }
+      });
+    });
+
+    // Join all formatted messages with newlines
+    if (Array.isArray(formattedMessages) && formattedMessages?.length !== 0) {
+      const fileContent = formattedMessages.join("\n");
+      const element = document.createElement("a");
+      const file = new Blob([fileContent], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = "messages.txt";
+      document.body.appendChild(element); // Required for this to work in FireFox
+      element.click();
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     let hours = date.getHours();
@@ -472,10 +521,6 @@ const Chatbox = () => {
                             ])
                           );
                         }
-                        // localStorage.setItem(
-                        //   "userCountInfo",
-                        //   JSON.stringify(setCount !== undefined ? setCount : [])
-                        // );
                       }
                     }}
                   >
@@ -604,6 +649,7 @@ const Chatbox = () => {
                                 active ? "w-full bg-gray-100" : "",
                                 "w-full block px-4 py-2 text-sm text-gray-700"
                               )}
+                              onClick={downloadTxtFile}
                             >
                               Export Chat
                             </button>
@@ -659,185 +705,199 @@ const Chatbox = () => {
                           )}
                           {/* ) : null} */}
                           {getMessage[date]?.map((dt, key) => {
-                            return dt.senderId === emailLocal?.userId &&
-                              dt?.userDelete === false ? (
-                              <>
-                                <div
-                                  className="you_chat md:pl-20 pl-5 "
-                                  key={key}
-                                  ref={messageDom}
-                                >
-                                  <p className="you_chat_text pl-2 text-start pr-2 py-1">
-                                    {dt?.message}
-                                    <span className="text-[11px] text-gray-200">
-                                      {dt?.createdAt &&
-                                        formatDate(dt?.createdAt)}
-                                    </span>
-                                  </p>
-                                  <Menu as="div" className="relative">
-                                    <Menu.Button>
-                                      <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
-                                    </Menu.Button>
+                            return (
+                              <ChatMessage
+                                dt={dt}
+                                key={key}
+                                emailLocal={emailLocal}
+                                reciverEmailAddress={reciverEmailAddress}
+                                reciverChatData={reciverChatData}
+                                socket={socket}
+                                date={date}
+                                messageDom={messageDom}
+                                getMessage={getMessage}
+                                setGetMessage={setGetMessage}
+                              />
+                            );
+                            // return dt.senderId === emailLocal?.userId &&
+                            //   dt?.userDelete === false ? (
+                            //   <>
+                            //     <div
+                            //       className="you_chat md:pl-20 pl-5 "
+                            //       key={key}
+                            //       ref={messageDom}
+                            //     >
+                            //       <p className="you_chat_text pl-2 text-start pr-2 py-1">
+                            //         {dt?.message}
+                            //         <span className="text-[11px] text-gray-200">
+                            //           {dt?.createdAt &&
+                            //             formatDate(dt?.createdAt)}
+                            //         </span>
+                            //       </p>
+                            //       <Menu as="div" className="relative">
+                            //         <Menu.Button>
+                            //           <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
+                            //         </Menu.Button>
 
-                                    <Transition
-                                      as={Fragment}
-                                      enter="transition ease-out duration-100"
-                                      enterFrom="transform opacity-0 scale-95"
-                                      enterTo="transform opacity-100 scale-100"
-                                      leave="transition ease-in duration-75"
-                                      leaveFrom="transform opacity-100 scale-100"
-                                      leaveTo="transform opacity-0 scale-95"
-                                    >
-                                      <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <Menu.Item>
-                                          {({ active }) => (
-                                            <button
-                                              className={classNames(
-                                                active
-                                                  ? "w-full bg-gray-100"
-                                                  : "",
-                                                "w-full block px-2 py-2 text-sm text-gray-700"
-                                              )}
-                                              onClick={() => {
-                                                const uniqueData = getMessage[
-                                                  date
-                                                ]?.filter(
-                                                  (items) =>
-                                                    items?.uniqueId !==
-                                                    dt?.uniqueId
-                                                );
+                            //         <Transition
+                            //           as={Fragment}
+                            //           enter="transition ease-out duration-100"
+                            //           enterFrom="transform opacity-0 scale-95"
+                            //           enterTo="transform opacity-100 scale-100"
+                            //           leave="transition ease-in duration-75"
+                            //           leaveFrom="transform opacity-100 scale-100"
+                            //           leaveTo="transform opacity-0 scale-95"
+                            //         >
+                            //           <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            //             <Menu.Item>
+                            //               {({ active }) => (
+                            //                 <button
+                            //                   className={classNames(
+                            //                     active
+                            //                       ? "w-full bg-gray-100"
+                            //                       : "",
+                            //                     "w-full block px-2 py-2 text-sm text-gray-700"
+                            //                   )}
+                            //                   onClick={() => {
+                            //                     const uniqueData = getMessage[
+                            //                       date
+                            //                     ]?.filter(
+                            //                       (items) =>
+                            //                         items?.uniqueId !==
+                            //                         dt?.uniqueId
+                            //                     );
 
-                                                setGetMessage((prevState) => {
-                                                  return {
-                                                    ...prevState,
-                                                    [date]: uniqueData,
-                                                  };
-                                                });
+                            //                     setGetMessage((prevState) => {
+                            //                       return {
+                            //                         ...prevState,
+                            //                         [date]: uniqueData,
+                            //                       };
+                            //                     });
 
-                                                const data = {
-                                                  messageId: dt?.uniqueId,
-                                                  title: "Me",
-                                                  senderId: emailLocal?.userId,
-                                                };
-                                                dispatch(
-                                                  deleteMessageData(data)
-                                                );
-                                              }}
-                                            >
-                                              delete for Me
-                                            </button>
-                                          )}
-                                        </Menu.Item>
-                                        <hr />
-                                        {TodayDateOnly === date && (
-                                          <Menu.Item>
-                                            {({ active }) => (
-                                              <button
-                                                className={classNames(
-                                                  active
-                                                    ? "w-full bg-gray-100"
-                                                    : "",
-                                                  "w-full block px-4 py-2 text-sm text-gray-700"
-                                                )}
-                                                onClick={() => {
-                                                  socket?.emit(
-                                                    "deleteMessageFromBoth",
-                                                    {
-                                                      senderId:
-                                                        emailLocal?.userId,
-                                                      reciverId:
-                                                        reciverEmailAddress?.reciverId,
-                                                      date: date,
-                                                      uniqueId: dt?.uniqueId,
-                                                    }
-                                                  );
-                                                }}
-                                              >
-                                                delete both
-                                              </button>
-                                            )}
-                                          </Menu.Item>
-                                        )}
-                                      </Menu.Items>
-                                    </Transition>
-                                  </Menu>
-                                </div>
-                              </>
-                            ) : reciverChatData === dt?.senderId &&
-                              dt?.reciverDelete === false ? (
-                              <>
-                                <div
-                                  className="you_chat_div md:mr-20 mr-5 flex"
-                                  key={key}
-                                  ref={messageDom}
-                                >
-                                  {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
-                                  <Menu as="div" className="relative">
-                                    <Menu.Button>
-                                      <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
-                                    </Menu.Button>
+                            //                     const data = {
+                            //                       messageId: dt?.uniqueId,
+                            //                       title: "Me",
+                            //                       senderId: emailLocal?.userId,
+                            //                     };
+                            //                     dispatch(
+                            //                       deleteMessageData(data)
+                            //                     );
+                            //                   }}
+                            //                 >
+                            //                   delete for Me
+                            //                 </button>
+                            //               )}
+                            //             </Menu.Item>
+                            //             <hr />
+                            //             {TodayDateOnly === date && (
+                            //               <Menu.Item>
+                            //                 {({ active }) => (
+                            //                   <button
+                            //                     className={classNames(
+                            //                       active
+                            //                         ? "w-full bg-gray-100"
+                            //                         : "",
+                            //                       "w-full block px-4 py-2 text-sm text-gray-700"
+                            //                     )}
+                            //                     onClick={() => {
+                            //                       socket?.emit(
+                            //                         "deleteMessageFromBoth",
+                            //                         {
+                            //                           senderId:
+                            //                             emailLocal?.userId,
+                            //                           reciverId:
+                            //                             reciverEmailAddress?.reciverId,
+                            //                           date: date,
+                            //                           uniqueId: dt?.uniqueId,
+                            //                         }
+                            //                       );
+                            //                     }}
+                            //                   >
+                            //                     delete both
+                            //                   </button>
+                            //                 )}
+                            //               </Menu.Item>
+                            //             )}
+                            //           </Menu.Items>
+                            //         </Transition>
+                            //       </Menu>
+                            //     </div>
+                            //   </>
+                            // ) : reciverChatData === dt?.senderId &&
+                            //   dt?.reciverDelete === false ? (
+                            //   <>
+                            //     <div
+                            //       className="you_chat_div md:mr-20 mr-5 flex"
+                            //       key={key}
+                            //       ref={messageDom}
+                            //     >
+                            //       {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
+                            //       <Menu as="div" className="relative">
+                            //         <Menu.Button>
+                            //           <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
+                            //         </Menu.Button>
 
-                                    <Transition
-                                      as={Fragment}
-                                      enter="transition ease-out duration-100"
-                                      enterFrom="transform opacity-0 scale-95"
-                                      enterTo="transform opacity-100 scale-100"
-                                      leave="transition ease-in duration-75"
-                                      leaveFrom="transform opacity-100 scale-100"
-                                      leaveTo="transform opacity-0 scale-95"
-                                    >
-                                      <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <Menu.Item>
-                                          {({ active }) => (
-                                            <button
-                                              className={classNames(
-                                                active
-                                                  ? "w-full bg-gray-100"
-                                                  : "",
-                                                "w-full block px-2 py-2 text-sm text-gray-700"
-                                              )}
-                                              onClick={() => {
-                                                const uniqueData = getMessage[
-                                                  date
-                                                ]?.filter(
-                                                  (items) =>
-                                                    items?.uniqueId !==
-                                                    dt?.uniqueId
-                                                );
+                            //         <Transition
+                            //           as={Fragment}
+                            //           enter="transition ease-out duration-100"
+                            //           enterFrom="transform opacity-0 scale-95"
+                            //           enterTo="transform opacity-100 scale-100"
+                            //           leave="transition ease-in duration-75"
+                            //           leaveFrom="transform opacity-100 scale-100"
+                            //           leaveTo="transform opacity-0 scale-95"
+                            //         >
+                            //           <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            //             <Menu.Item>
+                            //               {({ active }) => (
+                            //                 <button
+                            //                   className={classNames(
+                            //                     active
+                            //                       ? "w-full bg-gray-100"
+                            //                       : "",
+                            //                     "w-full block px-2 py-2 text-sm text-gray-700"
+                            //                   )}
+                            //                   onClick={() => {
+                            //                     const uniqueData = getMessage[
+                            //                       date
+                            //                     ]?.filter(
+                            //                       (items) =>
+                            //                         items?.uniqueId !==
+                            //                         dt?.uniqueId
+                            //                     );
 
-                                                setGetMessage((prevState) => {
-                                                  return {
-                                                    ...prevState,
-                                                    [date]: uniqueData,
-                                                  };
-                                                });
+                            //                     setGetMessage((prevState) => {
+                            //                       return {
+                            //                         ...prevState,
+                            //                         [date]: uniqueData,
+                            //                       };
+                            //                     });
 
-                                                const data = {
-                                                  messageId: dt?.uniqueId,
-                                                  title: "Me",
-                                                };
-                                                dispatch(
-                                                  deleteMessageData(data)
-                                                );
-                                              }}
-                                            >
-                                              delete for Me
-                                            </button>
-                                          )}
-                                        </Menu.Item>
-                                      </Menu.Items>
-                                    </Transition>
-                                  </Menu>
-                                  <p className="you_chat_text1 text-start ">
-                                    {dt?.message}{" "}
-                                    <span className="text-[11px] text-gray-200">
-                                      {dt?.createdAt &&
-                                        formatDate(dt?.createdAt)}
-                                    </span>
-                                  </p>
-                                </div>
-                              </>
-                            ) : null;
+                            //                     const data = {
+                            //                       messageId: dt?.uniqueId,
+                            //                       title: "Me",
+                            //                     };
+                            //                     dispatch(
+                            //                       deleteMessageData(data)
+                            //                     );
+                            //                   }}
+                            //                 >
+                            //                   delete for Me
+                            //                 </button>
+                            //               )}
+                            //             </Menu.Item>
+                            //           </Menu.Items>
+                            //         </Transition>
+                            //       </Menu>
+                            //       <p className="you_chat_text1 text-start ">
+                            //         {dt?.message}{" "}
+                            //         <span className="text-[11px] text-gray-200">
+                            //           {dt?.createdAt &&
+                            //             formatDate(dt?.createdAt)}
+                            //         </span>
+                            //       </p>
+                            //     </div>
+                            //   </>
+                            // ) : null;
                           })}
                         </div>
                       );
