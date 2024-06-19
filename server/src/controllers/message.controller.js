@@ -161,4 +161,50 @@ const getAllUser = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, userIs, "get All User successfully"));
 });
 
-export { addMessage, getMessage, getConversation, getAllUser, deleteMessage };
+const clearChatMessage = asyncHandler(async (req, res, next) => {
+  const { uniqueIds = [], senderId } = req.body;
+
+  const userMessage = await Message.find({ uniqueId: uniqueIds });
+  const Sender = new mongoose.Types.ObjectId(senderId);
+
+  if (userMessage?.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(500, "something is wrong in clear chat id"));
+  }
+
+  userMessage?.forEach(async (userId) => {
+    if (userId.senderId.equals(Sender)) {
+      console.log("sender come in if part<<<", userId?.senderId, Sender);
+
+      if (userId.userDelete === true) {
+        await Message.findByIdAndDelete({
+          _id: userId?._id,
+        });
+      } else if (userId.reciverDelete === true) {
+        await Message.findByIdAndDelete({
+          _id: userId?._id,
+        });
+      } else {
+        userId.userDelete = true;
+        await userId.save();
+      }
+    } else {
+      userId.reciverDelete = true;
+      await userId.save();
+    }
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "chatClear successfully"));
+});
+
+export {
+  addMessage,
+  getMessage,
+  getConversation,
+  getAllUser,
+  deleteMessage,
+  clearChatMessage,
+};

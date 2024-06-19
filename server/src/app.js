@@ -70,7 +70,15 @@ io.on("connection", (socket) => {
 
   socket.on(
     "addMessage",
-    ({ message, reciverId, senderId, userDelete, reciverDelete, uniqueId }) => {
+    ({
+      message,
+      reciverId,
+      senderId,
+      userDelete,
+      reciverDelete,
+      uniqueId,
+      userName,
+    }) => {
       const receiver = users.find((user) => user.userId === reciverId);
       const sender = users.find((user) => user.userId === senderId);
 
@@ -96,6 +104,7 @@ io.on("connection", (socket) => {
             userDelete,
             reciverDelete,
             uniqueId,
+            userName,
             createdAt: new Date(),
           },
         ]);

@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
 import {
   addUserMessage,
+  clearChatMessageData,
   deleteMessageData,
   getAllUser,
   getConversation,
@@ -200,14 +201,22 @@ const Chatbox = () => {
         if (Notification.permission === "granted") {
           // If granted, show the notification
           // playNotificationSound();
-          new Notification(reloadUserNotification?.message);
+          new Notification(
+            reloadUserNotification?.userName +
+              ":- \n" +
+              reloadUserNotification?.message
+          );
         } else if (Notification.permission !== "denied") {
           // Otherwise, request permission from the user
           Notification.requestPermission().then(function (permission) {
             if (permission === "granted") {
               // playNotificationSound();
 
-              new Notification(reloadUserNotification?.message);
+              new Notification(
+                reloadUserNotification?.userName +
+                  ":- \n" +
+                  reloadUserNotification?.message
+              );
             }
           });
         }
@@ -328,6 +337,7 @@ const Chatbox = () => {
         userDelete: false,
         reciverDelete: false,
         uniqueId: uniqueId,
+        userName: emailLocal?.email,
       });
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
@@ -562,6 +572,24 @@ const Chatbox = () => {
                                 active ? "w-full bg-gray-100" : "",
                                 "w-full block px-2 py-2 text-sm text-gray-700"
                               )}
+                              onClick={() => {
+                                const uniqueIds = [];
+
+                                for (const date in getMessage) {
+                                  if (getMessage.hasOwnProperty(date)) {
+                                    getMessage[date].forEach((item) => {
+                                      uniqueIds.push(item.uniqueId);
+                                    });
+                                  }
+                                }
+                                const data = {
+                                  senderId: emailLocal?.userId,
+                                  uniqueIds,
+                                };
+                                dispatch(clearChatMessageData(data));
+                                setGetMessage({});
+                                console.log("data unique id is<<<", uniqueIds);
+                              }}
                             >
                               Clear Chat
                             </button>
@@ -598,11 +626,17 @@ const Chatbox = () => {
                 ) : (
                   <>
                     {Object.keys(getMessage).map((date) => {
-                      const CheckFilterDate = !getMessage[date].every(
-                        (obj) =>
-                          obj.userDelete === true &&
-                          obj.senderId === emailLocal?.userId
+                      const CheckFilterDate = getMessage[date].some((obj) =>
+                        obj.senderId === emailLocal?.userId
+                          ? !obj.userDelete === true
+                          : !obj.reciverDelete === true
                       );
+
+                      // const CheckFilterDate = !getMessage[date].every(
+                      //   (obj) =>
+                      //     obj.userDelete === true &&
+                      //     obj.senderId === emailLocal?.userId
+                      // );
                       console.log(
                         "I am looking what is come from this",
                         date,
@@ -612,8 +646,8 @@ const Chatbox = () => {
                         <div key={date}>
                           {/* {emailLocal?.userId !==
                           reciverEmailAddress?.reciverId ? ( */}
-                          <div className="text-center flex justify-center my-4">
-                            {CheckFilterDate && (
+                          {CheckFilterDate && (
+                            <div className="text-center flex justify-center my-4">
                               <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
                                 {TodayDateOnly === date
                                   ? "Today"
@@ -621,8 +655,8 @@ const Chatbox = () => {
                                   ? "Yesterday"
                                   : date}
                               </h2>
-                            )}
-                          </div>
+                            </div>
+                          )}
                           {/* ) : null} */}
                           {getMessage[date]?.map((dt, key) => {
                             return dt.senderId === emailLocal?.userId &&
