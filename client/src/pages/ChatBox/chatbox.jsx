@@ -188,6 +188,45 @@ const Chatbox = () => {
         }
       });
     }
+    // else {
+    //   function filterAndUpdateSeen(array, targetUniqueId) {
+    //     return array.map((item) => {
+    //       if (item.uniqueId === targetUniqueId) {
+    //         return {
+    //           ...item,
+    //           seen: true,
+    //           seenAt: new Date(),
+    //         };
+    //       }
+    //       return item;
+    //     });
+    //   }
+    //   const currentDate = datafunction[0]?.createdAt;
+
+    //   if (currentDate) {
+    //     const dateObject = new Date(currentDate); // Attempt to create a Date object
+
+    //     if (!isNaN(dateObject.getTime())) {
+    //       // Check if dateObject is a valid Date
+    //       const formattedDate = dateObject.toISOString().split("T")[0];
+    //       console.log("Formatted Date:", formattedDate);
+    //       const modifiedArray = filterAndUpdateSeen(
+    //         getMessage[formattedDate],
+    //         datafunction[0]?.uniqueId
+    //       );
+    //       console.error("Invalid date format:", modifiedArray);
+    //       setGetMessage((prevState) => ({
+    //         ...prevState,
+    //         [formattedDate || ""]: modifiedArray,
+    //       }));
+    //       // setGetMessage(modifiedArray);
+    //     } else {
+    //     }
+    //   } else {
+    //     console.error("createdAt is undefined or null");
+    //   }
+    // }
+    // SetDataFunction("");
   }, [datafunction]);
   // const playNotificationSound = () => {
   //   const audio = new Audio("../../../public/iphone_sound.mp3");
@@ -253,6 +292,8 @@ const Chatbox = () => {
       }
     }
   }, [deleteMessageForUpdated]);
+
+  console.log("Get messages is<<<<,", getMessage);
 
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
@@ -338,6 +379,8 @@ const Chatbox = () => {
         reciverDelete: false,
         uniqueId: uniqueId,
         userName: emailLocal?.email,
+        seen: false,
+        seenAt: "",
       });
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
@@ -377,14 +420,16 @@ const Chatbox = () => {
     // Iterate over each date in the data object
     Object.keys(getMessage)?.forEach((date) => {
       // Iterate over each message on this date
-      formattedMessages.push(`\n${date}`);
-
+      console.log("date is coome on this<<<<", date);
+      let j = 0;
       getMessage[date]?.forEach((item) => {
         // Format each message
         if (
           item?.senderId === emailLocal?.userId &&
           item?.userDelete === false
         ) {
+          j == 0 ? formattedMessages.push(`\n${date}`) : null;
+          j += 1;
           const formattedMessage = `You :- message: "${
             item?.message
           }" time:- ${new Date(item?.createdAt).toLocaleTimeString([], {
@@ -396,6 +441,8 @@ const Chatbox = () => {
           reciverChatData === item?.senderId &&
           item?.reciverDelete === false
         ) {
+          j == 0 ? formattedMessages.push(`\n${date}`) : null;
+          j += 1;
           const formattedMessage = `${
             reciverEmailAddress?.userName
           } :- message: "${item?.message}" time:- ${new Date(
@@ -418,16 +465,6 @@ const Chatbox = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    const ampm = hours >= 12 ? "pm" : "am";
-    hours = hours % 12;
-    hours = hours ? hours : 12; // Handle midnight
-    minutes = minutes < 10 ? "0" + minutes : minutes; // Add leading zero to minutes if less than 10
-    return hours + ":" + minutes + " " + ampm;
-  };
   let typingTimeout;
 
   const handleTyping = (e) => {
@@ -677,12 +714,8 @@ const Chatbox = () => {
                           ? !obj.userDelete === true
                           : !obj.reciverDelete === true
                       );
-
-                      // const CheckFilterDate = !getMessage[date].every(
-                      //   (obj) =>
-                      //     obj.userDelete === true &&
-                      //     obj.senderId === emailLocal?.userId
-                      // );
+                      const messages = getMessage[date];
+                      const lastMessageIndex = messages.length - 1;
                       console.log(
                         "I am looking what is come from this",
                         date,
@@ -690,8 +723,6 @@ const Chatbox = () => {
                       );
                       return (
                         <div key={date}>
-                          {/* {emailLocal?.userId !==
-                          reciverEmailAddress?.reciverId ? ( */}
                           {CheckFilterDate && (
                             <div className="text-center flex justify-center my-4">
                               <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
@@ -703,7 +734,6 @@ const Chatbox = () => {
                               </h2>
                             </div>
                           )}
-                          {/* ) : null} */}
                           {getMessage[date]?.map((dt, key) => {
                             return (
                               <ChatMessage
@@ -717,187 +747,9 @@ const Chatbox = () => {
                                 messageDom={messageDom}
                                 getMessage={getMessage}
                                 setGetMessage={setGetMessage}
+                                lastMessageIndex={lastMessageIndex}
                               />
                             );
-                            // return dt.senderId === emailLocal?.userId &&
-                            //   dt?.userDelete === false ? (
-                            //   <>
-                            //     <div
-                            //       className="you_chat md:pl-20 pl-5 "
-                            //       key={key}
-                            //       ref={messageDom}
-                            //     >
-                            //       <p className="you_chat_text pl-2 text-start pr-2 py-1">
-                            //         {dt?.message}
-                            //         <span className="text-[11px] text-gray-200">
-                            //           {dt?.createdAt &&
-                            //             formatDate(dt?.createdAt)}
-                            //         </span>
-                            //       </p>
-                            //       <Menu as="div" className="relative">
-                            //         <Menu.Button>
-                            //           <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
-                            //         </Menu.Button>
-
-                            //         <Transition
-                            //           as={Fragment}
-                            //           enter="transition ease-out duration-100"
-                            //           enterFrom="transform opacity-0 scale-95"
-                            //           enterTo="transform opacity-100 scale-100"
-                            //           leave="transition ease-in duration-75"
-                            //           leaveFrom="transform opacity-100 scale-100"
-                            //           leaveTo="transform opacity-0 scale-95"
-                            //         >
-                            //           <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            //             <Menu.Item>
-                            //               {({ active }) => (
-                            //                 <button
-                            //                   className={classNames(
-                            //                     active
-                            //                       ? "w-full bg-gray-100"
-                            //                       : "",
-                            //                     "w-full block px-2 py-2 text-sm text-gray-700"
-                            //                   )}
-                            //                   onClick={() => {
-                            //                     const uniqueData = getMessage[
-                            //                       date
-                            //                     ]?.filter(
-                            //                       (items) =>
-                            //                         items?.uniqueId !==
-                            //                         dt?.uniqueId
-                            //                     );
-
-                            //                     setGetMessage((prevState) => {
-                            //                       return {
-                            //                         ...prevState,
-                            //                         [date]: uniqueData,
-                            //                       };
-                            //                     });
-
-                            //                     const data = {
-                            //                       messageId: dt?.uniqueId,
-                            //                       title: "Me",
-                            //                       senderId: emailLocal?.userId,
-                            //                     };
-                            //                     dispatch(
-                            //                       deleteMessageData(data)
-                            //                     );
-                            //                   }}
-                            //                 >
-                            //                   delete for Me
-                            //                 </button>
-                            //               )}
-                            //             </Menu.Item>
-                            //             <hr />
-                            //             {TodayDateOnly === date && (
-                            //               <Menu.Item>
-                            //                 {({ active }) => (
-                            //                   <button
-                            //                     className={classNames(
-                            //                       active
-                            //                         ? "w-full bg-gray-100"
-                            //                         : "",
-                            //                       "w-full block px-4 py-2 text-sm text-gray-700"
-                            //                     )}
-                            //                     onClick={() => {
-                            //                       socket?.emit(
-                            //                         "deleteMessageFromBoth",
-                            //                         {
-                            //                           senderId:
-                            //                             emailLocal?.userId,
-                            //                           reciverId:
-                            //                             reciverEmailAddress?.reciverId,
-                            //                           date: date,
-                            //                           uniqueId: dt?.uniqueId,
-                            //                         }
-                            //                       );
-                            //                     }}
-                            //                   >
-                            //                     delete both
-                            //                   </button>
-                            //                 )}
-                            //               </Menu.Item>
-                            //             )}
-                            //           </Menu.Items>
-                            //         </Transition>
-                            //       </Menu>
-                            //     </div>
-                            //   </>
-                            // ) : reciverChatData === dt?.senderId &&
-                            //   dt?.reciverDelete === false ? (
-                            //   <>
-                            //     <div
-                            //       className="you_chat_div md:mr-20 mr-5 flex"
-                            //       key={key}
-                            //       ref={messageDom}
-                            //     >
-                            //       {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
-                            //       <Menu as="div" className="relative">
-                            //         <Menu.Button>
-                            //           <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
-                            //         </Menu.Button>
-
-                            //         <Transition
-                            //           as={Fragment}
-                            //           enter="transition ease-out duration-100"
-                            //           enterFrom="transform opacity-0 scale-95"
-                            //           enterTo="transform opacity-100 scale-100"
-                            //           leave="transition ease-in duration-75"
-                            //           leaveFrom="transform opacity-100 scale-100"
-                            //           leaveTo="transform opacity-0 scale-95"
-                            //         >
-                            //           <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            //             <Menu.Item>
-                            //               {({ active }) => (
-                            //                 <button
-                            //                   className={classNames(
-                            //                     active
-                            //                       ? "w-full bg-gray-100"
-                            //                       : "",
-                            //                     "w-full block px-2 py-2 text-sm text-gray-700"
-                            //                   )}
-                            //                   onClick={() => {
-                            //                     const uniqueData = getMessage[
-                            //                       date
-                            //                     ]?.filter(
-                            //                       (items) =>
-                            //                         items?.uniqueId !==
-                            //                         dt?.uniqueId
-                            //                     );
-
-                            //                     setGetMessage((prevState) => {
-                            //                       return {
-                            //                         ...prevState,
-                            //                         [date]: uniqueData,
-                            //                       };
-                            //                     });
-
-                            //                     const data = {
-                            //                       messageId: dt?.uniqueId,
-                            //                       title: "Me",
-                            //                     };
-                            //                     dispatch(
-                            //                       deleteMessageData(data)
-                            //                     );
-                            //                   }}
-                            //                 >
-                            //                   delete for Me
-                            //                 </button>
-                            //               )}
-                            //             </Menu.Item>
-                            //           </Menu.Items>
-                            //         </Transition>
-                            //       </Menu>
-                            //       <p className="you_chat_text1 text-start ">
-                            //         {dt?.message}{" "}
-                            //         <span className="text-[11px] text-gray-200">
-                            //           {dt?.createdAt &&
-                            //             formatDate(dt?.createdAt)}
-                            //         </span>
-                            //       </p>
-                            //     </div>
-                            //   </>
-                            // ) : null;
                           })}
                         </div>
                       );

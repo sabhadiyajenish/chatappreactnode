@@ -1,6 +1,6 @@
 import "../chatbox.css";
 import { Menu, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { deleteMessageData } from "../../../store/Message/authApi";
 import { useDispatch } from "react-redux";
@@ -26,8 +26,11 @@ const ChatMessage = ({
   getMessage,
   setGetMessage,
   reciverEmailAddress,
+  lastMessageIndex,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSeen, setIsSeen] = useState(dt?.seen);
+  const [seenAt, setSeenAt] = useState(dt.seenAt);
   const dispatch = useDispatch();
   const todayDate = new Date();
   const TodayDateOnly = todayDate.toISOString().split("T")[0];
@@ -52,9 +55,10 @@ const ChatMessage = ({
             >
               {isExpanded ? " read Less" : "... read More"}
             </span>
-          )}
+          )}{" "}
           <span className="text-[11px] text-gray-200 ml-1">
             {dt?.createdAt && formatDate(dt?.createdAt)}
+            {isSeen && lastMessageIndex && "seen"}
           </span>
         </p>
         <Menu as="div" className="relative">
@@ -197,8 +201,10 @@ const ChatMessage = ({
               {isExpanded ? " read Less" : "... read More"}
             </span>
           )}
+
           <span className="text-[11px] text-gray-200 ml-1">
             {dt?.createdAt && formatDate(dt?.createdAt)}
+            {isSeen && lastMessageIndex && "seen"}
           </span>
         </p>
       </div>
