@@ -126,3 +126,11 @@
     transform: translateX(-100%);
   }
 }
+.chat_time {
+  float: right;
+  padding-top: 12px;
+}
+.chat_time1 {
+  float: right;
+  padding-top: 12px;
+}

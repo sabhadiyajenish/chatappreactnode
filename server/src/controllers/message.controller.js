@@ -103,6 +103,9 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
       .status(200)
       .json(new ApiResponse(500, "something is wrong in message id"));
   }
+  if (messages.seen === true) {
+    return res.status(200).json(new ApiResponse(500, "already seen message"));
+  }
   messages.seen = true;
   messages.seenAt = new Date();
   await messages.save();

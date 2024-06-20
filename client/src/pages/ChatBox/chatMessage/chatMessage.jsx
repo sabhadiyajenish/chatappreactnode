@@ -73,7 +73,7 @@ const ChatMessage = ({
   return dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
     <>
       <div className="you_chat md:pl-20 pl-5 " key={indexKey} ref={messageDom}>
-        <p className="you_chat_text pl-2 text-start pr-2 py-1">
+        <p className="you_chat_text pl-2 text-start pr-2 py-1 chat_time">
           {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
           {dt?.message?.length > 300 && (
             <span
@@ -224,7 +224,7 @@ const ChatMessage = ({
             </Menu.Items>
           </Transition>
         </Menu>
-        <p className="you_chat_text1 text-start  ">
+        <p className="you_chat_text1 text-start chat_time1 ">
           {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
           {dt?.message?.length > 300 && (
             <span

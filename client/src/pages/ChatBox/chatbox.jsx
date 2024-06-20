@@ -199,9 +199,9 @@ const Chatbox = () => {
       const dataForSeen = {
         messageId: datafunction[0]?.uniqueId,
       };
-      if (datafunction?.length !== 0 && Array.isArray(datafunction)) {
+      setTimeout(() => {
         dispatch(updateSeenChatMessageData(dataForSeen));
-      }
+      }, 1500);
     }
     // else {
     //   function filterAndUpdateSeen(array, targetUniqueId) {
@@ -354,7 +354,7 @@ const Chatbox = () => {
         const newData = { ...prevData };
         if (newData[currentDate]) {
           newData[currentDate] = newData[currentDate].map((msg) =>
-            msg.uniqueId === messageId
+            msg.uniqueId === messageId && msg.seen !== true
               ? { ...msg, seen: true, seenAt: new Date().toISOString() }
               : msg
           );
