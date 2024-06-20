@@ -53,6 +53,8 @@ import userRoutes from "./routes/user.route.js";
 import messageRoutes from "./routes/message.route.js";
 
 let users = [];
+let lastSeen = {};
+
 io.on("connection", (socket) => {
   console.log(`New connection: ${socket.id}`);
 
@@ -63,7 +65,7 @@ io.on("connection", (socket) => {
     if (!isUser) {
       const user = { userId, socketId: socket.id };
       users.push(user);
-      io.emit("getUser", users);
+      io.emit("getUser", users, lastSeen);
     }
     console.log("Connected users:", users);
   });
@@ -210,10 +212,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    users = users.filter((user) => user.socketId !== socket.id);
-    io.emit("getUser", users);
-    console.log(`User disconnected: ${socket.id}`);
-    console.log("Remaining users:", users);
+    const user = users.find((user) => user.socketId === socket.id);
+    if (user) {
+      // Record the last seen time for the disconnected user
+      lastSeen[user.userId] = new Date().toISOString();
+      users = users.filter((user) => user.socketId !== socket.id);
+      io.emit("getUser", users, lastSeen);
+      console.log(`User disconnected: ${socket.id}`);
+      console.log("Remaining users:", users);
+    }
   });
 });
 

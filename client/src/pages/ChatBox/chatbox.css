@@ -100,3 +100,29 @@
   height: 30px;
   border-radius: 10px;
 }
+
+.marquee-container {
+  width: 100%;
+  margin-left: 10px;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.marquee-text {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+  animation-delay: 3s; /* 2 seconds delay before starting the animation */
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  10% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}

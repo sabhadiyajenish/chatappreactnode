@@ -27,7 +27,7 @@ import EmojiModel from "./emoji/emojiModel";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import axios from "../../utils/commonAxios.jsx";
 import ChatMessage from "./chatMessage/chatMessage.jsx";
-
+import moment from "moment";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -42,6 +42,8 @@ const Chatbox = () => {
 
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
+  const [LastSeenUser, setLastSeenUser] = useState({});
+
   const [message, setMessage] = useState("");
   const [emailLocal, setEmailLocal] = useState("");
   const [reciverEmailAddress, setReciverEmailaddress] = useState({
@@ -134,9 +136,8 @@ const Chatbox = () => {
   function generateUniqueId(length = 30) {
     return uuidv4().replace(/-/g, "").slice(0, length);
   }
-  useEffect(() => {
-    if (!datafunction || !reciverEmailAddress) return;
 
+  useEffect(() => {
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
       setCountMessage((prevMessages) => {
         // Initialize prevMessages as an empty array if it's null or undefined
@@ -293,12 +294,15 @@ const Chatbox = () => {
     }
   }, [deleteMessageForUpdated]);
 
-  console.log("Get messages is<<<<,", getMessage);
+  // console.log("Get messages is<<<<,", getMessage);
 
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
-    socket?.on("getUser", (user) => {
+    socket?.on("getUser", (user, lastSeenData) => {
       setActiveUser(user);
+      if (lastSeenData) {
+        setLastSeenUser(lastSeenData);
+      }
     });
     socket?.on("getMessage", (user1) => {
       // setActiveUser(user);
@@ -413,6 +417,26 @@ const Chatbox = () => {
     }
   };
 
+  const formatLastSeen = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const timeDifference = now - date;
+
+    // Calculate the difference in days
+    const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    if (daysDifference === 0) {
+      return `Last seen today at ${moment(date).format("LT")}`;
+    } else if (daysDifference === 1) {
+      return `Last seen yesterday at ${moment(date).format("LT")}`;
+    } else {
+      return `Last seen on ${moment(date).format("MMMM D")} at ${moment(
+        date
+      ).format("LT")}`;
+    }
+  };
+
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
     const formattedMessages = [];
@@ -487,6 +511,18 @@ const Chatbox = () => {
   const isUserOnline = activeUser?.some(
     (dr) => dr.userId === reciverEmailAddress?.reciverId
   );
+  let checkLastSeenParticularUser;
+  let lastSeenTextParticularUser;
+  if (LastSeenUser && typeof LastSeenUser === "object") {
+    checkLastSeenParticularUser = LastSeenUser.hasOwnProperty(
+      reciverEmailAddress?.reciverId
+    )
+      ? LastSeenUser[reciverEmailAddress?.reciverId]
+      : null;
+    lastSeenTextParticularUser = checkLastSeenParticularUser
+      ? formatLastSeen(checkLastSeenParticularUser)
+      : "Last seen not available";
+  }
   const isUserTyping =
     reciverEmailAddress?.reciverId === isTyping?.senderId && isTyping?.status;
   return (
@@ -515,6 +551,20 @@ const Chatbox = () => {
             </div>
             <h1 className="mx-3 my-4 text-center font-medium">Your Chat</h1>
             {userConversationData?.map((dt, key) => {
+              let checkLastSeen;
+              let lastSeenText;
+              if (LastSeenUser && typeof LastSeenUser === "object") {
+                checkLastSeen = LastSeenUser.hasOwnProperty(dt._id)
+                  ? LastSeenUser[dt._id]
+                  : null;
+                lastSeenText = checkLastSeen
+                  ? formatLastSeen(checkLastSeen)
+                  : "Last seen not available";
+              }
+              const checkOnorNot = !activeUser?.some(
+                (dr) => dr.userId === dt._id
+              );
+              console.log(checkLastSeen);
               return (
                 <>
                   <div
@@ -592,6 +642,10 @@ const Chatbox = () => {
                         ) : null;
                       })}
                     </div>
+                    <p className="text-[#7436c5] text-[15px] mt-1 text-center">
+                      {checkOnorNot && checkLastSeen && lastSeenText}
+                    </p>
+
                     {countMessage?.map((itm) => {
                       return itm.senderId === dt._id ? (
                         <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
@@ -624,6 +678,14 @@ const Chatbox = () => {
                     <p className="text-[15px] text-green-500 text-start ml-4">
                       online
                     </p>
+                  )}
+                  {!isUserOnline && !isUserTyping && (
+                    <div className="marquee-container">
+                      <p className=" marquee-text text-[#7436c5] text-[15px] text-center">
+                        {checkLastSeenParticularUser &&
+                          lastSeenTextParticularUser}
+                      </p>
+                    </div>
                   )}
                   {isUserOnline && isUserTyping && (
                     <p className="text-[15px] text-blue-500 text-start ml-4">
@@ -716,11 +778,7 @@ const Chatbox = () => {
                       );
                       const messages = getMessage[date];
                       const lastMessageIndex = messages.length - 1;
-                      console.log(
-                        "I am looking what is come from this",
-                        date,
-                        CheckFilterDate
-                      );
+
                       return (
                         <div key={date}>
                           {CheckFilterDate && (
