@@ -17,7 +17,7 @@ const formatDate = (dateString) => {
 
 const ChatMessage = ({
   dt,
-  key,
+  indexKey,
   emailLocal,
   reciverChatData,
   socket,
@@ -43,9 +43,36 @@ const ChatMessage = ({
   const toggleReadMore = () => {
     setIsExpanded(!isExpanded);
   };
+  const formatTimeDifference = (previousDate) => {
+    const currentDateTime = new Date();
+    const previousDateTime = new Date(previousDate);
+
+    const timeDifference =
+      currentDateTime.getTime() - previousDateTime.getTime();
+    const secondsDifference = Math.floor(timeDifference / 1000);
+
+    // Handle different time units: seconds, minutes, hours, days, weeks, etc.
+    if (secondsDifference < 60) {
+      // return `${secondsDifference} sec${
+      //   secondsDifference !== 1 ? "s" : ""
+      // } ago`;
+      return `just now`;
+    } else if (secondsDifference < 3600) {
+      const minutesDifference = Math.floor(secondsDifference / 60);
+      return `${minutesDifference} min${
+        minutesDifference !== 1 ? "s" : ""
+      } ago`;
+    } else if (secondsDifference < 86400) {
+      const hoursDifference = Math.floor(secondsDifference / 3600);
+      return `${hoursDifference} hour${hoursDifference !== 1 ? "s" : ""} ago`;
+    } else {
+      const daysDifference = Math.floor(secondsDifference / 86400);
+      return `${daysDifference} day${daysDifference !== 1 ? "s" : ""} ago`;
+    }
+  };
   return dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
     <>
-      <div className="you_chat md:pl-20 pl-5 " key={key} ref={messageDom}>
+      <div className="you_chat md:pl-20 pl-5 " key={indexKey} ref={messageDom}>
         <p className="you_chat_text pl-2 text-start pr-2 py-1">
           {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
           {dt?.message?.length > 300 && (
@@ -58,9 +85,10 @@ const ChatMessage = ({
           )}{" "}
           <span className="text-[11px] text-gray-200 ml-1">
             {dt?.createdAt && formatDate(dt?.createdAt)}
-            {isSeen && lastMessageIndex && "seen"}
+            {/* {isSeen && lastMessageIndex && "seen"} */}
           </span>
         </p>
+
         <Menu as="div" className="relative">
           <Menu.Button>
             <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
@@ -134,12 +162,17 @@ const ChatMessage = ({
           </Transition>
         </Menu>
       </div>
+      {indexKey === getMessage[date].length - 1 && dt?.seen && (
+        <div className=" text-end mr-6 mb-2 text-blue-500">
+          <p> Seen {formatTimeDifference(new Date(dt?.seenAt))}.</p>
+        </div>
+      )}
     </>
   ) : reciverChatData === dt?.senderId && dt?.reciverDelete === false ? (
     <>
       <div
         className="you_chat_div md:mr-20 mr-5 flex"
-        key={key}
+        key={indexKey}
         ref={messageDom}
       >
         {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
@@ -204,7 +237,7 @@ const ChatMessage = ({
 
           <span className="text-[11px] text-gray-200 ml-1">
             {dt?.createdAt && formatDate(dt?.createdAt)}
-            {isSeen && lastMessageIndex && "seen"}
+            {/* {isSeen && lastMessageIndex && "seen"} */}
           </span>
         </p>
       </div>

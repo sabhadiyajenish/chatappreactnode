@@ -14,6 +14,7 @@ import {
   getAllUser,
   getConversation,
   getUserMessage,
+  updateSeenChatMessageData,
 } from "../../store/Message/authApi";
 import { getOneUser } from "../../store/Users/userApi";
 import { SOCKET_URL } from "../../utils/constant";
@@ -188,6 +189,19 @@ const Chatbox = () => {
           ];
         }
       });
+    } else {
+      console.log("when user have in cureent chat so work this");
+      socket?.emit("SetMessageSeenConfirm", {
+        messageId: datafunction[0]?.uniqueId,
+        reciverId: datafunction[0]?.senderId,
+        date: datafunction[0]?.createdAt,
+      });
+      const dataForSeen = {
+        messageId: datafunction[0]?.uniqueId,
+      };
+      if (datafunction?.length !== 0 && Array.isArray(datafunction)) {
+        dispatch(updateSeenChatMessageData(dataForSeen));
+      }
     }
     // else {
     //   function filterAndUpdateSeen(array, targetUniqueId) {
@@ -333,7 +347,21 @@ const Chatbox = () => {
     socket?.on("getMessageNotification", (userDatas) => {
       setreloadUserNotification(userDatas[0]);
     });
-
+    socket?.on("messageSeenConfirmation", ({ date, messageId, receiver }) => {
+      console.log("user seen status come here brothers<<<<", date, messageId);
+      const currentDate = date.split("T")[0]; // Extract date from createdAt
+      setGetMessage((prevData) => {
+        const newData = { ...prevData };
+        if (newData[currentDate]) {
+          newData[currentDate] = newData[currentDate].map((msg) =>
+            msg.uniqueId === messageId
+              ? { ...msg, seen: true, seenAt: new Date().toISOString() }
+              : msg
+          );
+        }
+        return newData;
+      });
+    });
     socket?.on("getNewUserData", (userStatus) => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
@@ -370,6 +398,7 @@ const Chatbox = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleOpenEmoji]);
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (message !== "") {
@@ -436,7 +465,7 @@ const Chatbox = () => {
       ).format("LT")}`;
     }
   };
-
+  // console.log("seee get message<<<", getMessage);
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
     const formattedMessages = [];
@@ -589,6 +618,21 @@ const Chatbox = () => {
                         const setCount = countMessage?.filter(
                           (datas) => datas?.senderId !== dt?._id
                         );
+
+                        socket?.emit("SetMessageSeenConfirm", {
+                          messageId: datafunction[0]?.uniqueId,
+                          reciverId: dt?._id,
+                          date: datafunction[0]?.createdAt,
+                        });
+                        const dataForSeen = {
+                          messageId: datafunction[0]?.uniqueId,
+                        };
+                        if (
+                          datafunction?.length !== 0 &&
+                          Array.isArray(datafunction)
+                        ) {
+                          dispatch(updateSeenChatMessageData(dataForSeen));
+                        }
                         setCountMessage(setCount);
                         if (Array.isArray(setCount) && setCount?.length !== 0) {
                           localStorage.setItem(
@@ -679,14 +723,15 @@ const Chatbox = () => {
                       online
                     </p>
                   )}
-                  {!isUserOnline && !isUserTyping && (
-                    <div className="marquee-container">
-                      <p className=" marquee-text text-[#7436c5] text-[15px] text-center">
-                        {checkLastSeenParticularUser &&
-                          lastSeenTextParticularUser}
-                      </p>
-                    </div>
-                  )}
+                  {!isUserOnline &&
+                    !isUserTyping &&
+                    checkLastSeenParticularUser && (
+                      <div className="marquee-container">
+                        <p className=" marquee-text text-[#7436c5] text-[15px] text-center">
+                          {lastSeenTextParticularUser}
+                        </p>
+                      </div>
+                    )}
                   {isUserOnline && isUserTyping && (
                     <p className="text-[15px] text-blue-500 text-start ml-4">
                       Typing...
@@ -792,11 +837,11 @@ const Chatbox = () => {
                               </h2>
                             </div>
                           )}
-                          {getMessage[date]?.map((dt, key) => {
+                          {getMessage[date]?.map((dt, index) => {
                             return (
                               <ChatMessage
                                 dt={dt}
-                                key={key}
+                                indexKey={index}
                                 emailLocal={emailLocal}
                                 reciverEmailAddress={reciverEmailAddress}
                                 reciverChatData={reciverChatData}
