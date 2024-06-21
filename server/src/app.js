@@ -51,6 +51,7 @@ app.use(passport.session());
 
 import userRoutes from "./routes/user.route.js";
 import messageRoutes from "./routes/message.route.js";
+import messageNotificationRoutes from "./routes/notification.route.js";
 
 let users = [];
 let lastSeen = {};
@@ -241,6 +242,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/notification", messageNotificationRoutes);
 
 // socket connection code
 
