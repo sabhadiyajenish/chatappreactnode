@@ -1,6 +1,6 @@
 import "../chatbox.css";
 import { Menu, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { deleteMessageData } from "../../../store/Message/authApi";
 import { useDispatch } from "react-redux";
@@ -245,4 +245,4 @@ const ChatMessage = ({
   ) : null;
 };
 
-export default ChatMessage;
+export default React.memo(ChatMessage);

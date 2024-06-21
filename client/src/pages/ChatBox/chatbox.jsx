@@ -54,7 +54,14 @@ const Chatbox = () => {
     userName: "",
   });
   const [countMessage, setCountMessage] = useState([
-    { reciverId: "jenish", senderId: "jjs", firstMessage: "", count: 0 },
+    {
+      reciverId: "jenish",
+      senderId: "jjs",
+      firstMessage: "",
+      uniqueId: "",
+      date: "",
+      count: 0,
+    },
   ]);
   const [reciverChatData, setReciverChatData] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -155,6 +162,9 @@ const Chatbox = () => {
           updatedMessages[index] = {
             ...updatedMessages[index],
             count: updatedMessages[index].count + 1,
+            date: (updatedMessages[index].date = datafunction[0]?.createdAt),
+            uniqueId: (updatedMessages[index].uniqueId =
+              datafunction[0]?.uniqueId),
           };
           if (Array.isArray(updatedMessages) && updatedMessages?.length !== 0) {
             localStorage.setItem(
@@ -173,6 +183,8 @@ const Chatbox = () => {
                 reciverId: datafunction[0]?.reciverId,
                 senderId: datafunction[0]?.senderId,
                 firstMessage: datafunction[0]?.message,
+                uniqueId: datafunction[0]?.uniqueId,
+                date: datafunction[0]?.createdAt,
                 count: 1,
               },
             ])
@@ -184,6 +196,8 @@ const Chatbox = () => {
               reciverId: datafunction[0]?.reciverId,
               senderId: datafunction[0]?.senderId,
               firstMessage: datafunction[0]?.message,
+              uniqueId: datafunction[0]?.uniqueId,
+              date: datafunction[0]?.createdAt,
               count: 1,
             },
           ];
@@ -615,24 +629,28 @@ const Chatbox = () => {
                           reciverId: dt._id,
                         };
                         dispatch(getUserMessage(data1));
+                        const setCurrentUniueId = countMessage?.filter(
+                          (datas) => datas?.senderId === dt?._id
+                        );
+                        if (
+                          setCurrentUniueId?.length !== 0 &&
+                          Array.isArray(setCurrentUniueId)
+                        ) {
+                          socket?.emit("SetMessageSeenConfirm", {
+                            messageId: setCurrentUniueId[0]?.uniqueId,
+                            reciverId: dt?._id,
+                            date: setCurrentUniueId[0]?.date,
+                          });
+                          const dataForSeen = {
+                            messageId: setCurrentUniueId[0]?.uniqueId,
+                          };
+
+                          dispatch(updateSeenChatMessageData(dataForSeen));
+                        }
+
                         const setCount = countMessage?.filter(
                           (datas) => datas?.senderId !== dt?._id
                         );
-
-                        socket?.emit("SetMessageSeenConfirm", {
-                          messageId: datafunction[0]?.uniqueId,
-                          reciverId: dt?._id,
-                          date: datafunction[0]?.createdAt,
-                        });
-                        const dataForSeen = {
-                          messageId: datafunction[0]?.uniqueId,
-                        };
-                        if (
-                          datafunction?.length !== 0 &&
-                          Array.isArray(datafunction)
-                        ) {
-                          dispatch(updateSeenChatMessageData(dataForSeen));
-                        }
                         setCountMessage(setCount);
                         if (Array.isArray(setCount) && setCount?.length !== 0) {
                           localStorage.setItem(
@@ -648,6 +666,8 @@ const Chatbox = () => {
                                 senderId: "jjs",
                                 firstMessage: "",
                                 count: 0,
+                                date: "",
+                                uniqueId: "",
                               },
                             ])
                           );
@@ -914,6 +934,26 @@ const Chatbox = () => {
                             senderId: emailLocal?.userId,
                             reciverId: dt._id,
                           };
+
+                          const setCurrentUniueId = countMessage?.filter(
+                            (datas) => datas?.senderId === dt?._id
+                          );
+                          if (
+                            setCurrentUniueId?.length !== 0 &&
+                            Array.isArray(setCurrentUniueId)
+                          ) {
+                            socket?.emit("SetMessageSeenConfirm", {
+                              messageId: setCurrentUniueId[0]?.uniqueId,
+                              reciverId: dt?._id,
+                              date: setCurrentUniueId[0]?.date,
+                            });
+                            const dataForSeen = {
+                              messageId: setCurrentUniueId[0]?.uniqueId,
+                            };
+
+                            dispatch(updateSeenChatMessageData(dataForSeen));
+                          }
+
                           const setCount = countMessage?.filter(
                             (datas) => datas?.senderId !== dt?._id
                           );
@@ -937,6 +977,8 @@ const Chatbox = () => {
                                   senderId: "jjs",
                                   firstMessage: "",
                                   count: 0,
+                                  date: "",
+                                  uniqueId: "",
                                 },
                               ])
                             );
