@@ -72,32 +72,45 @@ const deleteNotification = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId } = req.body;
   const Sender = new mongoose.Types.ObjectId(senderId);
   const Reciver = new mongoose.Types.ObjectId(reciverId);
-  const checkHaveRecord = await Notification.findOne({
-    senderId: Sender,
-    reciverId: Reciver,
-  });
 
-  if (!checkHaveRecord) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, {}, "No id match with Notification"));
-  }
+  try {
+    // Check if a record exists with the given senderId and reciverId
+    const checkHaveRecord = await Notification.findOne({
+      senderId: Sender,
+      reciverId: Reciver,
+    });
 
-  const deleteRecord = await Notification.findByIdAndDelete({
-    _id: checkHaveRecord?._id,
-  });
+    if (!checkHaveRecord) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "No id match with Notification"));
+    }
 
-  if (!deleteRecord) {
+    // Delete the record by its _id
+    const deleteRecord = await Notification.findByIdAndDelete(
+      checkHaveRecord._id
+    );
+
+    if (!deleteRecord) {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            {},
+            "something wrong while deleting Notification"
+          )
+        );
+    }
+
     return res
       .status(200)
       .json(
-        new ApiResponse(200, {}, "something wrong while deleting Notification")
+        new ApiResponse(200, deleteRecord, "notification deleted successfully")
       );
+  } catch (error) {
+    return next(error);
   }
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, deleteRecord, "notification  deleted successfully")
-    );
 });
+
 export { addNotification, getNotification, deleteNotification };

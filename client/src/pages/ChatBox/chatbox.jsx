@@ -34,6 +34,7 @@ function classNames(...classes) {
 }
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
+  const { notificationDatas } = useSelector((state) => state.notificationData);
   const { tag, oneUserMessage, loading, conversationData, userLists } =
     useSelector((state) => state.messageData);
 
