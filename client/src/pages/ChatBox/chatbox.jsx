@@ -381,6 +381,17 @@ const Chatbox = () => {
       setDeleteMessageForUpdated(userDatas);
     });
 
+    socket?.on("getMessageNotificationInMongoDb", (userDatas) => {
+      dispatch(
+        addUserNotification({
+          senderId: userDatas[0]?.senderId,
+          reciverId: userDatas[0]?.reciverId,
+          firstMessage: userDatas[0]?.message,
+          date: userDatas[0]?.createdAt,
+          uniqueId: userDatas[0]?.uniqueId,
+        })
+      );
+    });
     socket?.on("getMessageNotification", (userDatas) => {
       setreloadUserNotification(userDatas[0]);
     });

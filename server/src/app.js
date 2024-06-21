@@ -131,6 +131,20 @@ io.on("connection", (socket) => {
             createdAt: new Date(),
           },
         ]);
+        io.to(sender?.socketId).emit("getMessageNotificationInMongoDb", [
+          {
+            message,
+            senderId,
+            reciverId,
+            userDelete,
+            reciverDelete,
+            uniqueId,
+            userName,
+            seen,
+            seenAt,
+            createdAt: new Date(),
+          },
+        ]);
       }
     }
   );
