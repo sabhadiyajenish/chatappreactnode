@@ -51,13 +51,9 @@ const getNotification = asyncHandler(async (req, res, next) => {
   const Sender = new mongoose.Types.ObjectId(senderId);
 
   const checkHaveRecord = await Notification.find({
-    senderId: Sender,
+    $or: [{ senderId: Sender }, { reciverId: Sender }],
   });
-  if (checkHaveRecord.length === 0) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, {}, "No data found in Notification"));
-  }
+
   return res
     .status(200)
     .json(

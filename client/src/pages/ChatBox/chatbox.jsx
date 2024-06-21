@@ -29,6 +29,11 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import axios from "../../utils/commonAxios.jsx";
 import ChatMessage from "./chatMessage/chatMessage.jsx";
 import moment from "moment";
+import {
+  addUserNotification,
+  deleteNotificationData,
+  getUserNotification,
+} from "../../store/Notification/notificationApi.js";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -115,10 +120,10 @@ const Chatbox = () => {
     dispatch(getOneUser());
     dispatch(getAllUser());
 
-    const userInfo = localStorage.getItem("userCountInfo");
-    userInfo !== undefined && userInfo?.length !== 0
-      ? setCountMessage(JSON.parse(userInfo))
-      : null;
+    // const userInfo = localStorage.getItem("userCountInfo");
+    // userInfo !== undefined && userInfo?.length !== 0
+    //   ? setCountMessage(JSON.parse(userInfo))
+    //   : null;
   }, []);
   useEffect(() => {
     const socket = io(SOCKET_URL); // Initialize socket connection
@@ -130,6 +135,11 @@ const Chatbox = () => {
     };
   }, []);
   useEffect(() => {
+    if (Array.isArray(notificationDatas) && notificationDatas?.length !== 0) {
+      setCountMessage(notificationDatas);
+    }
+  }, [notificationDatas]);
+  useEffect(() => {
     setUserConversationDatas(conversationData);
   }, [conversationData]);
   useEffect(() => {
@@ -140,6 +150,9 @@ const Chatbox = () => {
     if (user !== undefined) {
       setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
       dispatch(getConversation(JSON.parse(user)?.userId || ""));
+      dispatch(
+        getUserNotification({ senderId: JSON.parse(user)?.userId || "" })
+      );
     }
   }, [reloadUserConversation]);
   function generateUniqueId(length = 30) {
@@ -148,62 +161,59 @@ const Chatbox = () => {
 
   useEffect(() => {
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
-      setCountMessage((prevMessages) => {
-        // Initialize prevMessages as an empty array if it's null or undefined
-        prevMessages = prevMessages || [];
-
-        // Find if the reciverId already exists in the state
-        const index = prevMessages.findIndex(
-          (msg) => msg.senderId === datafunction[0]?.senderId
-        );
-
-        // If it exists, update the count
-        if (index !== -1) {
-          const updatedMessages = [...prevMessages];
-          updatedMessages[index] = {
-            ...updatedMessages[index],
-            count: updatedMessages[index].count + 1,
-            date: (updatedMessages[index].date = datafunction[0]?.createdAt),
-            uniqueId: (updatedMessages[index].uniqueId =
-              datafunction[0]?.uniqueId),
-          };
-          if (Array.isArray(updatedMessages) && updatedMessages?.length !== 0) {
-            localStorage.setItem(
-              "userCountInfo",
-              JSON.stringify(updatedMessages)
-            );
-          }
-          return updatedMessages;
-        } else {
-          // If it doesn't exist, add a new entry
-          localStorage.setItem(
-            "userCountInfo",
-            JSON.stringify([
-              ...prevMessages,
-              {
-                reciverId: datafunction[0]?.reciverId,
-                senderId: datafunction[0]?.senderId,
-                firstMessage: datafunction[0]?.message,
-                uniqueId: datafunction[0]?.uniqueId,
-                date: datafunction[0]?.createdAt,
-                count: 1,
-              },
-            ])
-          );
-
-          return [
-            ...prevMessages,
-            {
-              reciverId: datafunction[0]?.reciverId,
-              senderId: datafunction[0]?.senderId,
-              firstMessage: datafunction[0]?.message,
-              uniqueId: datafunction[0]?.uniqueId,
-              date: datafunction[0]?.createdAt,
-              count: 1,
-            },
-          ];
-        }
-      });
+      // setCountMessage((prevMessages) => {
+      //   // Initialize prevMessages as an empty array if it's null or undefined
+      //   prevMessages = prevMessages || [];
+      //   // Find if the reciverId already exists in the state
+      //   const index = prevMessages.findIndex(
+      //     (msg) => msg.senderId === datafunction[0]?.senderId
+      //   );
+      //   // If it exists, update the count
+      //   if (index !== -1) {
+      //     const updatedMessages = [...prevMessages];
+      //     updatedMessages[index] = {
+      //       ...updatedMessages[index],
+      //       count: updatedMessages[index].count + 1,
+      //       date: (updatedMessages[index].date = datafunction[0]?.createdAt),
+      //       uniqueId: (updatedMessages[index].uniqueId =
+      //         datafunction[0]?.uniqueId),
+      //     };
+      //     if (Array.isArray(updatedMessages) && updatedMessages?.length !== 0) {
+      //       localStorage.setItem(
+      //         "userCountInfo",
+      //         JSON.stringify(updatedMessages)
+      //       );
+      //     }
+      //     return updatedMessages;
+      //   } else {
+      //     // If it doesn't exist, add a new entry
+      //     localStorage.setItem(
+      //       "userCountInfo",
+      //       JSON.stringify([
+      //         ...prevMessages,
+      //         {
+      //           reciverId: datafunction[0]?.reciverId,
+      //           senderId: datafunction[0]?.senderId,
+      //           firstMessage: datafunction[0]?.message,
+      //           uniqueId: datafunction[0]?.uniqueId,
+      //           date: datafunction[0]?.createdAt,
+      //           count: 1,
+      //         },
+      //       ])
+      //     );
+      //     return [
+      //       ...prevMessages,
+      //       {
+      //         reciverId: datafunction[0]?.reciverId,
+      //         senderId: datafunction[0]?.senderId,
+      //         firstMessage: datafunction[0]?.message,
+      //         uniqueId: datafunction[0]?.uniqueId,
+      //         date: datafunction[0]?.createdAt,
+      //         count: 1,
+      //       },
+      //     ];
+      //   }
+      // });
     } else {
       console.log("when user have in cureent chat so work this");
       socket?.emit("SetMessageSeenConfirm", {
@@ -265,6 +275,18 @@ const Chatbox = () => {
   useEffect(() => {
     if (!reciverEmailAddress || !reloadUserNotification) return;
     if (reciverEmailAddress?.reciverId !== reloadUserNotification?.senderId) {
+      dispatch(
+        addUserNotification({
+          senderId: reloadUserNotification?.senderId,
+          reciverId: reloadUserNotification?.reciverId,
+          firstMessage: reloadUserNotification?.message,
+          date: reloadUserNotification?.createdAt,
+          uniqueId: reloadUserNotification?.uniqueId,
+        })
+      );
+      setTimeout(() => {
+        dispatch(getUserNotification({ senderId: emailLocal?.userId }));
+      }, 1000);
       if ("Notification" in window) {
         // Check if permission is already granted
         if (Notification.permission === "granted") {
@@ -648,7 +670,19 @@ const Chatbox = () => {
 
                           dispatch(updateSeenChatMessageData(dataForSeen));
                         }
-
+                        dispatch(
+                          deleteNotificationData({
+                            reciverId: emailLocal?.userId,
+                            senderId: dt?._id,
+                          })
+                        );
+                        setTimeout(() => {
+                          dispatch(
+                            getUserNotification({
+                              senderId: emailLocal?.userId,
+                            })
+                          );
+                        }, 1000);
                         const setCount = countMessage?.filter(
                           (datas) => datas?.senderId !== dt?._id
                         );
