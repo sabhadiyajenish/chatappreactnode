@@ -18,6 +18,8 @@ const addNotification = asyncHandler(async (req, res, next) => {
 
   if (checkHaveRecord) {
     checkHaveRecord.count = checkHaveRecord.count + 1;
+    checkHaveRecord.uniqueId = uniqueId;
+
     await checkHaveRecord.save();
     return res
       .status(200)

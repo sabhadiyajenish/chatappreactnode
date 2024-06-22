@@ -687,13 +687,13 @@ const Chatbox = () => {
                             senderId: dt?._id,
                           })
                         );
-                        setTimeout(() => {
-                          dispatch(
-                            getUserNotification({
-                              senderId: emailLocal?.userId,
-                            })
-                          );
-                        }, 1000);
+                        // setTimeout(() => {
+                        //   dispatch(
+                        //     getUserNotification({
+                        //       senderId: emailLocal?.userId,
+                        //     })
+                        //   );
+                        // }, 1000);
                         const setCount = countMessage?.filter(
                           (datas) => datas?.senderId !== dt?._id
                         );
@@ -917,6 +917,7 @@ const Chatbox = () => {
                                 getMessage={getMessage}
                                 setGetMessage={setGetMessage}
                                 lastMessageIndex={lastMessageIndex}
+                                activeUser={activeUser}
                               />
                             );
                           })}
@@ -957,7 +958,7 @@ const Chatbox = () => {
               </div>
             </div>
           )}
-          <div className="all_chat_div">
+          <div className="all_chat_div overflow-y-scroll">
             <h4 className="mt-4 mb-4 font-bold">All User List</h4>
             {userLists?.map((dt, key) => {
               return (
@@ -999,7 +1000,12 @@ const Chatbox = () => {
 
                             dispatch(updateSeenChatMessageData(dataForSeen));
                           }
-
+                          dispatch(
+                            deleteNotificationData({
+                              reciverId: emailLocal?.userId,
+                              senderId: dt?._id,
+                            })
+                          );
                           const setCount = countMessage?.filter(
                             (datas) => datas?.senderId !== dt?._id
                           );

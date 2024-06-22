@@ -4,6 +4,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { deleteMessageData } from "../../../store/Message/authApi";
 import { useDispatch } from "react-redux";
+import { SiTicktick } from "react-icons/si";
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   let hours = date.getHours();
@@ -27,6 +28,7 @@ const ChatMessage = ({
   setGetMessage,
   reciverEmailAddress,
   lastMessageIndex,
+  activeUser,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSeen, setIsSeen] = useState(dt?.seen);
@@ -165,6 +167,12 @@ const ChatMessage = ({
       {indexKey === getMessage[date].length - 1 && dt?.seen && (
         <div className=" text-end mr-6 mb-2 text-blue-500">
           <p> Seen {formatTimeDifference(new Date(dt?.seenAt))}.</p>
+        </div>
+      )}
+
+      {indexKey === getMessage[date].length - 1 && !dt?.seen && (
+        <div className="text-end mr-6 mb-4 text-blue-500">
+          <SiTicktick className="text-end float-right h-4 w-4 mt-1" />
         </div>
       )}
     </>

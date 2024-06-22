@@ -1,6 +1,6 @@
 .main_chat_div {
   width: 100%;
-  height: 100vh;
+  height: 98vh;
   background-color: lightgray;
 }
 .child1_chat_div {
@@ -11,7 +11,7 @@
 .all_chat_div {
   width: 100%;
   text-align: center;
-  height: 100vh;
+  height: 96vh;
   border: 1px solid black;
 }
 .img_girls_icon {
@@ -35,11 +35,29 @@
 }
 .center_chat_div {
   width: 100%;
-  margin-top: 1rem;
   height: 79vh;
   /* overflow-x: scroll; */
   overflow-y: scroll;
   border-bottom: 1px solid rgb(164, 185, 231);
+}
+/* WebKit (Chrome, Safari, new Edge) */
+.center_chat_div::-webkit-scrollbar {
+  width: 1px; /* Width of the scrollbar */
+}
+
+.center_chat_div::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Color of the scrollbar track */
+}
+
+.center_chat_div::-webkit-scrollbar-thumb {
+  background-color: #bcc2c8; /* Color of the scrollbar thumb */
+  border-radius: 10px; /* Rounded corners of the scrollbar thumb */
+}
+
+/* Firefox */
+.center_chat_div {
+  scrollbar-width: thin; /* Width of the scrollbar */
+  scrollbar-color: #bcc2c8 #f1f1f1; /* Color of the scrollbar thumb and track */
 }
 .you_chat {
   display: flex;
