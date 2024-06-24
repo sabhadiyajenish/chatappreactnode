@@ -102,7 +102,6 @@ const Chatbox = () => {
       setUserDatas(tag?.data);
     }
   }, [tag]);
-
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -514,6 +513,57 @@ const Chatbox = () => {
     }
   };
   // console.log("seee get message<<<", getMessage);
+  // const downloadTxtFile = () => {
+  //   // Create an array to hold formatted messages
+  //   const formattedMessages = [];
+
+  //   // Iterate over each date in the data object
+  //   Object.keys(getMessage)?.forEach((date) => {
+  //     // Iterate over each message on this date
+  //     console.log("date is coome on this<<<<", date);
+  //     let j = 0;
+  //     getMessage[date]?.forEach((item) => {
+  //       // Format each message
+  //       if (
+  //         item?.senderId === emailLocal?.userId &&
+  //         item?.userDelete === false
+  //       ) {
+  //         j == 0 ? formattedMessages.push(`\n${date}`) : null;
+  //         j += 1;
+  //         const formattedMessage = `You :- message: "${
+  //           item?.message
+  //         }" time:- ${new Date(item?.createdAt).toLocaleTimeString([], {
+  //           hour: "2-digit",
+  //           minute: "2-digit",
+  //         })}`;
+  //         formattedMessages.push(formattedMessage);
+  //       } else if (
+  //         reciverChatData === item?.senderId &&
+  //         item?.reciverDelete === false
+  //       ) {
+  //         j == 0 ? formattedMessages.push(`\n${date}`) : null;
+  //         j += 1;
+  //         const formattedMessage = `${
+  //           reciverEmailAddress?.userName
+  //         } :- message: "${item?.message}" time:- ${new Date(
+  //           item?.createdAt
+  //         ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  //         formattedMessages.push(formattedMessage);
+  //       }
+  //     });
+  //   });
+
+  //   // Join all formatted messages with newlines
+  //   if (Array.isArray(formattedMessages) && formattedMessages?.length !== 0) {
+  //     const fileContent = formattedMessages.join("\n");
+  //     const element = document.createElement("a");
+  //     const file = new Blob([fileContent], { type: "text/plain" });
+  //     element.href = URL.createObjectURL(file);
+  //     element.download = "messages.txt";
+  //     document.body.appendChild(element); // Required for this to work in FireFox
+  //     element.click();
+  //   }
+  // };
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
     const formattedMessages = [];
@@ -521,7 +571,6 @@ const Chatbox = () => {
     // Iterate over each date in the data object
     Object.keys(getMessage)?.forEach((date) => {
       // Iterate over each message on this date
-      console.log("date is coome on this<<<<", date);
       let j = 0;
       getMessage[date]?.forEach((item) => {
         // Format each message
@@ -529,38 +578,87 @@ const Chatbox = () => {
           item?.senderId === emailLocal?.userId &&
           item?.userDelete === false
         ) {
-          j == 0 ? formattedMessages.push(`\n${date}`) : null;
-          j += 1;
-          const formattedMessage = `You :- message: "${
-            item?.message
-          }" time:- ${new Date(item?.createdAt).toLocaleTimeString([], {
+          formattedMessages.push(`<div class="custom-message-container">`);
+          formattedMessages.push(`<p class="main_text">You</p> <hr/>`);
+          const datap = `<p>${item?.message}</p>`;
+          formattedMessages.push(datap);
+
+          const formattedMessage = `<p> ${new Date(date).toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }
+          )}, ${new Date(item?.createdAt).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
-          })}`;
+          })}</p></div>`;
           formattedMessages.push(formattedMessage);
         } else if (
           reciverChatData === item?.senderId &&
           item?.reciverDelete === false
         ) {
-          j == 0 ? formattedMessages.push(`\n${date}`) : null;
-          j += 1;
-          const formattedMessage = `${
-            reciverEmailAddress?.userName
-          } :- message: "${item?.message}" time:- ${new Date(
-            item?.createdAt
-          ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+          formattedMessages.push(`<div class="custom-message-container">`);
+          formattedMessages.push(
+            `<p class="main_text">${reciverEmailAddress?.userName}</p> <hr/>`
+          );
+          const datap = `<p>${item?.message}</p>`;
+          formattedMessages.push(datap);
+
+          const formattedMessage = `<p> ${new Date(date).toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }
+          )}, ${new Date(item?.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</p></div>`;
           formattedMessages.push(formattedMessage);
         }
       });
     });
 
-    // Join all formatted messages with newlines
+    // Join all formatted messages
     if (Array.isArray(formattedMessages) && formattedMessages?.length !== 0) {
       const fileContent = formattedMessages.join("\n");
+      const htmlContent = `<!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Messages</title>
+          <style>
+            .custom-message-container {
+              width: 600px;
+              background-color: #f0f0f0; /* Light grey background */
+              padding: 10px;
+              margin:10px auto;
+              border-radius: 8px;
+              box-sizing: border-box;
+
+            }
+            .custom-message-container p {
+              margin-top: 5px;
+            }
+              .main_text{
+                font-size: 16px;
+                font-weight: bold;
+              }
+                .jenish{
+                display: flex;
+  justify-content: center;
+                }
+          </style>
+        </head>
+        <body><div class="jenish"><div>${fileContent}</div></div></body>
+      </html>`;
       const element = document.createElement("a");
-      const file = new Blob([fileContent], { type: "text/plain" });
+      const file = new Blob([htmlContent], { type: "text/html" });
       element.href = URL.createObjectURL(file);
-      element.download = "messages.txt";
+      element.download = "messages.html";
       document.body.appendChild(element); // Required for this to work in FireFox
       element.click();
     }
