@@ -53,8 +53,10 @@ const getNotification = asyncHandler(async (req, res, next) => {
   const Sender = new mongoose.Types.ObjectId(senderId);
 
   const checkHaveRecord = await Notification.find({
-    $or: [{ senderId: Sender }, { reciverId: Sender }],
+    $or: [{ senderId: senderId }, { reciverId: senderId }],
   });
+  // .populate({ path: "senderId", select: "email userName" })
+  // .populate({ path: "reciverId", select: "email userName" });
 
   return res
     .status(200)

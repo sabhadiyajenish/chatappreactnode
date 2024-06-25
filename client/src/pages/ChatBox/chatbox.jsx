@@ -1,9 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 // import { addTag, getAllTag } from "../../../store/tag/tagAction";
 import "./chatbox.css";
 import Glrs from "../../assets/image/grls.jpg";
+
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Modal from "@mui/material/Modal";
+
 // import SendIcon from "@mui/icons-material/Send";
 import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
@@ -26,6 +32,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import EmojiModel from "./emoji/emojiModel";
 import { HiOutlineDotsVertical } from "react-icons/hi";
+import { TiDeleteOutline } from "react-icons/ti";
 import axios from "../../utils/commonAxios.jsx";
 import ChatMessage from "./chatMessage/chatMessage.jsx";
 import moment from "moment";
@@ -34,6 +41,19 @@ import {
   deleteNotificationData,
   getUserNotification,
 } from "../../store/Notification/notificationApi.js";
+import ChatHeader from "./ChatComponents/ChatHeader.jsx";
+import ChatList from "./ChatComponents/ChatList.jsx";
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 330,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+};
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -42,7 +62,7 @@ const Chatbox = () => {
   const { notificationDatas } = useSelector((state) => state.notificationData);
   const { tag, oneUserMessage, loading, conversationData, userLists } =
     useSelector((state) => state.messageData);
-
+  const [open, setOpen] = React.useState(false);
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
   const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
@@ -50,6 +70,9 @@ const Chatbox = () => {
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
   const [LastSeenUser, setLastSeenUser] = useState({});
+
+  const [file, setFile] = useState(null);
+  const [previewURL, setPreviewURL] = useState(null);
 
   const [message, setMessage] = useState("");
   const [emailLocal, setEmailLocal] = useState("");
@@ -118,11 +141,6 @@ const Chatbox = () => {
   useEffect(() => {
     dispatch(getOneUser());
     dispatch(getAllUser());
-
-    // const userInfo = localStorage.getItem("userCountInfo");
-    // userInfo !== undefined && userInfo?.length !== 0
-    //   ? setCountMessage(JSON.parse(userInfo))
-    //   : null;
   }, []);
   useEffect(() => {
     const socket = io(SOCKET_URL); // Initialize socket connection
@@ -227,45 +245,6 @@ const Chatbox = () => {
         dispatch(updateSeenChatMessageData(dataForSeen));
       }, 1500);
     }
-    // else {
-    //   function filterAndUpdateSeen(array, targetUniqueId) {
-    //     return array.map((item) => {
-    //       if (item.uniqueId === targetUniqueId) {
-    //         return {
-    //           ...item,
-    //           seen: true,
-    //           seenAt: new Date(),
-    //         };
-    //       }
-    //       return item;
-    //     });
-    //   }
-    //   const currentDate = datafunction[0]?.createdAt;
-
-    //   if (currentDate) {
-    //     const dateObject = new Date(currentDate); // Attempt to create a Date object
-
-    //     if (!isNaN(dateObject.getTime())) {
-    //       // Check if dateObject is a valid Date
-    //       const formattedDate = dateObject.toISOString().split("T")[0];
-    //       console.log("Formatted Date:", formattedDate);
-    //       const modifiedArray = filterAndUpdateSeen(
-    //         getMessage[formattedDate],
-    //         datafunction[0]?.uniqueId
-    //       );
-    //       console.error("Invalid date format:", modifiedArray);
-    //       setGetMessage((prevState) => ({
-    //         ...prevState,
-    //         [formattedDate || ""]: modifiedArray,
-    //       }));
-    //       // setGetMessage(modifiedArray);
-    //     } else {
-    //     }
-    //   } else {
-    //     console.error("createdAt is undefined or null");
-    //   }
-    // }
-    // SetDataFunction("");
   }, [datafunction]);
   // const playNotificationSound = () => {
   //   const audio = new Audio("../../../public/iphone_sound.mp3");
@@ -364,15 +343,6 @@ const Chatbox = () => {
           [currentDate]: [...(prevState[currentDate] || []), user1[0]],
         };
       });
-      // setGetMessage((prevMessagesByDate) => {
-      //   const newMessagesByDate = { ...prevMessagesByDate };
-      //   if (!newMessagesByDate[date]) {
-      //     newMessagesByDate[date] = [];
-      //   }
-      //   newMessagesByDate[date].push(user1[0]);
-      //   return newMessagesByDate;
-      // });
-      // setGetMessage((mess) => mess.concat(user1));
       SetDataFunction(user1);
     });
 
@@ -462,18 +432,23 @@ const Chatbox = () => {
         seen: false,
         seenAt: "",
       });
+      const receiverId = reciverEmailAddress?.reciverId;
+
       const CheckUserCon = userConversationData?.find(
-        (dr) => dr?._id === reciverEmailAddress?.reciverId
+        (dr) => dr?._id === receiverId
       );
-      if (CheckUserCon === undefined) {
-        socket?.emit("addUserNew", {
-          _id: reciverEmailAddress?.reciverId,
+
+      if (!CheckUserCon) {
+        const newUser = {
+          _id: receiverId,
           email: reciverEmailAddress?.email,
           avatar: reciverEmailAddress?.avatar,
           userName: reciverEmailAddress?.userName,
           senderId: emailLocal?.userId,
-          reciverId: reciverEmailAddress?.reciverId,
-        });
+          receiverId: receiverId,
+        };
+
+        socket?.emit("addUserNew", newUser);
       }
       const data = {
         senderId: emailLocal?.userId,
@@ -512,58 +487,7 @@ const Chatbox = () => {
       ).format("LT")}`;
     }
   };
-  // console.log("seee get message<<<", getMessage);
-  // const downloadTxtFile = () => {
-  //   // Create an array to hold formatted messages
-  //   const formattedMessages = [];
 
-  //   // Iterate over each date in the data object
-  //   Object.keys(getMessage)?.forEach((date) => {
-  //     // Iterate over each message on this date
-  //     console.log("date is coome on this<<<<", date);
-  //     let j = 0;
-  //     getMessage[date]?.forEach((item) => {
-  //       // Format each message
-  //       if (
-  //         item?.senderId === emailLocal?.userId &&
-  //         item?.userDelete === false
-  //       ) {
-  //         j == 0 ? formattedMessages.push(`\n${date}`) : null;
-  //         j += 1;
-  //         const formattedMessage = `You :- message: "${
-  //           item?.message
-  //         }" time:- ${new Date(item?.createdAt).toLocaleTimeString([], {
-  //           hour: "2-digit",
-  //           minute: "2-digit",
-  //         })}`;
-  //         formattedMessages.push(formattedMessage);
-  //       } else if (
-  //         reciverChatData === item?.senderId &&
-  //         item?.reciverDelete === false
-  //       ) {
-  //         j == 0 ? formattedMessages.push(`\n${date}`) : null;
-  //         j += 1;
-  //         const formattedMessage = `${
-  //           reciverEmailAddress?.userName
-  //         } :- message: "${item?.message}" time:- ${new Date(
-  //           item?.createdAt
-  //         ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  //         formattedMessages.push(formattedMessage);
-  //       }
-  //     });
-  //   });
-
-  //   // Join all formatted messages with newlines
-  //   if (Array.isArray(formattedMessages) && formattedMessages?.length !== 0) {
-  //     const fileContent = formattedMessages.join("\n");
-  //     const element = document.createElement("a");
-  //     const file = new Blob([fileContent], { type: "text/plain" });
-  //     element.href = URL.createObjectURL(file);
-  //     element.download = "messages.txt";
-  //     document.body.appendChild(element); // Required for this to work in FireFox
-  //     element.click();
-  //   }
-  // };
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
     const formattedMessages = [];
@@ -663,7 +587,25 @@ const Chatbox = () => {
       element.click();
     }
   };
+  const handleFileChange = (e) => {
+    console.log("come inside modules<<<<<<<<<<<<<<<<<<", e);
+    const selectedFile = e.target.files[0];
 
+    if (selectedFile) {
+      setFile(selectedFile);
+
+      // Preview image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewURL(reader.result);
+      };
+      reader.readAsDataURL(selectedFile); // Read file as data URL
+    } else {
+      // Clear file and preview if no file selected
+      setFile(null);
+      setPreviewURL(null);
+    }
+  };
   let typingTimeout;
 
   const handleTyping = (e) => {
@@ -700,171 +642,41 @@ const Chatbox = () => {
   }
   const isUserTyping =
     reciverEmailAddress?.reciverId === isTyping?.senderId && isTyping?.status;
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setFile(null);
+    setPreviewURL(null);
+  };
+
   return (
     <>
       <div className="main_chat_div">
         <div className="child1_chat_div">
           <div className="all_chat_div">
-            <div
-              style={{ borderBottom: "1px solid black" }}
-              className="mt-2 p-4 flex justify-center items-center flex-wrap "
-            >
-              <div className=" relative">
-                <img
-                  alt="gdg"
-                  src={userOneData?.avatar ? userOneData?.avatar : Glrs}
-                  className=" w-16 h-16 rounded-full "
-                />
-                {seeLoginActiveInfo?.online && (
-                  <span className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"></span>
-                )}
-              </div>
-              <div className="md:ml-3 ml-1">
-                <h1 className="text-center p-2 font-bold ">Me</h1>
-                <h4>{emailLocal?.email}</h4>
-              </div>
-            </div>
-            <h1 className="mx-3 my-4 text-center font-medium">Your Chat</h1>
-            {userConversationData?.map((dt, key) => {
-              let checkLastSeen;
-              let lastSeenText;
-              if (LastSeenUser && typeof LastSeenUser === "object") {
-                checkLastSeen = LastSeenUser.hasOwnProperty(dt._id)
-                  ? LastSeenUser[dt._id]
-                  : null;
-                lastSeenText = checkLastSeen
-                  ? formatLastSeen(checkLastSeen)
-                  : "Last seen not available";
-              }
-              const checkOnorNot = !activeUser?.some(
-                (dr) => dr.userId === dt._id
-              );
-              console.log(checkLastSeen);
-              return (
-                <>
-                  <div
-                    className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
-                    key={key}
-                    onClick={async () => {
-                      if (reciverEmailAddress?.email !== dt?.email) {
-                        setReciverEmailaddress({
-                          email: dt?.email,
-                          reciverId: dt?._id,
-                          avatar: dt?.avatar,
-                          userName: dt?.userName,
-                          _id: dt?._id,
-                        });
-                        setReciverChatData(dt?._id);
-
-                        const data1 = {
-                          senderId: emailLocal?.userId,
-                          reciverId: dt._id,
-                        };
-                        dispatch(getUserMessage(data1));
-                        const setCurrentUniueId = countMessage?.filter(
-                          (datas) => datas?.senderId === dt?._id
-                        );
-                        if (
-                          setCurrentUniueId?.length !== 0 &&
-                          Array.isArray(setCurrentUniueId)
-                        ) {
-                          socket?.emit("SetMessageSeenConfirm", {
-                            messageId: setCurrentUniueId[0]?.uniqueId,
-                            reciverId: dt?._id,
-                            date: setCurrentUniueId[0]?.date,
-                          });
-                          const dataForSeen = {
-                            messageId: setCurrentUniueId[0]?.uniqueId,
-                          };
-
-                          dispatch(updateSeenChatMessageData(dataForSeen));
-                        }
-                        dispatch(
-                          deleteNotificationData({
-                            reciverId: emailLocal?.userId,
-                            senderId: dt?._id,
-                          })
-                        );
-                        // setTimeout(() => {
-                        //   dispatch(
-                        //     getUserNotification({
-                        //       senderId: emailLocal?.userId,
-                        //     })
-                        //   );
-                        // }, 1000);
-                        const setCount = countMessage?.filter(
-                          (datas) => datas?.senderId !== dt?._id
-                        );
-                        setCountMessage(setCount);
-                        if (Array.isArray(setCount) && setCount?.length !== 0) {
-                          localStorage.setItem(
-                            "userCountInfo",
-                            JSON.stringify(setCount)
-                          );
-                        } else {
-                          localStorage.setItem(
-                            "userCountInfo",
-                            JSON.stringify([
-                              {
-                                reciverId: "jenish",
-                                senderId: "jjs",
-                                firstMessage: "",
-                                count: 0,
-                                date: "",
-                                uniqueId: "",
-                              },
-                            ])
-                          );
-                        }
-                      }
-                    }}
-                  >
-                    <div style={{ position: "relative" }}>
-                      <img
-                        alt="gdg"
-                        src={dt?.avatar ? dt?.avatar : Glrs}
-                        className=" w-16 h-16 rounded-full "
-                      />
-                      {activeUser.map((dr, key1) => {
-                        return dr?.userId === dt?._id ? (
-                          <span
-                            className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
-                            key={key1}
-                          ></span>
-                        ) : (
-                          ""
-                        );
-                      })}
-                    </div>
-                    <div>
-                      <p className="icon_text">
-                        {dt?.userName?.substring(0, 10)}
-                        {dt?.userName?.length <= 10 ? null : ".."}
-                      </p>
-                      {countMessage?.map((itm) => {
-                        return itm.senderId === dt._id ? (
-                          <p className="text-[#00C000]">
-                            {itm?.firstMessage?.substring(0, 10)}
-                            {itm?.firstMessage?.length <= 10 ? null : ".."}
-                          </p>
-                        ) : null;
-                      })}
-                    </div>
-                    <p className="text-[#7436c5] text-[15px] mt-1 text-center">
-                      {checkOnorNot && checkLastSeen && lastSeenText}
-                    </p>
-
-                    {countMessage?.map((itm) => {
-                      return itm.senderId === dt._id ? (
-                        <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
-                          {itm?.count < 10 ? itm?.count : "9+"}
-                        </h1>
-                      ) : null;
-                    })}
-                  </div>
-                </>
-              );
-            })}
+            <ChatHeader
+              userOneData={userOneData}
+              emailLocal={emailLocal}
+              seeLoginActiveInfo={seeLoginActiveInfo}
+            />
+            <ChatList
+              userConversationData={userConversationData}
+              reciverEmailAddress={reciverEmailAddress}
+              setReciverEmailaddress={setReciverEmailaddress}
+              setReciverChatData={setReciverChatData}
+              emailLocal={emailLocal}
+              dispatch={dispatch}
+              getUserMessage={getUserMessage}
+              countMessage={countMessage}
+              socket={socket}
+              updateSeenChatMessageData={updateSeenChatMessageData}
+              deleteNotificationData={deleteNotificationData}
+              setCountMessage={setCountMessage}
+              activeUser={activeUser}
+              LastSeenUser={LastSeenUser}
+              formatLastSeen={formatLastSeen}
+            />
           </div>
           {reciverEmailAddress?.email === "" ? (
             <>
@@ -968,7 +780,7 @@ const Chatbox = () => {
                   </Menu>
                 </div>
               </div>
-              <div className="center_chat_div">
+              <div className="center_chat_div relative">
                 {loading ? (
                   <div className="h-[80vh] flex justify-center items-center">
                     <h2 className=" text-4xl font-thin">Loading chat...</h2>
@@ -1024,8 +836,17 @@ const Chatbox = () => {
                     })}
                   </>
                 )}
+                {/* <div className=" absolute bottom-0 w-full ">
+                  <div className="w-full h-32 bg-slate-500 ">efefefe</div>
+                </div> */}
               </div>
-              <div className="center_input_div flex justify-center cursor-pointer items-center">
+
+              <div className="center_input_div flex   justify-center cursor-pointer items-center">
+                <HiOutlineDotsVertical
+                  className="mt-[15px]  cursor-pointer "
+                  onClick={handleOpen}
+                />
+
                 <MdEmojiEmotions
                   className="w-8 h-8 md:ml-1 ml-3 mr-3 mt-3"
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
@@ -1172,6 +993,55 @@ const Chatbox = () => {
           </div>
         </div>
       </div>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            {!previewURL && (
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                // className="hidden"
+                className="w-[17rem]"
+              />
+            )}
+          </Typography>
+
+          <Typography id="modal-modal-description " sx={{ mt: 2 }}>
+            {previewURL && (
+              <div className=" relative">
+                <img
+                  src={previewURL}
+                  alt="Preview"
+                  style={{ height: "150px", width: "100%" }}
+                />
+                <TiDeleteOutline
+                  className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                  onClick={() => {
+                    setFile(null);
+                    setPreviewURL(null);
+                  }}
+                />
+              </div>
+            )}
+            {previewURL && (
+              <div className=" w-full">
+                <button
+                  type="button"
+                  class="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                >
+                  Send
+                </button>
+              </div>
+            )}
+          </Typography>
+        </Box>
+      </Modal>
     </>
   );
 };
