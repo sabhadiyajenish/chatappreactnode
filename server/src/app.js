@@ -75,6 +75,7 @@ io.on("connection", (socket) => {
     "addMessage",
     ({
       message,
+      avatar,
       reciverId,
       senderId,
       userDelete,
@@ -93,6 +94,7 @@ io.on("connection", (socket) => {
           .emit("getMessage", [
             {
               message,
+              avatar,
               senderId,
               reciverId,
               userDelete,
@@ -106,6 +108,7 @@ io.on("connection", (socket) => {
         io.to(receiver?.socketId).emit("getMessageNotification", [
           {
             message,
+            avatar,
             senderId,
             reciverId,
             userDelete,
@@ -121,6 +124,7 @@ io.on("connection", (socket) => {
         io.to(sender?.socketId).emit("getMessage", [
           {
             message,
+            avatar,
             senderId,
             reciverId,
             userDelete,
@@ -134,6 +138,7 @@ io.on("connection", (socket) => {
         io.to(sender?.socketId).emit("getMessageNotificationInMongoDb", [
           {
             message,
+            avatar,
             senderId,
             reciverId,
             userDelete,

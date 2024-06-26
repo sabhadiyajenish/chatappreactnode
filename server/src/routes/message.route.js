@@ -9,7 +9,9 @@ import {
   deleteMessage,
   clearChatMessage,
   updateSeenStatus,
+  AddImageInClound,
 } from "../controllers/message.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router(); // eslint-disable-line new-cap
 // get cart
@@ -21,5 +23,18 @@ router.route("/getalluser/users").get(authMiddleWare, getAllUser);
 router.route("/deleteMessage").post(authMiddleWare, deleteMessage);
 router.route("/clearChatMessage").post(authMiddleWare, clearChatMessage);
 router.route("/updateSeenStatus").post(authMiddleWare, updateSeenStatus);
+
+router.route("/updateSeenStatus").post(authMiddleWare, updateSeenStatus);
+
+router.route("/uploadImageInCloud").post(
+  authMiddleWare,
+  upload.fields([
+    {
+      name: "avatar",
+      maxCount: 1,
+    },
+  ]),
+  AddImageInClound
+);
 
 export default router;

@@ -21,7 +21,9 @@ const MessageSchema = mongoose.Schema({
   },
   message: {
     type: String,
-    required: true,
+  },
+  avatar: {
+    type: String,
   },
   seen: { type: Boolean, default: false },
   seenAt: { type: Date },

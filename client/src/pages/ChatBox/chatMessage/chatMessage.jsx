@@ -75,21 +75,31 @@ const ChatMessage = ({
   return dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
     <>
       <div className="you_chat md:pl-20 pl-5 " key={indexKey} ref={messageDom}>
-        <p className="you_chat_text pl-2 text-start pr-2 py-1 chat_time">
-          {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
-          {dt?.message?.length > 300 && (
-            <span
-              className="text-blue-500 cursor-pointer"
-              onClick={toggleReadMore}
-            >
-              {isExpanded ? " read Less" : "... read More"}
+        {dt?.message ? (
+          <p className="you_chat_text pl-2 text-start pr-2 py-1 chat_time">
+            {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
+            {dt?.message?.length > 300 && (
+              <span
+                className="text-blue-500 cursor-pointer"
+                onClick={toggleReadMore}
+              >
+                {isExpanded ? " read Less" : "... read More"}
+              </span>
+            )}{" "}
+            <span className="text-[11px] text-gray-200 ml-1">
+              {dt?.createdAt && formatDate(dt?.createdAt)}
+              {/* {isSeen && lastMessageIndex && "seen"} */}
             </span>
-          )}{" "}
-          <span className="text-[11px] text-gray-200 ml-1">
-            {dt?.createdAt && formatDate(dt?.createdAt)}
-            {/* {isSeen && lastMessageIndex && "seen"} */}
-          </span>
-        </p>
+          </p>
+        ) : dt?.avatar ? (
+          <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
+            <img src={dt?.avatar} alt="image" height={200} width={200} />
+            <span className="text-[11px] text-gray-700 float-end absolute bottom-0 right-1">
+              {dt?.createdAt && formatDate(dt?.createdAt)}
+              {/* {isSeen && lastMessageIndex && "seen"} */}
+            </span>
+          </div>
+        ) : null}
 
         <Menu as="div" className="relative">
           <Menu.Button>
@@ -232,22 +242,32 @@ const ChatMessage = ({
             </Menu.Items>
           </Transition>
         </Menu>
-        <p className="you_chat_text1 text-start chat_time1 ">
-          {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
-          {dt?.message?.length > 300 && (
-            <span
-              className="text-blue-500 cursor-pointer"
-              onClick={toggleReadMore}
-            >
-              {isExpanded ? " read Less" : "... read More"}
-            </span>
-          )}
+        {dt?.message ? (
+          <p className="you_chat_text1 text-start chat_time1 ">
+            {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
+            {dt?.message?.length > 300 && (
+              <span
+                className="text-blue-500 cursor-pointer"
+                onClick={toggleReadMore}
+              >
+                {isExpanded ? " read Less" : "... read More"}
+              </span>
+            )}
 
-          <span className="text-[11px] text-gray-200 ml-1">
-            {dt?.createdAt && formatDate(dt?.createdAt)}
-            {/* {isSeen && lastMessageIndex && "seen"} */}
-          </span>
-        </p>
+            <span className="text-[11px] text-gray-200 ml-1">
+              {dt?.createdAt && formatDate(dt?.createdAt)}
+              {/* {isSeen && lastMessageIndex && "seen"} */}
+            </span>
+          </p>
+        ) : dt?.avatar ? (
+          <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
+            <img src={dt?.avatar} alt="image" height={200} width={200} />
+            <span className="text-[11px] text-gray-700  absolute bottom-0 right-1">
+              {dt?.createdAt && formatDate(dt?.createdAt)}
+              {/* {isSeen && lastMessageIndex && "seen"} */}
+            </span>
+          </div>
+        ) : null}
       </div>
     </>
   ) : null;

@@ -43,6 +43,7 @@ import {
 } from "../../store/Notification/notificationApi.js";
 import ChatHeader from "./ChatComponents/ChatHeader.jsx";
 import ChatList from "./ChatComponents/ChatList.jsx";
+
 const style = {
   position: "absolute",
   top: "50%",
@@ -73,6 +74,7 @@ const Chatbox = () => {
 
   const [file, setFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
+  const [loadingForUploadImage, setLoadingForUploadImage] = useState(false);
 
   const [message, setMessage] = useState("");
   const [emailLocal, setEmailLocal] = useState("");
@@ -257,7 +259,9 @@ const Chatbox = () => {
         addUserNotification({
           senderId: reloadUserNotification?.senderId,
           reciverId: reloadUserNotification?.reciverId,
-          firstMessage: reloadUserNotification?.message,
+          firstMessage: reloadUserNotification?.message
+            ? reloadUserNotification?.message
+            : "Image",
           date: reloadUserNotification?.createdAt,
           uniqueId: reloadUserNotification?.uniqueId,
         })
@@ -265,27 +269,25 @@ const Chatbox = () => {
       setTimeout(() => {
         dispatch(getUserNotification({ senderId: emailLocal?.userId }));
       }, 1000);
+
+      const displayNoti = `${reloadUserNotification?.userName}:- \n ${
+        reloadUserNotification?.message
+          ? reloadUserNotification?.message
+          : "Image"
+      }`;
       if ("Notification" in window) {
         // Check if permission is already granted
         if (Notification.permission === "granted") {
           // If granted, show the notification
           // playNotificationSound();
-          new Notification(
-            reloadUserNotification?.userName +
-              ":- \n" +
-              reloadUserNotification?.message
-          );
+          new Notification(displayNoti);
         } else if (Notification.permission !== "denied") {
           // Otherwise, request permission from the user
           Notification.requestPermission().then(function (permission) {
             if (permission === "granted") {
               // playNotificationSound();
 
-              new Notification(
-                reloadUserNotification?.userName +
-                  ":- \n" +
-                  reloadUserNotification?.message
-              );
+              new Notification(displayNoti);
             }
           });
         }
@@ -355,7 +357,7 @@ const Chatbox = () => {
         addUserNotification({
           senderId: userDatas[0]?.senderId,
           reciverId: userDatas[0]?.reciverId,
-          firstMessage: userDatas[0]?.message,
+          firstMessage: userDatas[0]?.message || "Image",
           date: userDatas[0]?.createdAt,
           uniqueId: userDatas[0]?.uniqueId,
         })
@@ -383,10 +385,18 @@ const Chatbox = () => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
       );
+      console.log(
+        "get new user is come here<<<<<<<<<<<<<<<<<<<<<<<",
+        CheckUserCon
+      );
       if (CheckUserCon === undefined) {
         setTimeout(() => {
+          console.log(
+            "get new user is come here<<<<<<<<<<<<<<<<<<<<<<<",
+            emailLocal?.userId
+          );
           dispatch(getConversation(emailLocal?.userId || ""));
-        }, 500);
+        }, 1000);
       }
     });
     socket?.on("getUserTypingStatus", (userStatus) => {
@@ -445,7 +455,7 @@ const Chatbox = () => {
           avatar: reciverEmailAddress?.avatar,
           userName: reciverEmailAddress?.userName,
           senderId: emailLocal?.userId,
-          receiverId: receiverId,
+          reciverId: reciverEmailAddress?.reciverId,
         };
 
         socket?.emit("addUserNew", newUser);
@@ -606,6 +616,73 @@ const Chatbox = () => {
       setPreviewURL(null);
     }
   };
+
+  let formData = new FormData();
+
+  const UploadFileOnCloud = async () => {
+    setLoadingForUploadImage(true);
+    formData.append("avatar", file);
+
+    const getImageUrl = await axios.post(
+      "/messages/uploadImageInCloud",
+      formData,
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    if (getImageUrl?.data?.data?.url) {
+      console.log("image upload in cloud<<<<<<<<<<<<<<<<<<", getImageUrl);
+
+      const uniqueId = generateUniqueId();
+
+      socket?.emit("addMessage", {
+        avatar: getImageUrl?.data?.data?.url,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+        userDelete: false,
+        reciverDelete: false,
+        uniqueId: uniqueId,
+        userName: emailLocal?.email,
+        seen: false,
+        seenAt: "",
+      });
+      const receiverId = reciverEmailAddress?.reciverId;
+
+      const CheckUserCon = userConversationData?.find(
+        (dr) => dr?._id === receiverId
+      );
+
+      if (!CheckUserCon) {
+        const newUser = {
+          _id: receiverId,
+          email: reciverEmailAddress?.email,
+          avatar: reciverEmailAddress?.avatar,
+          userName: reciverEmailAddress?.userName,
+          senderId: emailLocal?.userId,
+          reciverId: receiverId,
+        };
+
+        socket?.emit("addUserNew", newUser);
+      }
+      const data = {
+        senderId: emailLocal?.userId,
+        conversationId: "",
+        reciverId: reciverEmailAddress?.reciverId,
+        uniqueId: uniqueId,
+        avatar: getImageUrl?.data?.data?.url,
+      };
+      setLoadingForUploadImage(false);
+      handleClose();
+
+      dispatch(addUserMessage(data));
+    } else {
+      setLoadingForUploadImage(false);
+    }
+  };
+
   let typingTimeout;
 
   const handleTyping = (e) => {
@@ -843,7 +920,7 @@ const Chatbox = () => {
 
               <div className="center_input_div flex   justify-center cursor-pointer items-center">
                 <HiOutlineDotsVertical
-                  className="mt-[15px]  cursor-pointer "
+                  className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
                 />
 
@@ -890,7 +967,7 @@ const Chatbox = () => {
                         if (reciverEmailAddress?.email !== dt?.email) {
                           setReciverEmailaddress({
                             email: dt.email,
-                            reciverId: dt._id,
+                            reciverId: dt?._id,
                             avatar: dt?.avatar,
                             userName: dt?.userName,
                             _id: dt?._id,
@@ -1033,9 +1110,10 @@ const Chatbox = () => {
               <div className=" w-full">
                 <button
                   type="button"
-                  class="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                  onClick={UploadFileOnCloud}
+                  className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  Send
+                  {loadingForUploadImage ? "uploading... " : "Send"}
                 </button>
               </div>
             )}

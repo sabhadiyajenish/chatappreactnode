@@ -4,14 +4,16 @@ import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { fileUploadCloud } from "../utils/cloudinary.js";
 
 const addMessage = asyncHandler(async (req, res, next) => {
   const {
     senderId,
     reciverId,
     conversationIds = "",
-    message,
+    message = "",
     uniqueId,
+    avatar = "",
   } = req.body;
   const userData = await Coversation.find({
     members: { $all: [senderId, reciverId] },
@@ -28,6 +30,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
       senderId: senderId,
       message: message,
       uniqueId,
+      avatar,
     });
     const messageData = await messageComeData.save();
     return res
@@ -46,6 +49,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
     senderId: senderId,
     message: message,
     uniqueId,
+    avatar,
   });
   // console.log(">>>message>>>", messageComewithComIdData);
   const messageData1 = await messageComewithComIdData.save();
@@ -219,6 +223,31 @@ const clearChatMessage = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, {}, "chatClear successfully"));
 });
 
+const AddImageInClound = asyncHandler(async (req, res) => {
+  const avatarLocalFile = req.files?.avatar[0]?.path;
+
+  if (!avatarLocalFile) {
+    return res
+      .status(300)
+      .json(new ApiResponse(300, "avatar image is required.."));
+  }
+  const avatarSerPath = await fileUploadCloud(avatarLocalFile);
+  if (!avatarSerPath) {
+    return res
+      .status(300)
+      .json(new ApiResponse(300, "avatar image is required.."));
+  }
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        url: avatarSerPath?.url,
+      },
+      "image upload in clound successfully"
+    )
+  );
+});
+
 export {
   addMessage,
   getMessage,
@@ -227,4 +256,5 @@ export {
   deleteMessage,
   clearChatMessage,
   updateSeenStatus,
+  AddImageInClound,
 };
