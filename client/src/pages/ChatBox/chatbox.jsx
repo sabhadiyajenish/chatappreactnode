@@ -497,6 +497,20 @@ const Chatbox = () => {
       ).format("LT")}`;
     }
   };
+  const getLastMessageIndex = () => {
+    let lastMessageIndex = -1;
+    Object.keys(getMessage).forEach((date) => {
+      const messages = getMessage[date];
+      if (messages && messages.length > 0) {
+        const lastIndex = messages.length - 1;
+        if (lastIndex > lastMessageIndex) {
+          lastMessageIndex = lastIndex;
+        }
+      }
+    });
+    return lastMessageIndex;
+  };
+  const lastMessageIndex = getLastMessageIndex();
 
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
@@ -874,8 +888,6 @@ const Chatbox = () => {
                           ? !obj.userDelete === true
                           : !obj.reciverDelete === true
                       );
-                      const messages = getMessage[date];
-                      const lastMessageIndex = messages.length - 1;
 
                       return (
                         <div key={date}>
