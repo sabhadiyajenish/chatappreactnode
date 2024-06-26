@@ -28,7 +28,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import EmojiPicker from "emoji-picker-react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
-import { MdEmojiEmotions } from "react-icons/md";
+import { MdEmojiEmotions, MdOutlineAddAPhoto } from "react-icons/md";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import EmojiModel from "./emoji/emojiModel";
 import { HiOutlineDotsVertical } from "react-icons/hi";
@@ -43,6 +43,8 @@ import {
 } from "../../store/Notification/notificationApi.js";
 import ChatHeader from "./ChatComponents/ChatHeader.jsx";
 import ChatList from "./ChatComponents/ChatList.jsx";
+
+import { MdAddAPhoto } from "react-icons/md";
 
 const style = {
   position: "absolute",
@@ -624,6 +626,7 @@ const Chatbox = () => {
         setPreviewURL(reader.result);
       };
       reader.readAsDataURL(selectedFile); // Read file as data URL
+      handleOpen();
     } else {
       // Clear file and preview if no file selected
       setFile(null);
@@ -931,11 +934,20 @@ const Chatbox = () => {
               </div>
 
               <div className="center_input_div flex   justify-center cursor-pointer items-center">
-                <HiOutlineDotsVertical
+                {/* <HiOutlineDotsVertical
                   className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
-                />
-
+                /> */}
+                <div class="fileUpload">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    // className="hidden"
+                    className="upload"
+                  />
+                  <MdOutlineAddAPhoto />
+                </div>
                 <MdEmojiEmotions
                   className="w-8 h-8 md:ml-1 ml-3 mr-3 mt-3"
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
@@ -1089,47 +1101,34 @@ const Chatbox = () => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            {!previewURL && (
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                // className="hidden"
-                className="w-[17rem]"
+          {previewURL && (
+            <div className=" relative">
+              <img
+                src={previewURL}
+                alt="Preview"
+                style={{ height: "100%", width: "100%" }}
               />
-            )}
-          </Typography>
-
-          <Typography id="modal-modal-description " sx={{ mt: 2 }}>
-            {previewURL && (
-              <div className=" relative">
-                <img
-                  src={previewURL}
-                  alt="Preview"
-                  style={{ height: "150px", width: "100%" }}
-                />
-                <TiDeleteOutline
-                  className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
-                  onClick={() => {
-                    setFile(null);
-                    setPreviewURL(null);
-                  }}
-                />
-              </div>
-            )}
-            {previewURL && (
-              <div className=" w-full">
-                <button
-                  type="button"
-                  onClick={UploadFileOnCloud}
-                  className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                >
-                  {loadingForUploadImage ? "uploading... " : "Send"}
-                </button>
-              </div>
-            )}
-          </Typography>
+              <TiDeleteOutline
+                className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                onClick={() => {
+                  setFile(null);
+                  setPreviewURL(null);
+                  handleClose();
+                }}
+              />
+            </div>
+          )}
+          {previewURL && (
+            <div className=" w-full">
+              <button
+                type="button"
+                onClick={UploadFileOnCloud}
+                className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              >
+                {loadingForUploadImage ? "uploading... " : "Send"}
+              </button>
+            </div>
+          )}
         </Box>
       </Modal>
     </>
