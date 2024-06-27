@@ -530,8 +530,18 @@ const Chatbox = () => {
         ) {
           formattedMessages.push(`<div class="custom-message-container">`);
           formattedMessages.push(`<p class="main_text">You</p> <hr/>`);
-          const datap = `<p>${item?.message}</p>`;
-          formattedMessages.push(datap);
+          {
+            if (item?.message) {
+              const datap = `<p>${item?.message}</p>`;
+              formattedMessages.push(datap);
+            } else if (item?.avatar) {
+              const datap = `<img src=${item?.avatar} alt="image" width="200" height="200">`;
+              formattedMessages.push(datap);
+            } else {
+              const datap = `<p>Image</p>`;
+              formattedMessages.push(datap);
+            }
+          }
 
           const formattedMessage = `<p> ${new Date(date).toLocaleDateString(
             "en-US",
@@ -553,8 +563,19 @@ const Chatbox = () => {
           formattedMessages.push(
             `<p class="main_text">${reciverEmailAddress?.userName}</p> <hr/>`
           );
-          const datap = `<p>${item?.message}</p>`;
-          formattedMessages.push(datap);
+          {
+            if (item?.message) {
+              const datap = `<p>${item?.message}</p>`;
+              formattedMessages.push(datap);
+            } else if (item?.avatar) {
+              const datap = `<img src=${item?.avatar} alt="image jacket" width="200" height="200">`;
+
+              formattedMessages.push(datap);
+            } else {
+              const datap = `<p>Image</p>`;
+              formattedMessages.push(datap);
+            }
+          }
 
           const formattedMessage = `<p> ${new Date(date).toLocaleDateString(
             "en-US",

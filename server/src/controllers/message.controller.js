@@ -4,7 +4,14 @@ import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { fileUploadCloud } from "../utils/cloudinary.js";
+import { deleteImage, fileUploadCloud } from "../utils/cloudinary.js";
+
+function extractPublicIdFromUrl(url) {
+  const startIndex = url.lastIndexOf("/") + 1;
+  const endIndex =
+    url.lastIndexOf(".") !== -1 ? url.lastIndexOf(".") : url.length;
+  return url.substring(startIndex, endIndex);
+}
 
 const addMessage = asyncHandler(async (req, res, next) => {
   const {
@@ -73,10 +80,20 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
       console.log("sender come in if part<<<", userMessage?.senderId, Sender);
 
       if (userMessage.userDelete === true) {
+        if (userMessage?.avatar) {
+          const publicId = extractPublicIdFromUrl(userMessage?.avatar);
+          const pub = await deleteImage(publicId);
+          console.log("delete image<<<<<<<<<", pub);
+        }
         await Message.findByIdAndDelete({
           _id: userMessage?._id,
         });
       } else if (userMessage.reciverDelete === true) {
+        if (userMessage?.avatar) {
+          const publicId = extractPublicIdFromUrl(userMessage?.avatar);
+          const pub = await deleteImage(publicId);
+          console.log("delete image<<<<<<<<<", pub);
+        }
         await Message.findByIdAndDelete({
           _id: userMessage?._id,
         });
@@ -89,6 +106,11 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
       await userMessage.save();
     }
   } else {
+    if (userMessage?.avatar) {
+      const publicId = extractPublicIdFromUrl(userMessage?.avatar);
+      const pub = await deleteImage(publicId);
+      console.log("delete image<<<<<<<<<", pub);
+    }
     await Message.findByIdAndDelete({
       _id: userMessage?._id,
     });
@@ -201,10 +223,20 @@ const clearChatMessage = asyncHandler(async (req, res, next) => {
       console.log("sender come in if part<<<", userId?.senderId, Sender);
 
       if (userId.userDelete === true) {
+        if (userId?.avatar) {
+          const publicId = extractPublicIdFromUrl(userId?.avatar);
+          const pub = await deleteImage(publicId);
+          console.log("delete image<<<<<<<<<", pub);
+        }
         await Message.findByIdAndDelete({
           _id: userId?._id,
         });
       } else if (userId.reciverDelete === true) {
+        if (userId?.avatar) {
+          const publicId = extractPublicIdFromUrl(userId?.avatar);
+          const pub = await deleteImage(publicId);
+          console.log("delete image<<<<<<<<<", pub);
+        }
         await Message.findByIdAndDelete({
           _id: userId?._id,
         });
