@@ -22,7 +22,11 @@ const ChatItem = ({
 }) => {
   return (
     <div
-      className="lg:flex  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md cursor-pointer bg-[#034f84]"
+      className={`lg:flex ${
+        reciverEmailAddress?.email === dt.email
+          ? "bg-[#bce2d4] text-black "
+          : "bg-[#034f84]"
+      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md cursor-pointer `}
       key={key}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
@@ -109,7 +113,13 @@ const ChatItem = ({
           )}
         </div>
         <div className="lg:ml-8 md:ml-3 ml-2">
-          <p className="text-white text-start  font-semibold">
+          <p
+            className={`${
+              reciverEmailAddress?.email === dt.email
+                ? " text-black text-[18px]"
+                : " text-white"
+            } text-start  font-semibold`}
+          >
             {dt?.userName?.substring(0, 10)}
             {dt?.userName?.length <= 10 ? null : ".."}
           </p>
@@ -122,7 +132,13 @@ const ChatItem = ({
             ) : null
           )}
           {checkOnorNot && checkLastSeen ? (
-            <p className="text-[#dfd7e9] text-[15px] mt-1 text-center">
+            <p
+              className={` ${
+                reciverEmailAddress?.email === dt.email
+                  ? "text-[#65448d]"
+                  : "text-[#dfd7e9]"
+              } text-[15px] mt-1 text-center`}
+            >
               {checkOnorNot && checkLastSeen && lastSeenText}
             </p>
           ) : null}

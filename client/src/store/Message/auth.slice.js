@@ -7,6 +7,8 @@ const Message = createSlice({
     conversationData: [],
     userLists: [],
     loading: false,
+    loadingUsers: false,
+    loadingConversation: false,
   },
   reducers: {},
   extraReducers(builder) {
@@ -23,26 +25,26 @@ const Message = createSlice({
         state.loading = false;
       })
       .addCase(getAllUser.pending, (state) => {
-        state.loading = true;
+        state.loadingUsers = true;
       })
       .addCase(getAllUser.fulfilled, (state, action) => {
         const { payload } = action;
         state.userLists = payload?.data;
-        state.loading = false;
+        state.loadingUsers = false;
       })
       .addCase(getAllUser.rejected, (state) => {
-        state.loading = false;
+        state.loadingUsers = false;
       })
       .addCase(getConversation.pending, (state) => {
-        state.loading = true;
+        state.loadingConversation = true;
       })
       .addCase(getConversation.fulfilled, (state, action) => {
         const { payload } = action;
         state.conversationData = payload?.data;
-        state.loading = false;
+        state.loadingConversation = false;
       })
       .addCase(getConversation.rejected, (state) => {
-        state.loading = false;
+        state.loadingConversation = false;
       });
   },
 });

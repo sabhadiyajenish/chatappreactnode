@@ -46,6 +46,7 @@ import ChatList from "./ChatComponents/ChatList.jsx";
 import { IoSend } from "react-icons/io5";
 import { MdAddAPhoto } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
+import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -63,12 +64,21 @@ function classNames(...classes) {
 const Chatbox = () => {
   const { userOneData } = useSelector((state) => state.userAuthData);
   const { notificationDatas } = useSelector((state) => state.notificationData);
-  const { tag, oneUserMessage, loading, conversationData, userLists } =
-    useSelector((state) => state.messageData);
+  const {
+    tag,
+    oneUserMessage,
+    loading,
+    loadingUsers,
+    loadingConversation,
+    conversationData,
+    userLists,
+  } = useSelector((state) => state.messageData);
   const [open, setOpen] = React.useState(false);
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
   const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
+
+  const [allUserListData, setAllUserListData] = useState();
 
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
@@ -77,7 +87,7 @@ const Chatbox = () => {
   const [file, setFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
   const [loadingForUploadImage, setLoadingForUploadImage] = useState(false);
-
+  const [searchUserByName, setSearchUserByName] = useState("");
   const [message, setMessage] = useState("");
   const [emailLocal, setEmailLocal] = useState("");
   const [reciverEmailAddress, setReciverEmailaddress] = useState({
@@ -163,6 +173,22 @@ const Chatbox = () => {
   useEffect(() => {
     setUserConversationDatas(conversationData);
   }, [conversationData]);
+
+  useEffect(() => {
+    if (searchUserByName) {
+      const lowerCaseQuery = searchUserByName.toLowerCase();
+      const filtered = userLists?.filter(
+        (user) =>
+          user.email.toLowerCase().includes(lowerCaseQuery) ||
+          user.userName.toLowerCase().includes(lowerCaseQuery) ||
+          user.fullName.toLowerCase().includes(lowerCaseQuery)
+      );
+      setAllUserListData(filtered);
+    } else {
+      setAllUserListData(userLists);
+    }
+  }, [userLists, searchUserByName]);
+
   useEffect(() => {
     messageDom?.current?.scrollIntoView({ behavior: "smooth" });
   }, [getMessage]);
@@ -775,23 +801,29 @@ const Chatbox = () => {
               emailLocal={emailLocal}
               seeLoginActiveInfo={seeLoginActiveInfo}
             />
-            <ChatList
-              userConversationData={userConversationData}
-              reciverEmailAddress={reciverEmailAddress}
-              setReciverEmailaddress={setReciverEmailaddress}
-              setReciverChatData={setReciverChatData}
-              emailLocal={emailLocal}
-              dispatch={dispatch}
-              getUserMessage={getUserMessage}
-              countMessage={countMessage}
-              socket={socket}
-              updateSeenChatMessageData={updateSeenChatMessageData}
-              deleteNotificationData={deleteNotificationData}
-              setCountMessage={setCountMessage}
-              activeUser={activeUser}
-              LastSeenUser={LastSeenUser}
-              formatLastSeen={formatLastSeen}
-            />
+            {loadingConversation ? (
+              [1, 2, 3, 4, 5, 6]?.map((dt, key) => (
+                <ConversationLoadingPage key={dt} />
+              ))
+            ) : (
+              <ChatList
+                userConversationData={userConversationData}
+                reciverEmailAddress={reciverEmailAddress}
+                setReciverEmailaddress={setReciverEmailaddress}
+                setReciverChatData={setReciverChatData}
+                emailLocal={emailLocal}
+                dispatch={dispatch}
+                getUserMessage={getUserMessage}
+                countMessage={countMessage}
+                socket={socket}
+                updateSeenChatMessageData={updateSeenChatMessageData}
+                deleteNotificationData={deleteNotificationData}
+                setCountMessage={setCountMessage}
+                activeUser={activeUser}
+                LastSeenUser={LastSeenUser}
+                formatLastSeen={formatLastSeen}
+              />
+            )}
           </div>
           {reciverEmailAddress?.email === "" ? (
             <>
@@ -801,13 +833,13 @@ const Chatbox = () => {
             </>
           ) : (
             <div className="all_chat_div">
-              <div className="center_icon_div">
+              <div className="center_icon_div bg-[#bce2d4]">
                 <img
                   alt="gdg"
                   src={reciverEmailAddress?.avatar}
                   className="img_girls_icon"
                 />
-                <div>
+                <div className="md:ml-5">
                   <p className="icon_text">{reciverEmailAddress?.email}</p>
                   {isUserOnline && !isUserTyping && (
                     <p className="text-[15px] text-green-500 text-start ml-4">
@@ -995,119 +1027,160 @@ const Chatbox = () => {
               </div>
             </div>
           )}
-          <div className="all_chat_div overflow-y-scroll bg-slate-50">
-            <h4 className="mt-4 mb-4 font-bold">All User List</h4>
-            {userLists?.map((dt, key) => {
-              return (
-                <>
-                  {dt.email === emailLocal?.email ? null : (
-                    <div
-                      className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap bg-[#b7d7e8] mx-3 mt-2 rounded-lg  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
-                      key={key}
-                      onClick={async () => {
-                        if (reciverEmailAddress?.email !== dt?.email) {
-                          setReciverEmailaddress({
-                            email: dt.email,
-                            reciverId: dt?._id,
-                            avatar: dt?.avatar,
-                            userName: dt?.userName,
-                            _id: dt?._id,
-                          });
-                          setReciverChatData(dt?._id);
-                          const data1 = {
-                            senderId: emailLocal?.userId,
-                            reciverId: dt._id,
-                          };
+          <div className="all_chat_div overflow-y-scroll bg-slate-200">
+            {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
+            <div class="max-w-md mx-3 mt-3">
+              <div class="relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
+                <div class="grid place-items-center h-full w-12 text-gray-300">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
 
-                          const setCurrentUniueId = countMessage?.filter(
-                            (datas) => datas?.senderId === dt?._id
-                          );
-                          if (
-                            setCurrentUniueId?.length !== 0 &&
-                            Array.isArray(setCurrentUniueId)
-                          ) {
-                            socket?.emit("SetMessageSeenConfirm", {
-                              messageId: setCurrentUniueId[0]?.uniqueId,
+                <input
+                  class="peer h-full w-full outline-none text-sm text-gray-700 pr-2"
+                  type="text"
+                  id="search"
+                  placeholder="Search username.."
+                  onChange={(e) => setSearchUserByName(e.target.value)}
+                  value={searchUserByName}
+                />
+              </div>
+            </div>
+            {loadingUsers ? (
+              [1, 2, 3, 4, 5, 6, 7]?.map((dt, key) => (
+                <ConversationLoadingPage key={dt} />
+              ))
+            ) : allUserListData?.length === 0 ? (
+              <h1 className=" font-thin text-2xl">No User found</h1>
+            ) : (
+              allUserListData?.map((dt, key) => {
+                return (
+                  <>
+                    {dt.email === emailLocal?.email ? null : (
+                      <div
+                        className={`flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap font-medium ${
+                          reciverEmailAddress?.email === dt.email
+                            ? "bg-[#bce2d4]"
+                            : "bg-[#b7d7e8] hover:bg-[rgb(164,203,218)] cursor-pointer"
+                        }   mx-3 mt-2 rounded-lg  items-center gap-x-2 border-b-2 py-2 `}
+                        key={key}
+                        onClick={async () => {
+                          if (reciverEmailAddress?.email !== dt?.email) {
+                            setReciverEmailaddress({
+                              email: dt.email,
                               reciverId: dt?._id,
-                              date: setCurrentUniueId[0]?.date,
+                              avatar: dt?.avatar,
+                              userName: dt?.userName,
+                              _id: dt?._id,
                             });
-                            const dataForSeen = {
-                              messageId: setCurrentUniueId[0]?.uniqueId,
+                            setReciverChatData(dt?._id);
+                            const data1 = {
+                              senderId: emailLocal?.userId,
+                              reciverId: dt._id,
                             };
 
-                            dispatch(updateSeenChatMessageData(dataForSeen));
-                          }
-                          dispatch(
-                            deleteNotificationData({
-                              reciverId: emailLocal?.userId,
-                              senderId: dt?._id,
-                            })
-                          );
-                          const setCount = countMessage?.filter(
-                            (datas) => datas?.senderId !== dt?._id
-                          );
-
-                          setCountMessage(setCount);
-
-                          if (
-                            Array.isArray(setCount) &&
-                            setCount?.length !== 0
-                          ) {
-                            localStorage.setItem(
-                              "userCountInfo",
-                              JSON.stringify(setCount)
+                            const setCurrentUniueId = countMessage?.filter(
+                              (datas) => datas?.senderId === dt?._id
                             );
-                          } else {
-                            localStorage.setItem(
-                              "userCountInfo",
-                              JSON.stringify([
-                                {
-                                  reciverId: "jenish",
-                                  senderId: "jjs",
-                                  firstMessage: "",
-                                  count: 0,
-                                  date: "",
-                                  uniqueId: "",
-                                },
-                              ])
+                            if (
+                              setCurrentUniueId?.length !== 0 &&
+                              Array.isArray(setCurrentUniueId)
+                            ) {
+                              socket?.emit("SetMessageSeenConfirm", {
+                                messageId: setCurrentUniueId[0]?.uniqueId,
+                                reciverId: dt?._id,
+                                date: setCurrentUniueId[0]?.date,
+                              });
+                              const dataForSeen = {
+                                messageId: setCurrentUniueId[0]?.uniqueId,
+                              };
+
+                              dispatch(updateSeenChatMessageData(dataForSeen));
+                            }
+                            dispatch(
+                              deleteNotificationData({
+                                reciverId: emailLocal?.userId,
+                                senderId: dt?._id,
+                              })
                             );
+                            const setCount = countMessage?.filter(
+                              (datas) => datas?.senderId !== dt?._id
+                            );
+
+                            setCountMessage(setCount);
+
+                            if (
+                              Array.isArray(setCount) &&
+                              setCount?.length !== 0
+                            ) {
+                              localStorage.setItem(
+                                "userCountInfo",
+                                JSON.stringify(setCount)
+                              );
+                            } else {
+                              localStorage.setItem(
+                                "userCountInfo",
+                                JSON.stringify([
+                                  {
+                                    reciverId: "jenish",
+                                    senderId: "jjs",
+                                    firstMessage: "",
+                                    count: 0,
+                                    date: "",
+                                    uniqueId: "",
+                                  },
+                                ])
+                              );
+                            }
+                            dispatch(getUserMessage(data1));
                           }
-                          dispatch(getUserMessage(data1));
-                        }
-                      }}
-                    >
-                      <div style={{ position: "relative" }}>
-                        <img
-                          alt="gdg"
-                          src={dt?.avatar ? dt?.avatar : Glrs}
-                          className=" w-16 h-16 rounded-full "
-                        />
-                        {activeUser.map((dr, key1) => {
-                          return dr.userId === dt._id ? (
-                            <span
-                              className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
-                              key={key1}
-                            ></span>
-                          ) : (
-                            ""
-                          );
-                        })}
+                        }}
+                      >
+                        <div style={{ position: "relative" }}>
+                          <img
+                            alt="gdg"
+                            src={dt?.avatar ? dt?.avatar : Glrs}
+                            className=" w-16 h-16 rounded-full "
+                          />
+                          {activeUser.map((dr, key1) => {
+                            return dr.userId === dt._id ? (
+                              <span
+                                className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                                key={key1}
+                              ></span>
+                            ) : (
+                              ""
+                            );
+                          })}
+                        </div>
+                        <div className=" lg:ml-4">
+                          <p className="">
+                            {dt?.email?.substring(0, 15)}
+                            {dt?.email?.length <= 15 ? null : ".."}
+                          </p>
+                          <p className=" text-start  text-gray-600">
+                            {dt?.userName?.substring(0, 15)}
+                            {dt?.userName?.length <= 15 ? null : ".."}
+                          </p>
+                        </div>
                       </div>
-                      <div className=" lg:ml-4">
-                        <p className="">
-                          {dt?.email?.substring(0, 15)}
-                          {dt?.email?.length <= 15 ? null : ".."}
-                        </p>
-                        <p className=" text-start  text-gray-600">
-                          {dt?.userName?.substring(0, 15)}
-                          {dt?.userName?.length <= 15 ? null : ".."}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })}
+                    )}
+                  </>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
