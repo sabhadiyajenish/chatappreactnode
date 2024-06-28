@@ -43,9 +43,9 @@ import {
 } from "../../store/Notification/notificationApi.js";
 import ChatHeader from "./ChatComponents/ChatHeader.jsx";
 import ChatList from "./ChatComponents/ChatList.jsx";
-
+import { IoSend } from "react-icons/io5";
 import { MdAddAPhoto } from "react-icons/md";
-
+import { LuSend } from "react-icons/lu";
 const style = {
   position: "absolute",
   top: "50%",
@@ -949,12 +949,9 @@ const Chatbox = () => {
                     })}
                   </>
                 )}
-                {/* <div className=" absolute bottom-0 w-full ">
-                  <div className="w-full h-32 bg-slate-500 ">efefefe</div>
-                </div> */}
               </div>
 
-              <div className="center_input_div flex   justify-center cursor-pointer items-center">
+              <div className="center_input_div flex justify-center cursor-pointer items-center">
                 {/* <HiOutlineDotsVertical
                   className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
@@ -967,7 +964,7 @@ const Chatbox = () => {
                     // className="hidden"
                     className="upload"
                   />
-                  <MdOutlineAddAPhoto />
+                  <MdOutlineAddAPhoto className="-ml-[2px]" />
                 </div>
                 <MdEmojiEmotions
                   className="w-8 h-8 md:ml-1 ml-3 mr-3 mt-3"
@@ -981,13 +978,12 @@ const Chatbox = () => {
                   className="input_message"
                   placeholder="Enter Message here..."
                 />
-                <input
-                  type="button"
-                  value="Send"
-                  name="User"
+                <div
                   onClick={handleSend}
-                  className="message_button px-3 py-1 mt-3 md:mr-1 mr-3"
-                />
+                  className="w-9 h-9  rounded-full bg-[#b6f76c] mt-[10px] mr-3 ml-3"
+                >
+                  <IoSend className="w-auto text-black p-[6px] ml-[3px] my-auto h-full" />
+                </div>
                 {handleOpenEmoji && (
                   <EmojiModel
                     emojiRef={modalRef}
@@ -999,14 +995,14 @@ const Chatbox = () => {
               </div>
             </div>
           )}
-          <div className="all_chat_div overflow-y-scroll">
+          <div className="all_chat_div overflow-y-scroll bg-slate-50">
             <h4 className="mt-4 mb-4 font-bold">All User List</h4>
             {userLists?.map((dt, key) => {
               return (
                 <>
                   {dt.email === emailLocal?.email ? null : (
                     <div
-                      className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
+                      className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap bg-[#b7d7e8] mx-3 mt-2 rounded-lg  items-center gap-x-2 border-b-2 py-2 cursor-pointer"
                       key={key}
                       onClick={async () => {
                         if (reciverEmailAddress?.email !== dt?.email) {
@@ -1097,12 +1093,12 @@ const Chatbox = () => {
                           );
                         })}
                       </div>
-                      <div>
-                        <p className="icon_text">
+                      <div className=" lg:ml-4">
+                        <p className="">
                           {dt?.email?.substring(0, 15)}
                           {dt?.email?.length <= 15 ? null : ".."}
                         </p>
-                        <p className=" text-start md:pl-4 pl-2 text-gray-600">
+                        <p className=" text-start  text-gray-600">
                           {dt?.userName?.substring(0, 15)}
                           {dt?.userName?.length <= 15 ? null : ".."}
                         </p>

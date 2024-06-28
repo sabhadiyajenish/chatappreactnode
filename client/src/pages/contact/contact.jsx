@@ -44,6 +44,8 @@ const Contact = () => {
         dataLength={product.length} //This is important field to render the next data
         next={() => {
           setTimeout(() => {
+            console.log("jenish<<<<<<<<<<<<<<<<<<<<<");
+
             setPage((prev) => prev + 1);
           }, 1500);
         }}

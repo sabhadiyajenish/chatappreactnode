@@ -22,7 +22,7 @@ const ChatItem = ({
 }) => {
   return (
     <div
-      className="flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 cursor-pointer"
+      className="lg:flex  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md cursor-pointer bg-[#034f84]"
       key={key}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
@@ -90,45 +90,51 @@ const ChatItem = ({
         }
       }}
     >
-      <div style={{ position: "relative" }}>
-        <img
-          alt="gdg"
-          src={dt?.avatar || Glrs}
-          className="w-16 h-16 rounded-full"
-        />
-        {activeUser.map((dr, key1) =>
-          dr?.userId === dt?._id ? (
-            <span
-              className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
-              key={key1}
-            ></span>
-          ) : (
-            ""
-          )
-        )}
-      </div>
-      <div>
-        <p className="icon_text">
-          {dt?.userName?.substring(0, 10)}
-          {dt?.userName?.length <= 10 ? null : ".."}
-        </p>
-        {countMessage?.map((itm) =>
-          itm.senderId === dt._id ? (
-            <p className="text-[#00C000]">
-              {itm?.firstMessage?.substring(0, 10)}
-              {itm?.firstMessage?.length <= 10 ? null : ".."}
+      <div className="flex  items-center">
+        <div style={{ position: "relative" }}>
+          <img
+            alt="gdg"
+            src={dt?.avatar || Glrs}
+            className="lg:w-16 md:w-12 w-10 lg:h-16 md:h-12 h-10  rounded-full"
+          />
+          {activeUser.map((dr, key1) =>
+            dr?.userId === dt?._id ? (
+              <span
+                className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                key={key1}
+              ></span>
+            ) : (
+              ""
+            )
+          )}
+        </div>
+        <div className="lg:ml-8 md:ml-3 ml-2">
+          <p className="text-white text-start  font-semibold">
+            {dt?.userName?.substring(0, 10)}
+            {dt?.userName?.length <= 10 ? null : ".."}
+          </p>
+          {countMessage?.map((itm) =>
+            itm.senderId === dt._id ? (
+              <p className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]">
+                {itm?.firstMessage?.substring(0, 10)}
+                {itm?.firstMessage?.length <= 10 ? null : ".."}
+              </p>
+            ) : null
+          )}
+          {checkOnorNot && checkLastSeen ? (
+            <p className="text-[#dfd7e9] text-[15px] mt-1 text-center">
+              {checkOnorNot && checkLastSeen && lastSeenText}
             </p>
-          ) : null
-        )}
+          ) : null}
+        </div>
       </div>
-      <p className="text-[#7436c5] text-[15px] mt-1 text-center">
-        {checkOnorNot && checkLastSeen && lastSeenText}
-      </p>
       {countMessage?.map((itm) =>
         itm.senderId === dt._id ? (
-          <h1 className="h-7 w-7 rounded-full bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
-            {itm?.count < 10 ? itm?.count : "9+"}
-          </h1>
+          <div className="mr-3">
+            <h1 className="h-7 w-7 rounded-full bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
+              {itm?.count < 10 ? itm?.count : "9+"}
+            </h1>
+          </div>
         ) : null
       )}
     </div>

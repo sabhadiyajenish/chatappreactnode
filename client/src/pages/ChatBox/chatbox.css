@@ -157,12 +157,12 @@
 
   -webkit-border-radius: 15px;
   -moz-border-radius: 15px;
-  border-radius: 15px;
+  border-radius: 50px;
   color: #fff;
   font-size: 1em;
   font-weight: bold;
   overflow: hidden;
-  padding: 10px; /*14px/16px*/
+  padding: 8px; /*14px/16px*/
   position: relative;
   text-align: center;
   width: fit-content;

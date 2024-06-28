@@ -83,14 +83,17 @@ const ChatMessage = ({
   //   dateSetForUpdated =  formatTimeDifference(new Date(dt.seenAt));
   //   }, 5000);
   // }
-  console.log("last message not indexed<<<", indexKey, lastMessageIndex);
   return (
     <>
       {" "}
       {dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
         <>
           {dt.senderId === emailLocal?.userId && !dt.userDelete && (
-            <div className="you_chat md:pl-20 pl-5 " key={indexKey}>
+            <div
+              className="you_chat md:pl-20 pl-5 "
+              key={indexKey}
+              ref={messageDom}
+            >
               {dt.message ? (
                 <p className="you_chat_text pl-2 text-start pr-2 py-1 chat_time">
                   {isExpanded ? dt.message : dt.message.slice(0, 300)}

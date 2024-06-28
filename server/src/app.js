@@ -25,6 +25,57 @@ app.options(
     credentials: true,
   })
 );
+// const allowedOrigin = "http://localhost:5173";
+// const io = new Server(2525, {
+//   cors: {
+//     origin: (origin, callback) => {
+//       if (origin === allowedOrigin) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   },
+// });
+
+// const app = express();
+
+// // Configure Express to use CORS with the allowed origin
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (origin === allowedOrigin || !origin) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
+// // Handle preflight requests
+// app.options(
+//   "*",
+//   cors({
+//     origin: (origin, callback) => {
+//       if (origin === allowedOrigin || !origin) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
+
+// Set up JSON request body limit
+app.use(
+  express.json({
+    limit: "20kb",
+  })
+);
 
 app.use(
   express.json({
