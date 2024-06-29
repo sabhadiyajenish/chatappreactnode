@@ -113,7 +113,7 @@ const Chatbox = () => {
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
   const [reloadUserConversation, setReloadUserCon] = useState(false);
   const [reloadUserNotification, setreloadUserNotification] = useState(false);
-
+  const [openSearchBarFull, setOpenSearchBarFull] = useState(false);
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -1029,12 +1029,19 @@ const Chatbox = () => {
           )}
           <div className="all_chat_div overflow-y-scroll bg-slate-200">
             {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
-            <div class="max-w-md mx-3 mt-3">
-              <div class="relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
-                <div class="grid place-items-center h-full w-12 text-gray-300">
+            <div className="max-w-md mx-3 mt-3 flex items-center justify-between">
+              <h4 className=" font-mono -mt-2 hidden lg:block">
+                All User List
+              </h4>
+
+              <div className="relative flex items-center w-fit h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
+                <div
+                  onClick={() => setOpenSearchBarFull((prev) => !prev)}
+                  className="grid cursor-pointer place-items-center h-full w-12 text-gray-300"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    className="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1047,15 +1054,16 @@ const Chatbox = () => {
                     />
                   </svg>
                 </div>
-
-                <input
-                  class="peer h-full w-full outline-none text-sm text-gray-700 pr-2"
-                  type="text"
-                  id="search"
-                  placeholder="Search username.."
-                  onChange={(e) => setSearchUserByName(e.target.value)}
-                  value={searchUserByName}
-                />
+                {openSearchBarFull ? (
+                  <input
+                    className="peer h-full md:w-[15rem] w-full outline-none text-sm text-gray-700 pr-2"
+                    type="text"
+                    id="search"
+                    placeholder="Search username.."
+                    onChange={(e) => setSearchUserByName(e.target.value)}
+                    value={searchUserByName}
+                  />
+                ) : null}
               </div>
             </div>
             {loadingUsers ? (
