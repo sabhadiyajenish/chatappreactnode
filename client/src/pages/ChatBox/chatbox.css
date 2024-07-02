@@ -185,3 +185,14 @@
   height: 46px;
   cursor: pointer;
 }
+.center_div_chatApp::-webkit-scrollbar,
+.all_chat_div::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.center_div_chatApp,
+.all_chat_div {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

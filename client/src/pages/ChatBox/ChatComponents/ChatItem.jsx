@@ -25,8 +25,8 @@ const ChatItem = ({
       className={`lg:flex ${
         reciverEmailAddress?.email === dt.email
           ? "bg-[#bce2d4] text-black "
-          : "bg-[#034f84] hover:bg-slate-400 cursor-pointer"
-      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md  `}
+          : "bg-[#034f84]"
+      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md cursor-pointer `}
       key={key}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {

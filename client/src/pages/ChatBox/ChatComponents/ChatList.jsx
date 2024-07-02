@@ -19,7 +19,7 @@ const ChatList = ({
   formatLastSeen,
 }) => (
   <>
-    <div className="bg-white py-4 h-[83vh] overflow-y-scroll">
+    <div className="bg-white py-4 h-[83vh] overflow-y-scroll center_div_chatApp">
       <h1 className="text-center font-medium pb-3">Your Chat</h1>
       {userConversationData?.map((dt, key) => {
         let checkLastSeen;

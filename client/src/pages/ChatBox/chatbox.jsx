@@ -113,7 +113,7 @@ const Chatbox = () => {
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
   const [reloadUserConversation, setReloadUserCon] = useState(false);
   const [reloadUserNotification, setreloadUserNotification] = useState(false);
-  const [openSearchBarFull, setOpenSearchBarFull] = useState(false);
+
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -527,18 +527,27 @@ const Chatbox = () => {
   };
   const getLastMessageIndex = () => {
     let lastMessageIndex = -1;
+    let latestDate = null;
+
+    // Find the latest date
     Object.keys(getMessage).forEach((date) => {
-      const messages = getMessage[date];
-      if (messages && messages.length > 0) {
-        const lastIndex = messages.length - 1;
-        if (lastIndex > lastMessageIndex) {
-          lastMessageIndex = lastIndex;
-        }
+      if (!latestDate || new Date(date) > new Date(latestDate)) {
+        latestDate = date;
       }
     });
-    return lastMessageIndex;
+
+    // If there's a latest date, find the last message index for that date
+    if (latestDate) {
+      const messages = getMessage[latestDate];
+      if (messages && messages.length > 0) {
+        lastMessageIndex = messages.length - 1;
+      }
+    }
+
+    return { lastMessageIndex, latestDate };
   };
-  const lastMessageIndex = getLastMessageIndex();
+
+  const { lastMessageIndex, latestDate } = getLastMessageIndex();
 
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
@@ -972,6 +981,7 @@ const Chatbox = () => {
                                 getMessage={getMessage}
                                 setGetMessage={setGetMessage}
                                 lastMessageIndex={lastMessageIndex}
+                                latestDate={latestDate}
                                 activeUser={activeUser}
                               />
                             );
@@ -1027,21 +1037,14 @@ const Chatbox = () => {
               </div>
             </div>
           )}
-          <div className="all_chat_div overflow-y-scroll bg-slate-200">
+          <div className="all_chat_div overflow-y-scroll bg-slate-200 pb-3">
             {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
-            <div className="max-w-md mx-3 mt-3 flex items-center justify-between">
-              <h4 className=" font-mono -mt-2 hidden lg:block">
-                All User List
-              </h4>
-
-              <div className="relative flex items-center w-fit h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
-                <div
-                  onClick={() => setOpenSearchBarFull((prev) => !prev)}
-                  className="grid cursor-pointer place-items-center h-full w-12 text-gray-300"
-                >
+            <div class="max-w-md mx-3 mt-3">
+              <div class="relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
+                <div class="grid place-items-center h-full w-12 text-gray-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
+                    class="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1054,16 +1057,15 @@ const Chatbox = () => {
                     />
                   </svg>
                 </div>
-                {openSearchBarFull ? (
-                  <input
-                    className="peer h-full md:w-[15rem] w-full outline-none text-sm text-gray-700 pr-2"
-                    type="text"
-                    id="search"
-                    placeholder="Search username.."
-                    onChange={(e) => setSearchUserByName(e.target.value)}
-                    value={searchUserByName}
-                  />
-                ) : null}
+
+                <input
+                  class="peer h-full w-full outline-none text-sm text-gray-700 pr-2"
+                  type="text"
+                  id="search"
+                  placeholder="Search username.."
+                  onChange={(e) => setSearchUserByName(e.target.value)}
+                  value={searchUserByName}
+                />
               </div>
             </div>
             {loadingUsers ? (
