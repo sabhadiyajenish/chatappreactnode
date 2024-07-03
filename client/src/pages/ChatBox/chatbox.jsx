@@ -9,7 +9,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-
+import imageCompression from "browser-image-compression";
 // import SendIcon from "@mui/icons-material/Send";
 import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
@@ -701,7 +701,13 @@ const Chatbox = () => {
 
   const UploadFileOnCloud = async () => {
     setLoadingForUploadImage(true);
-    formData.append("avatar", file);
+    const compressedFile = await imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
+    });
+
+    formData.append("avatar", compressedFile);
 
     const getImageUrl = await axios.post(
       "/messages/uploadImageInCloud",
@@ -1352,7 +1358,7 @@ const Chatbox = () => {
                 onClick={UploadFileOnCloud}
                 className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >
-                {loadingForUploadImage ? "uploading... " : "Send"}
+                {loadingForUploadImage ? "sending... " : "Send"}
               </button>
             </div>
           )}

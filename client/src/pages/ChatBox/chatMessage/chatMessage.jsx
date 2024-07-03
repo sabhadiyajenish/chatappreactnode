@@ -79,16 +79,28 @@ const ChatMessage = ({
       return `${daysDifference} day${daysDifference !== 1 ? "s" : ""} ago`;
     }
   };
+  const handleDownload = (imageUrl) => {
+    fetch(imageUrl)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "image.jpg");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch((error) => {
+        console.error("Error downloading image:", error);
+      });
+  };
   return (
     <>
       {dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
         <>
           {dt.senderId === emailLocal?.userId && !dt.userDelete && (
-            <div
-              className="you_chat md:pl-20 pl-5 "
-              key={indexKey}
-              ref={messageDom}
-            >
+            <div className="you_chat md:pl-20 pl-5 " key={indexKey}>
               {dt.message ? (
                 <p
                   className={`you_chat_text  pl-2 text-start pr-2 py-1 chat_time ${
@@ -96,6 +108,7 @@ const ChatMessage = ({
                       ? "bg-[#27374D] text-[#DDE6ED]"
                       : "bg-[#25d366] text-white"
                   } `}
+                  ref={messageDom}
                 >
                   {isExpanded ? dt.message : dt.message.slice(0, 300)}
                   {dt.message.length > 300 && (
@@ -119,6 +132,7 @@ const ChatMessage = ({
                     width={200}
                     className=" cursor-pointer"
                     onClick={() => handleOpenImageModel(dt?.avatar)}
+                    ref={messageDom}
                   />
                   <span
                     className={`text-[11px] ${
@@ -203,6 +217,21 @@ const ChatMessage = ({
                         )}
                       </Menu.Item>
                     )}
+                    {dt?.avatar && (
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            className={classNames(
+                              active ? "w-full bg-gray-100" : "",
+                              "w-full block px-2 py-2 text-sm text-gray-700"
+                            )}
+                            onClick={() => handleDownload(dt?.avatar)}
+                          >
+                            download
+                          </button>
+                        )}
+                      </Menu.Item>
+                    )}
                   </Menu.Items>
                 </Transition>
               </Menu>
@@ -278,6 +307,21 @@ const ChatMessage = ({
                       </button>
                     )}
                   </Menu.Item>
+                  {dt?.avatar && (
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          className={classNames(
+                            active ? "w-full bg-gray-100" : "",
+                            "w-full block px-2 py-2 text-sm text-gray-700"
+                          )}
+                          onClick={() => handleDownload(dt?.avatar)}
+                        >
+                          download
+                        </button>
+                      )}
+                    </Menu.Item>
+                  )}
                 </Menu.Items>
               </Transition>
             </Menu>
