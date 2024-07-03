@@ -21,9 +21,8 @@ const ChatList = ({
 }) => (
   <>
     <div
-      className={` ${
-        modeTheme === "dark" ? "bg-dark" : "bg-white"
-      } py-4 h-[84vh] overflow-y-scroll center_div_chatApp`}
+      className={` 
+       py-4 h-fit overflow-y-scroll center_div_chatApp`}
     >
       <h1
         className={`text-center font-medium pb-3 ${

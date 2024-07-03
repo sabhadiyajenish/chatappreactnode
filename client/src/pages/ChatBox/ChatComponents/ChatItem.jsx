@@ -19,14 +19,19 @@ const ChatItem = ({
   checkLastSeen,
   lastSeenText,
   checkOnorNot,
+  modeTheme,
 }) => {
   return (
     <div
       className={`lg:flex ${
         reciverEmailAddress?.email === dt.email
-          ? "bg-[#bce2d4] text-black "
+          ? modeTheme === "dark"
+            ? "bg-[#526D82] text-[#DDE6ED]"
+            : "bg-[#bce2d4] text-black "
+          : modeTheme === "dark"
+          ? "bg-[#27374D]"
           : "bg-[#034f84]"
-      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 border-b-2 py-2 my-2 mx-3 rounded-md cursor-pointer `}
+      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2  py-2 my-2 mx-3 rounded-md cursor-pointer `}
       key={key}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
@@ -116,8 +121,10 @@ const ChatItem = ({
           <p
             className={`${
               reciverEmailAddress?.email === dt.email
-                ? " text-black text-[18px]"
-                : " text-white"
+                ? modeTheme === "dark"
+                  ? "text-white "
+                  : " text-black "
+                : " text-white text-[18px]"
             } text-start  font-semibold`}
           >
             {dt?.userName?.substring(0, 10)}
@@ -135,7 +142,9 @@ const ChatItem = ({
             <p
               className={` ${
                 reciverEmailAddress?.email === dt.email
-                  ? "text-[#65448d]"
+                  ? modeTheme === "dark"
+                    ? "text-[#DDE6ED]"
+                    : "text-[#65448d]"
                   : "text-[#dfd7e9]"
               } text-[15px] mt-1 text-center`}
             >

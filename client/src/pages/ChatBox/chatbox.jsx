@@ -153,6 +153,13 @@ const Chatbox = () => {
   }, [activeUser]);
 
   useEffect(() => {
+    if (modeTheme !== "") {
+      const themeName = localStorage.getItem("Theme");
+      setModeTheme(themeName);
+    }
+  }, []);
+
+  useEffect(() => {
     dispatch(getOneUser());
     dispatch(getAllUser());
   }, []);
@@ -804,7 +811,11 @@ const Chatbox = () => {
     <>
       <div className="main_chat_div">
         <div className="child1_chat_div">
-          <div className=" w-full h-[96vh] border border-dark">
+          <div
+            className={`w-full h-[96vh]  border border-dark   ${
+              modeTheme === "dark" ? "bg-dark" : null
+            }`}
+          >
             <ChatHeader
               userOneData={userOneData}
               emailLocal={emailLocal}
@@ -814,7 +825,7 @@ const Chatbox = () => {
             />
             {loadingConversation ? (
               [1, 2, 3, 4, 5, 6]?.map((dt, key) => (
-                <ConversationLoadingPage key={dt} />
+                <ConversationLoadingPage key={dt} modeTheme={modeTheme} />
               ))
             ) : (
               <ChatList
@@ -859,16 +870,32 @@ const Chatbox = () => {
                 modeTheme === "dark" ? "bg-dark" : null
               }`}
             >
-              <div className="center_icon_div bg-[#bce2d4]">
+              <div
+                className={`center_icon_div  ${
+                  modeTheme === "dark" ? "bg-[#526D82]" : "bg-[#bce2d4]"
+                }`}
+              >
                 <img
                   alt="gdg"
                   src={reciverEmailAddress?.avatar}
-                  className="img_girls_icon"
+                  className="img_girls_icon mt-[6px]"
                 />
                 <div className="md:ml-5">
-                  <p className="icon_text">{reciverEmailAddress?.email}</p>
+                  <p
+                    className={`icon_text ${
+                      modeTheme === "dark" ? "text-white" : null
+                    }`}
+                  >
+                    {reciverEmailAddress?.email}
+                  </p>
                   {isUserOnline && !isUserTyping && (
-                    <p className="text-[15px] text-green-500 text-start ml-4">
+                    <p
+                      className={`text-[15px]  text-start ml-4 ${
+                        modeTheme === "dark"
+                          ? "text-[#DDE6ED]"
+                          : "text-green-500"
+                      }`}
+                    >
                       online
                     </p>
                   )}
@@ -876,13 +903,25 @@ const Chatbox = () => {
                     !isUserTyping &&
                     checkLastSeenParticularUser && (
                       <div className="marquee-container">
-                        <p className=" marquee-text text-[#7436c5] text-[15px] text-center">
+                        <p
+                          className={` text-[15px] text-center marquee-text  ${
+                            modeTheme === "dark"
+                              ? "text-[#DDE6ED]"
+                              : "text-[#7436c5]"
+                          } `}
+                        >
                           {lastSeenTextParticularUser}
                         </p>
                       </div>
                     )}
                   {isUserOnline && isUserTyping && (
-                    <p className="text-[15px] text-blue-500 text-start ml-4">
+                    <p
+                      className={`text-[15px]  ${
+                        modeTheme === "dark"
+                          ? "text-[#DDE6ED]"
+                          : "text-blue-500"
+                      } text-start ml-4`}
+                    >
                       Typing...
                     </p>
                   )}
@@ -890,7 +929,11 @@ const Chatbox = () => {
                 <div>
                   <Menu as="div" className="relative">
                     <Menu.Button>
-                      <HiOutlineDotsVertical className="mt-[10px] ml-8 cursor-pointer " />
+                      <HiOutlineDotsVertical
+                        className={`mt-[10px] ml-8 cursor-pointer ${
+                          modeTheme === "dark" ? "text-white" : null
+                        } `}
+                      />
                     </Menu.Button>
 
                     <Transition
@@ -991,7 +1034,13 @@ const Chatbox = () => {
                         <div key={date}>
                           {CheckFilterDate && (
                             <div className="text-center flex justify-center my-4">
-                              <h2 className=" text-center font-medium py-2 px-6 bg-[#4682B4] text-white w-fit rounded-lg">
+                              <h2
+                                className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                  modeTheme === "dark"
+                                    ? "bg-[#7190a8]"
+                                    : "bg-[#4682B4]"
+                                }  " `}
+                              >
                                 {TodayDateOnly === date
                                   ? "Today"
                                   : yesterdayDate === date
@@ -1016,6 +1065,7 @@ const Chatbox = () => {
                                 lastMessageIndex={lastMessageIndex}
                                 latestDate={latestDate}
                                 activeUser={activeUser}
+                                modeTheme={modeTheme}
                               />
                             );
                           })}
@@ -1056,7 +1106,11 @@ const Chatbox = () => {
                   onKeyDown={handleKeyDown}
                   value={message}
                   onChange={handleTyping}
-                  className="input_message"
+                  className={`input_message ${
+                    modeTheme === "dark"
+                      ? "text-[#fff] bg-dark border border-sky-100"
+                      : null
+                  } `}
                   placeholder="Enter Message here..."
                 />
                 <div
@@ -1083,7 +1137,13 @@ const Chatbox = () => {
           >
             {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
             <div class="max-w-md mx-3 mt-3">
-              <div class="relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
+              <div
+                class={`relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg ${
+                  modeTheme === "dark"
+                    ? "border border-sky-100 bg-dark"
+                    : "bg-white"
+                }  overflow-hidden`}
+              >
                 <div class="grid place-items-center h-full w-12 text-gray-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -1102,7 +1162,11 @@ const Chatbox = () => {
                 </div>
 
                 <input
-                  class="peer h-full w-full outline-none text-sm text-gray-700 pr-2"
+                  class={`peer h-full w-full outline-none text-sm ${
+                    modeTheme === "dark"
+                      ? "bg-dark text-white"
+                      : "text-gray-700"
+                  }    pr-2`}
                   type="text"
                   id="search"
                   placeholder="Search username.."
@@ -1113,7 +1177,7 @@ const Chatbox = () => {
             </div>
             {loadingUsers ? (
               [1, 2, 3, 4, 5, 6, 7]?.map((dt, key) => (
-                <ConversationLoadingPage key={dt} />
+                <ConversationLoadingPage key={dt} modeTheme={modeTheme} />
               ))
             ) : allUserListData?.length === 0 ? (
               <h1
@@ -1131,9 +1195,13 @@ const Chatbox = () => {
                       <div
                         className={`flex md:justify-start md:pl-5 pl-2 justify-center flex-wrap font-medium ${
                           reciverEmailAddress?.email === dt.email
-                            ? "bg-[#bce2d4]"
+                            ? modeTheme === "dark"
+                              ? "bg-[#526D82]"
+                              : "bg-[#bce2d4]"
+                            : modeTheme === "dark"
+                            ? "bg-[#27374D] hover:bg-[#4d6381] cursor-pointer "
                             : "bg-[#b7d7e8] hover:bg-[rgb(164,203,218)] cursor-pointer"
-                        }   mx-3 mt-2 rounded-lg  items-center gap-x-2 border-b-2 py-2 `}
+                        }   mx-3 mt-2 rounded-lg  items-center gap-x-2  py-2 `}
                         key={key}
                         onClick={async () => {
                           if (reciverEmailAddress?.email !== dt?.email) {
@@ -1225,11 +1293,21 @@ const Chatbox = () => {
                           })}
                         </div>
                         <div className=" lg:ml-4">
-                          <p className="">
+                          <p
+                            className={`${
+                              modeTheme === "dark" ? "text-white" : null
+                            }`}
+                          >
                             {dt?.email?.substring(0, 15)}
                             {dt?.email?.length <= 15 ? null : ".."}
                           </p>
-                          <p className=" text-start  text-gray-600">
+                          <p
+                            className={` text-start ${
+                              modeTheme === "dark"
+                                ? "text-[#b7d7e8]"
+                                : "text-gray-600"
+                            }  `}
+                          >
                             {dt?.userName?.substring(0, 15)}
                             {dt?.userName?.length <= 15 ? null : ".."}
                           </p>

@@ -6,7 +6,7 @@
 .child1_chat_div {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
-  gap: 30px 20px;
+  /* gap: 30px 20px; */
 }
 .all_chat_div {
   width: 100%;
@@ -15,10 +15,10 @@
   border: 1px solid black;
 }
 .img_girls_icon {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   border-radius: 100%;
-  border: 1px solid greenyellow;
+  /* border: 1px solid greenyellow; */
 }
 .center_icon_div {
   display: flex;
@@ -68,19 +68,14 @@
   box-sizing: border-box;
 }
 .you_chat_text {
-  background-color: #25d366;
   border-radius: 10px;
-  color: #fff;
-
   width: fit-content;
   margin: 0px 5px 0px 5px;
   font-size: 20px;
 }
 .you_chat_text1 {
-  background-color: #075e54;
   border-radius: 10px;
   width: fit-content;
-  color: #fff;
   margin: 0px 5px 0px 5px;
   padding: 5px 8px 5px 8px;
   font-size: 20px;
@@ -149,7 +144,6 @@
 }
 .chat_time1 {
   float: right;
-  padding-top: 12px;
 }
 .fileUpload {
   background: #00bcbe;

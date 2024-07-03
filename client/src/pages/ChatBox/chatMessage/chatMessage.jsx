@@ -31,6 +31,7 @@ const ChatMessage = ({
   reciverEmailAddress,
   lastMessageIndex,
   activeUser,
+  modeTheme,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -89,7 +90,13 @@ const ChatMessage = ({
               ref={messageDom}
             >
               {dt.message ? (
-                <p className="you_chat_text pl-2 text-start pr-2 py-1 chat_time">
+                <p
+                  className={`you_chat_text  pl-2 text-start pr-2 py-1 chat_time ${
+                    modeTheme === "dark"
+                      ? "bg-[#27374D] text-[#DDE6ED]"
+                      : "bg-[#25d366] text-white"
+                  } `}
+                >
                   {isExpanded ? dt.message : dt.message.slice(0, 300)}
                   {dt.message.length > 300 && (
                     <span
@@ -113,7 +120,11 @@ const ChatMessage = ({
                     className=" cursor-pointer"
                     onClick={() => handleOpenImageModel(dt?.avatar)}
                   />
-                  <span className="text-[11px] text-gray-700 float-end absolute bottom-0 right-1">
+                  <span
+                    className={`text-[11px] ${
+                      modeTheme === "dark" ? " text-white" : "text-blue-300"
+                    }  float-end absolute bottom-0 right-1`}
+                  >
                     {dt.createdAt && formatDate(dt.createdAt)}
                   </span>
                 </div>
@@ -121,7 +132,11 @@ const ChatMessage = ({
 
               <Menu as="div" className="relative">
                 <Menu.Button>
-                  <HiOutlineDotsVertical className="mt-[10px] -ml-1 mr-1 cursor-pointer " />
+                  <HiOutlineDotsVertical
+                    className={`mt-[10px] -ml-1 mr-1 cursor-pointer ${
+                      modeTheme === "dark" ? "text-white" : null
+                    } `}
+                  />
                 </Menu.Button>
 
                 <Transition
@@ -216,7 +231,11 @@ const ChatMessage = ({
             {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
             <Menu as="div" className="relative">
               <Menu.Button>
-                <HiOutlineDotsVertical className="ml-1 z-10 -mr-1 mt-[10px] cursor-pointer " />
+                <HiOutlineDotsVertical
+                  className={`ml-1 z-10 -mr-1 mt-[10px] cursor-pointer ${
+                    modeTheme === "dark" ? "text-white" : null
+                  } `}
+                />
               </Menu.Button>
 
               <Transition
@@ -263,7 +282,13 @@ const ChatMessage = ({
               </Transition>
             </Menu>
             {dt?.message ? (
-              <p className="you_chat_text1 text-start chat_time1 ">
+              <p
+                className={`you_chat_text1   text-start chat_time1 ${
+                  modeTheme === "dark"
+                    ? "bg-[#526D82] text-[#DDE6ED]"
+                    : "bg-[#075e54] text-white"
+                } `}
+              >
                 {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
                 {dt?.message?.length > 300 && (
                   <span
@@ -274,7 +299,7 @@ const ChatMessage = ({
                   </span>
                 )}
 
-                <span className="text-[11px] text-gray-200 ml-1">
+                <span className="text-[11px] text-gray-200 ml-2">
                   {dt?.createdAt && formatDate(dt?.createdAt)}
                   {/* {isSeen && lastMessageIndex && "seen"} */}
                 </span>
@@ -289,7 +314,11 @@ const ChatMessage = ({
                   width={200}
                   onClick={() => handleOpenImageModel(dt?.avatar)}
                 />
-                <span className="text-[11px] text-gray-700  absolute bottom-0 right-1">
+                <span
+                  className={`text-[11px] ${
+                    modeTheme === "dark" ? " text-white" : "text-blue-300"
+                  } absolute bottom-0 right-1`}
+                >
                   {dt?.createdAt && formatDate(dt?.createdAt)}
                   {/* {isSeen && lastMessageIndex && "seen"} */}
                 </span>

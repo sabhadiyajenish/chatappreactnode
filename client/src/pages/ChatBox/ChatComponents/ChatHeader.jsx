@@ -10,7 +10,7 @@ const ChatHeader = ({
 }) => (
   <div
     style={{ borderBottom: "1px solid black" }}
-    className={`p-4 flex justify-center items-center flex-wrap ${
+    className={`p-1 flex justify-center items-center flex-wrap ${
       modeTheme === "dark" ? "bg-[#272626]" : "bg-[#d5e1df]"
     } `}
   >
@@ -36,14 +36,28 @@ const ChatHeader = ({
         {emailLocal?.email}
       </h4>
     </div>
-    <button
-      onClick={() =>
-        setModeTheme((prev) => (prev === "dark" ? "light" : "dark"))
-      }
-      className={`ml-2 ${modeTheme === "dark" ? "text-white" : null}`}
-    >
-      {modeTheme === "dark" ? "Dark Mode" : "Light Mode"}
-    </button>
+    <label className="inline-flex items-center cursor-pointer md:ml-10">
+      <input
+        type="checkbox"
+        value={modeTheme}
+        className="sr-only peer"
+        onChange={(e) => {
+          setModeTheme((prev) => (prev === "dark" ? "light" : "dark"));
+          localStorage.setItem(
+            "Theme",
+            e.target.value === "dark" ? "light" : "dark"
+          );
+        }}
+      />
+      <div className="relative w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4  rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+      <span
+        className={`ms-3 text-sm font-medium  dark:text-gray-300  ${
+          modeTheme === "dark" ? "text-white" : "text-black"
+        }`}
+      >
+        {modeTheme === "dark" ? "Dark" : "Light"}
+      </span>
+    </label>
   </div>
 );
 
