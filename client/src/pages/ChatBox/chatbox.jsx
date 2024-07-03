@@ -113,7 +113,7 @@ const Chatbox = () => {
   const [handleOpenEmoji, setHandleOpenEmoji] = useState(false);
   const [reloadUserConversation, setReloadUserCon] = useState(false);
   const [reloadUserNotification, setreloadUserNotification] = useState(false);
-
+  const [modeTheme, setModeTheme] = useState("light");
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
@@ -804,11 +804,13 @@ const Chatbox = () => {
     <>
       <div className="main_chat_div">
         <div className="child1_chat_div">
-          <div className="all_chat_div">
+          <div className=" w-full h-[96vh] border border-dark">
             <ChatHeader
               userOneData={userOneData}
               emailLocal={emailLocal}
               seeLoginActiveInfo={seeLoginActiveInfo}
+              setModeTheme={setModeTheme}
+              modeTheme={modeTheme}
             />
             {loadingConversation ? (
               [1, 2, 3, 4, 5, 6]?.map((dt, key) => (
@@ -831,17 +833,32 @@ const Chatbox = () => {
                 activeUser={activeUser}
                 LastSeenUser={LastSeenUser}
                 formatLastSeen={formatLastSeen}
+                modeTheme={modeTheme}
               />
             )}
           </div>
           {reciverEmailAddress?.email === "" ? (
             <>
-              <div className="h-[80vh] flex justify-center items-center">
-                <h2 className=" text-4xl font-thin">Chatting with people...</h2>
+              <div
+                className={`h-[96vh] flex justify-center items-center ${
+                  modeTheme === "dark" ? "bg-dark" : null
+                } `}
+              >
+                <h2
+                  className={` text-4xl font-thin ${
+                    modeTheme === "dark" ? "text-white" : null
+                  } `}
+                >
+                  Chatting with people...
+                </h2>
               </div>
             </>
           ) : (
-            <div className="all_chat_div">
+            <div
+              className={`all_chat_div  ${
+                modeTheme === "dark" ? "bg-dark" : null
+              }`}
+            >
               <div className="center_icon_div bg-[#bce2d4]">
                 <img
                   alt="gdg"
@@ -936,14 +953,30 @@ const Chatbox = () => {
                   </Menu>
                 </div>
               </div>
-              <div className="center_chat_div relative">
+              <div
+                className={`center_chat_div relative ${
+                  modeTheme === "dark" ? "bg-dark" : null
+                }`}
+              >
                 {loading ? (
                   <div className="h-[80vh] flex justify-center items-center">
-                    <h2 className=" text-4xl font-thin">Loading chat...</h2>
+                    <h2
+                      className={` text-4xl font-thin ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                    >
+                      Loading chat...
+                    </h2>
                   </div>
                 ) : Object.keys(getMessage)?.length === 0 ? (
                   <div className="h-[80vh] flex justify-center items-center">
-                    <h2 className=" text-4xl font-thin">No Chat found</h2>
+                    <h2
+                      className={` text-4xl font-thin  ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                    >
+                      No Chat found
+                    </h2>
                   </div>
                 ) : (
                   <>
@@ -993,7 +1026,11 @@ const Chatbox = () => {
                 )}
               </div>
 
-              <div className="center_input_div flex justify-center cursor-pointer items-center">
+              <div
+                className={`center_input_div flex justify-center cursor-pointer items-center  ${
+                  modeTheme === "dark" ? "bg-dark" : null
+                }`}
+              >
                 {/* <HiOutlineDotsVertical
                   className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
@@ -1009,7 +1046,9 @@ const Chatbox = () => {
                   <MdOutlineAddAPhoto className="-ml-[2px]" />
                 </div>
                 <MdEmojiEmotions
-                  className="w-8 h-8 md:ml-1 ml-3 mr-3 mt-3"
+                  className={`w-8 h-8 md:ml-1 ml-3 mr-3 mt-3  ${
+                    modeTheme === "dark" ? "text-white" : null
+                  }`}
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
                 />
                 <input
@@ -1037,7 +1076,11 @@ const Chatbox = () => {
               </div>
             </div>
           )}
-          <div className="all_chat_div overflow-y-scroll bg-slate-200 pb-3">
+          <div
+            className={`all_chat_div overflow-y-scroll  pb-3 ${
+              modeTheme === "dark" ? "bg-dark" : "bg-slate-200"
+            }`}
+          >
             {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
             <div class="max-w-md mx-3 mt-3">
               <div class="relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg bg-white overflow-hidden">
@@ -1073,7 +1116,13 @@ const Chatbox = () => {
                 <ConversationLoadingPage key={dt} />
               ))
             ) : allUserListData?.length === 0 ? (
-              <h1 className=" font-thin text-2xl">No User found</h1>
+              <h1
+                className={` font-thin text-2xl ${
+                  modeTheme === "dark" ? "text-white" : null
+                }`}
+              >
+                No User found
+              </h1>
             ) : (
               allUserListData?.map((dt, key) => {
                 return (

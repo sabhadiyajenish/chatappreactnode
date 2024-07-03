@@ -35,7 +35,6 @@ const ChatMessage = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState(false);
-
   const dispatch = useDispatch();
   const todayDate = new Date();
   const TodayDateOnly = todayDate.toISOString().split("T")[0];
@@ -79,15 +78,8 @@ const ChatMessage = ({
       return `${daysDifference} day${daysDifference !== 1 ? "s" : ""} ago`;
     }
   };
-  // if (indexKey === lastMessageIndex && !dt.seen) {
-  //   setInterval(() => {
-  //   dateSetForUpdated =  formatTimeDifference(new Date(dt.seenAt));
-  //   }, 5000);
-  // }
-  console.log("index keyy", indexKey, "last index key", lastMessageIndex);
   return (
     <>
-      {" "}
       {dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
         <>
           {dt.senderId === emailLocal?.userId && !dt.userDelete && (
@@ -217,7 +209,7 @@ const ChatMessage = ({
       ) : reciverChatData === dt?.senderId && dt?.reciverDelete === false ? (
         <>
           <div
-            className="you_chat_div md:mr-20 mr-5 flex"
+            className="you_chat_div md:mr-20 mr-5 flex mb-2"
             key={indexKey}
             ref={messageDom}
           >
