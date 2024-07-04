@@ -273,7 +273,6 @@ const Chatbox = () => {
       //   }
       // });
     } else {
-      console.log("when user have in cureent chat so work this");
       socket?.emit("SetMessageSeenConfirm", {
         messageId: datafunction[0]?.uniqueId,
         reciverId: datafunction[0]?.senderId,
@@ -364,8 +363,6 @@ const Chatbox = () => {
     }
   }, [deleteMessageForUpdated]);
 
-  // console.log("Get messages is<<<<,", getMessage);
-
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
     socket?.on("getUser", (user, lastSeenData) => {
@@ -406,7 +403,6 @@ const Chatbox = () => {
       setreloadUserNotification(userDatas[0]);
     });
     socket?.on("messageSeenConfirmation", ({ date, messageId, receiver }) => {
-      console.log("user seen status come here brothers<<<<", date, messageId);
       const currentDate = date.split("T")[0]; // Extract date from createdAt
       setGetMessage((prevData) => {
         const newData = { ...prevData };
@@ -424,10 +420,7 @@ const Chatbox = () => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
       );
-      console.log(
-        "get new user is come here<<<<<<<<<<<<<<<<<<<<<<<",
-        CheckUserCon
-      );
+
       if (CheckUserCon === undefined) {
         setTimeout(() => {
           console.log(
@@ -442,7 +435,6 @@ const Chatbox = () => {
       setIsTyping(userStatus[0]);
     });
     socket?.on("getUserData", (cate) => {
-      console.log(cate);
       setUserDatas((mess) => mess.concat(cate));
     });
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
@@ -695,7 +687,6 @@ const Chatbox = () => {
     }
   };
   const handleFileChange = async (e) => {
-    console.log("come inside modules<<<<<<<<<<<<<<<<<<", e);
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
@@ -745,7 +736,6 @@ const Chatbox = () => {
           const progress = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
           );
-          console.log(" cloud<<<<<<<<<<<<<<<<<<", progress);
 
           setUploadingImageProgress(progress);
         },
@@ -1009,7 +999,6 @@ const Chatbox = () => {
                                 };
                                 dispatch(clearChatMessageData(data));
                                 setGetMessage({});
-                                console.log("data unique id is<<<", uniqueIds);
                               }}
                             >
                               Clear Chat

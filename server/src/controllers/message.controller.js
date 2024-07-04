@@ -35,6 +35,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
     const messageComeData = new Message({
       conversationId: converData._id,
       senderId: senderId,
+      reciverId: reciverId,
       message: message,
       uniqueId,
       avatar,
@@ -54,6 +55,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
   const messageComewithComIdData = new Message({
     conversationId: userData[0]?._id,
     senderId: senderId,
+    reciverId: reciverId,
     message: message,
     uniqueId,
     avatar,

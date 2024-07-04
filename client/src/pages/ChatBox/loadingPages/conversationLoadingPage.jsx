@@ -7,7 +7,7 @@ const ConversationLoadingPage = ({ key, modeTheme }) => {
   return (
     <Grid container spacing={3} key={key} className="mt-2 px-3 ">
       {/* First item (rectangular) on the right side */}
-      <Grid item xs={12} md={3}>
+      <Grid item xs={12} sm={4} md={3}>
         <Stack spacing={1}>
           {/* <Skeleton variant="text" sx={{ fontSize: "1rem" }} /> */}
           <Skeleton
@@ -19,7 +19,7 @@ const ConversationLoadingPage = ({ key, modeTheme }) => {
           {/* <Skeleton variant="rounded" height={60} /> */}
         </Stack>
       </Grid>
-      <Grid item xs={12} md={9}>
+      <Grid item xs={12} sm={8} md={9}>
         <Skeleton
           variant="rounded"
           height={70}

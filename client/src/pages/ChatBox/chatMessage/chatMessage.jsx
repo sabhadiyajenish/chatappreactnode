@@ -95,9 +95,12 @@ const ChatMessage = ({
         console.error("Error downloading image:", error);
       });
   };
+
   return (
     <>
-      {dt.senderId === emailLocal?.userId && dt?.userDelete === false ? (
+      {dt.senderId === emailLocal?.userId &&
+      dt.reciverId === reciverEmailAddress?.reciverId &&
+      dt?.userDelete === false ? (
         <>
           {dt.senderId === emailLocal?.userId && !dt.userDelete && (
             <div className="you_chat md:pl-20 pl-5 " key={indexKey}>
