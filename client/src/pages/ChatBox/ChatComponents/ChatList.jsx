@@ -45,7 +45,7 @@ const ChatList = ({
         const checkOnorNot = !activeUser?.some((dr) => dr.userId === dt._id);
         return (
           <ChatItem
-            key={key}
+            index={key}
             dt={dt}
             reciverEmailAddress={reciverEmailAddress}
             setReciverEmailaddress={setReciverEmailaddress}

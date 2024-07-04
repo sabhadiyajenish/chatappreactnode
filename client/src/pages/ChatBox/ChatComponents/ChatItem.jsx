@@ -3,7 +3,7 @@ import Glrs from "../../../assets/image/grls.jpg";
 
 const ChatItem = ({
   dt,
-  key,
+  index,
   reciverEmailAddress,
   setReciverEmailaddress,
   setReciverChatData,
@@ -23,6 +23,7 @@ const ChatItem = ({
 }) => {
   return (
     <div
+      key={index}
       className={`lg:flex ${
         reciverEmailAddress?.email === dt.email
           ? modeTheme === "dark"
@@ -32,7 +33,6 @@ const ChatItem = ({
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
       }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2  py-2 my-2 mx-3 rounded-md cursor-pointer `}
-      key={key}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
           setReciverEmailaddress({
@@ -130,9 +130,12 @@ const ChatItem = ({
             {dt?.userName?.substring(0, 10)}
             {dt?.userName?.length <= 10 ? null : ".."}
           </p>
-          {countMessage?.map((itm) =>
+          {countMessage?.map((itm, key1) =>
             itm.senderId === dt._id ? (
-              <p className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]">
+              <p
+                className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]"
+                key={key1}
+              >
                 {itm?.firstMessage?.substring(0, 10)}
                 {itm?.firstMessage?.length <= 10 ? null : ".."}
               </p>
@@ -153,9 +156,9 @@ const ChatItem = ({
           ) : null}
         </div>
       </div>
-      {countMessage?.map((itm) =>
+      {countMessage?.map((itm, key1) =>
         itm.senderId === dt._id ? (
-          <div className="mr-3">
+          <div className="mr-3" key={key1}>
             <h1 className="h-7 w-7 rounded-full bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
               {itm?.count < 10 ? itm?.count : "9+"}
             </h1>

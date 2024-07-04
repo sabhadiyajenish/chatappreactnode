@@ -122,6 +122,7 @@ const Chatbox = () => {
   const [page, setPage] = useState(1);
   const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
   const [videoPreview, setVideoPreview] = useState(null);
+  const [videoAvatar, setVideoAvatar] = useState(null);
 
   const messageDom = useRef(null);
   const modalRef = useRef(null);
@@ -460,6 +461,7 @@ const Chatbox = () => {
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setVideoAvatar(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setVideoPreview(reader.result);
@@ -712,6 +714,83 @@ const Chatbox = () => {
   };
 
   let formData = new FormData();
+  const config = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    onUploadProgress: (progressEvent) => {
+      const progress = Math.round(
+        (progressEvent.loaded * 100) / progressEvent.total
+      );
+      console.log(`Upload Progress: ${progress}%,${progressEvent}`);
+      // Update your progress state here (e.g., using setState in React)
+      setUploadingImageProgress(progress);
+    },
+  };
+  const UploadVideoFileOnCloud = async () => {
+    setLoadingForUploadImage(true);
+    setUploadingImageProgress(20);
+
+    formData.append("avatarVideo", videoAvatar);
+    const getVideoUrl = await axios.post(
+      "/messages/uploadVideoInCloud",
+      formData,
+      config
+    );
+    // setUploadingImageProgress(20);
+    if (getVideoUrl?.data?.data?.url) {
+      const uniqueId = generateUniqueId();
+
+      socket?.emit("addMessage", {
+        avatarVideo: getVideoUrl?.data?.data?.url,
+        avatarVideoThumb: getVideoUrl?.data?.data?.thumb,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+        userDelete: false,
+        reciverDelete: false,
+        uniqueId: uniqueId,
+        userName: emailLocal?.email,
+        seen: false,
+        seenAt: "",
+      });
+
+      const receiverId = reciverEmailAddress?.reciverId;
+
+      const CheckUserCon = userConversationData?.find(
+        (dr) => dr?._id === receiverId
+      );
+
+      if (!CheckUserCon) {
+        const newUser = {
+          _id: receiverId,
+          email: reciverEmailAddress?.email,
+          avatar: reciverEmailAddress?.avatar,
+          userName: reciverEmailAddress?.userName,
+          senderId: emailLocal?.userId,
+          reciverId: receiverId,
+        };
+
+        socket?.emit("addUserNew", newUser);
+      }
+
+      const data = {
+        senderId: emailLocal?.userId,
+        conversationId: "",
+        reciverId: reciverEmailAddress?.reciverId,
+        uniqueId: uniqueId,
+        avatarVideo: getVideoUrl?.data?.data?.url,
+        avatarVideoThumb: getVideoUrl?.data?.data?.thumb,
+      };
+      setLoadingForUploadImage(false);
+      setUploadingImageProgress(0);
+      handleClose();
+
+      dispatch(addUserMessage(data));
+    } else {
+      setUploadingImageProgress(0);
+      setLoadingForUploadImage(false);
+    }
+  };
 
   const UploadFileOnCloud = async () => {
     setLoadingForUploadImage(true);
@@ -835,6 +914,7 @@ const Chatbox = () => {
     setFile(null);
     setPreviewURL(null);
     setVideoPreview(null);
+    setVideoAvatar(null);
   };
 
   return (
@@ -855,7 +935,7 @@ const Chatbox = () => {
             />
             {loadingConversation ? (
               [1, 2, 3, 4, 5, 6]?.map((dt, key) => (
-                <ConversationLoadingPage key={dt} modeTheme={modeTheme} />
+                <ConversationLoadingPage index={key} modeTheme={modeTheme} />
               ))
             ) : (
               <ChatList
@@ -1114,7 +1194,7 @@ const Chatbox = () => {
                   className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
                 /> */}
-                <div class="fileUpload">
+                <div className="fileUpload">
                   <input
                     type="file"
                     accept="video/*"
@@ -1124,7 +1204,7 @@ const Chatbox = () => {
                   />
                   <FaVideo className="" />
                 </div>
-                <div class="fileUpload">
+                <div className="fileUpload">
                   <input
                     type="file"
                     accept="image/*"
@@ -1175,33 +1255,28 @@ const Chatbox = () => {
             }`}
           >
             {/* <h4 className="mt-4 mb-4 font-bold">All User List</h4> */}
-            <div class="max-w-md mx-3 mt-3">
+            <div className="max-w-md mx-3 mt-3">
               <div
-                class={`relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg ${
+                className={`relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg ${
                   modeTheme === "dark"
                     ? "border border-sky-100 bg-dark"
                     : "bg-white"
                 }  overflow-hidden`}
               >
-                <div class="grid place-items-center h-full w-12 text-gray-300">
+                <div className="grid place-items-center h-full w-12 text-gray-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    className="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
 
                 <input
-                  class={`peer h-full w-full outline-none text-sm ${
+                  className={`peer h-full w-full outline-none text-sm ${
                     modeTheme === "dark"
                       ? "bg-dark text-white"
                       : "text-gray-700"
@@ -1451,6 +1526,17 @@ const Chatbox = () => {
                 className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >
                 {loadingForUploadImage ? "sending... " : "Send"}
+              </button>
+            </div>
+          )}
+          {videoPreview && !loadingForUploadImage && (
+            <div className=" w-full">
+              <button
+                type="button"
+                onClick={UploadVideoFileOnCloud}
+                className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              >
+                {loadingForUploadImage ? "sending... " : "Send Video"}
               </button>
             </div>
           )}

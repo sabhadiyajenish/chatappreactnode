@@ -127,6 +127,8 @@ io.on("connection", (socket) => {
     ({
       message,
       avatar,
+      avatarVideo,
+      avatarVideoThumb,
       reciverId,
       senderId,
       userDelete,
@@ -146,6 +148,8 @@ io.on("connection", (socket) => {
             {
               message,
               avatar,
+              avatarVideo,
+              avatarVideoThumb,
               senderId,
               reciverId,
               userDelete,
@@ -160,6 +164,8 @@ io.on("connection", (socket) => {
           {
             message,
             avatar,
+            avatarVideo,
+            avatarVideoThumb,
             senderId,
             reciverId,
             userDelete,
@@ -176,6 +182,8 @@ io.on("connection", (socket) => {
           {
             message,
             avatar,
+            avatarVideo,
+            avatarVideoThumb,
             senderId,
             reciverId,
             userDelete,
@@ -190,6 +198,8 @@ io.on("connection", (socket) => {
           {
             message,
             avatar,
+            avatarVideo,
+            avatarVideoThumb,
             senderId,
             reciverId,
             userDelete,

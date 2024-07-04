@@ -30,6 +30,12 @@ const MessageSchema = mongoose.Schema({
   avatar: {
     type: String,
   },
+  avatarVideo: {
+    type: String,
+  },
+  avatarVideoThumb: {
+    type: String,
+  },
   seen: { type: Boolean, default: false },
   seenAt: { type: Date },
   userDelete: {

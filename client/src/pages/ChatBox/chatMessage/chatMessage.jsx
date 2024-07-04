@@ -95,7 +95,7 @@ const ChatMessage = ({
         console.error("Error downloading image:", error);
       });
   };
-
+  console.log("<<<<<<", dt);
   return (
     <>
       {dt.senderId === emailLocal?.userId &&
@@ -137,6 +137,20 @@ const ChatMessage = ({
                     onClick={() => handleOpenImageModel(dt?.avatar)}
                     ref={messageDom}
                   />
+                  <span
+                    className={`text-[11px] ${
+                      modeTheme === "dark" ? " text-white" : "text-blue-300"
+                    }  float-end absolute bottom-0 right-1`}
+                  >
+                    {dt.createdAt && formatDate(dt.createdAt)}
+                  </span>
+                </div>
+              ) : dt.avatarVideo ? (
+                <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
+                  <video controls width="270" className="text-black">
+                    <source src={dt.avatarVideo} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
                   <span
                     className={`text-[11px] ${
                       modeTheme === "dark" ? " text-white" : "text-blue-300"
@@ -372,6 +386,20 @@ const ChatMessage = ({
                 >
                   {dt?.createdAt && formatDate(dt?.createdAt)}
                   {/* {isSeen && lastMessageIndex && "seen"} */}
+                </span>
+              </div>
+            ) : dt.avatarVideo ? (
+              <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
+                <video controls width="270" className="text-black">
+                  <source src={dt.avatarVideo} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <span
+                  className={`text-[11px] ${
+                    modeTheme === "dark" ? " text-white" : "text-blue-300"
+                  }  float-end absolute bottom-0 right-1`}
+                >
+                  {dt.createdAt && formatDate(dt.createdAt)}
                 </span>
               </div>
             ) : null}

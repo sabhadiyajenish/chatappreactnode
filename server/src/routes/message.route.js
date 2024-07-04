@@ -10,6 +10,7 @@ import {
   clearChatMessage,
   updateSeenStatus,
   AddImageInClound,
+  AddVideoInClound,
 } from "../controllers/message.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -36,5 +37,14 @@ router.route("/uploadImageInCloud").post(
   ]),
   AddImageInClound
 );
-
+router.route("/uploadVideoInCloud").post(
+  // authMiddleWare,
+  upload.fields([
+    {
+      name: "avatarVideo",
+      maxCount: 1,
+    },
+  ]),
+  AddVideoInClound
+);
 export default router;

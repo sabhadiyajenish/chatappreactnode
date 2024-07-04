@@ -4,7 +4,11 @@ import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { deleteImage, fileUploadCloud } from "../utils/cloudinary.js";
+import {
+  cloudinaryFile,
+  deleteImage,
+  fileUploadCloud,
+} from "../utils/cloudinary.js";
 
 function extractPublicIdFromUrl(url) {
   const startIndex = url.lastIndexOf("/") + 1;
@@ -17,6 +21,8 @@ const addMessage = asyncHandler(async (req, res, next) => {
   const {
     senderId,
     reciverId,
+    avatarVideo = "",
+    avatarVideoThumb = "",
     conversationIds = "",
     message = "",
     uniqueId,
@@ -32,34 +38,61 @@ const addMessage = asyncHandler(async (req, res, next) => {
     });
     const converData = await data.save();
     // console.log(">>>>>>>>>>>>>>>>>>>>>", converData);
-    const messageComeData = new Message({
+
+    const messageData = {
       conversationId: converData._id,
       senderId: senderId,
       reciverId: reciverId,
       message: message,
-      uniqueId,
-      avatar,
-    });
-    const messageData = await messageComeData.save();
+      uniqueId: uniqueId,
+    };
+
+    // Add optional fields if they are present
+    if (avatar) {
+      messageData.avatar = avatar;
+    }
+    if (avatarVideo) {
+      messageData.avatarVideo = avatarVideo;
+    }
+    if (avatarVideoThumb) {
+      messageData.avatarVideoThumb = avatarVideoThumb;
+    }
+
+    const messageComeData = new Message(messageData);
+
+    const messageDataValue = await messageComeData.save();
     return res
       .status(200)
       .json(
         new ApiResponse(
           200,
-          messageData,
+          messageDataValue,
           "conversation create and  message inserted successfully"
         )
       );
   }
   // console.log(">>>>convoid", userData?._id);
-  const messageComewithComIdData = new Message({
+
+  const messageData = {
     conversationId: userData[0]?._id,
     senderId: senderId,
     reciverId: reciverId,
     message: message,
-    uniqueId,
-    avatar,
-  });
+    uniqueId: uniqueId,
+  };
+
+  // Add optional fields if they are present
+  if (avatar) {
+    messageData.avatar = avatar;
+  }
+  if (avatarVideo) {
+    messageData.avatarVideo = avatarVideo;
+  }
+  if (avatarVideoThumb) {
+    messageData.avatarVideoThumb = avatarVideoThumb;
+  }
+  const messageComewithComIdData = new Message(messageData);
+
   // console.log(">>>message>>>", messageComewithComIdData);
   const messageData1 = await messageComewithComIdData.save();
   return res
@@ -282,6 +315,43 @@ const AddImageInClound = asyncHandler(async (req, res) => {
   );
 });
 
+const AddVideoInClound = asyncHandler(async (req, res) => {
+  const avatarVideoLocalFile = req.files?.avatarVideo[0]?.path;
+
+  if (!avatarVideoLocalFile) {
+    return res
+      .status(300)
+      .json(new ApiResponse(300, "avatar Video is required.."));
+  }
+  const avatarVideoSerPath = await fileUploadCloud(avatarVideoLocalFile);
+  if (!avatarVideoSerPath) {
+    return res
+      .status(300)
+      .json(new ApiResponse(300, "avatar Video is required.."));
+  }
+  const thumbnailUrl = cloudinaryFile.url(
+    avatarVideoSerPath.public_id + ".jpg",
+    {
+      resource_type: "video",
+      format: "jpg",
+      quality: "auto",
+      width: 300,
+      height: 300,
+      crop: "thumb",
+    }
+  );
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        url: avatarVideoSerPath?.url,
+        thumb: thumbnailUrl,
+      },
+      "Video upload in clound successfully"
+    )
+  );
+});
+
 export {
   addMessage,
   getMessage,
@@ -291,4 +361,5 @@ export {
   clearChatMessage,
   updateSeenStatus,
   AddImageInClound,
+  AddVideoInClound,
 };
