@@ -239,7 +239,11 @@ const ChatMessage = ({
           )}
 
           {date === latestDate && indexKey === lastMessageIndex && dt.seen && (
-            <div className="text-end mr-6 mb-2 text-blue-500">
+            <div
+              className={`text-end mr-6 mb-2  ${
+                modeTheme === "dark" ? "text-[#E0D8D1]" : "text-blue-500"
+              }`}
+            >
               <p> Seen {formatTimeDifference(new Date(dt.seenAt))}.</p>
             </div>
           )}

@@ -9,8 +9,10 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
+import CircularProgress from "@mui/material/CircularProgress";
 import imageCompression from "browser-image-compression";
 // import SendIcon from "@mui/icons-material/Send";
+import { FaVideo } from "react-icons/fa6";
 import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
 import {
@@ -118,6 +120,8 @@ const Chatbox = () => {
     online: false,
   });
   const [page, setPage] = useState(1);
+  const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
+  const [videoPreview, setVideoPreview] = useState(null);
 
   const messageDom = useRef(null);
   const modalRef = useRef(null);
@@ -461,6 +465,18 @@ const Chatbox = () => {
     };
   }, [handleOpenEmoji]);
 
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVideoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      handleOpen();
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (message !== "") {
@@ -571,7 +587,9 @@ const Chatbox = () => {
           item?.userDelete === false
         ) {
           formattedMessages.push(`<div class="custom-message-container">`);
-          formattedMessages.push(`<p class="main_text">You</p> <hr/>`);
+          formattedMessages.push(
+            `<p class="main_text">You (${emailLocal?.email})</p> <hr/>`
+          );
           {
             if (item?.message) {
               const datap = `<p>${item?.message}</p>`;
@@ -676,19 +694,24 @@ const Chatbox = () => {
       element.click();
     }
   };
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     console.log("come inside modules<<<<<<<<<<<<<<<<<<", e);
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
-      setFile(selectedFile);
+      const compressedFile = await imageCompression(selectedFile, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true,
+      });
+      setFile(compressedFile);
 
       // Preview image
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewURL(reader.result);
       };
-      reader.readAsDataURL(selectedFile); // Read file as data URL
+      reader.readAsDataURL(compressedFile); // Read file as data URL
       handleOpen();
     } else {
       // Clear file and preview if no file selected
@@ -701,14 +724,15 @@ const Chatbox = () => {
 
   const UploadFileOnCloud = async () => {
     setLoadingForUploadImage(true);
+    setUploadingImageProgress(20);
     const compressedFile = await imageCompression(file, {
       maxSizeMB: 1,
       maxWidthOrHeight: 1024,
       useWebWorker: true,
     });
+    setUploadingImageProgress(50);
 
     formData.append("avatar", compressedFile);
-
     const getImageUrl = await axios.post(
       "/messages/uploadImageInCloud",
       formData,
@@ -717,11 +741,17 @@ const Chatbox = () => {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "multipart/form-data",
         },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(" cloud<<<<<<<<<<<<<<<<<<", progress);
+
+          setUploadingImageProgress(progress);
+        },
       }
     );
     if (getImageUrl?.data?.data?.url) {
-      console.log("image upload in cloud<<<<<<<<<<<<<<<<<<", getImageUrl);
-
       const uniqueId = generateUniqueId();
 
       socket?.emit("addMessage", {
@@ -735,6 +765,7 @@ const Chatbox = () => {
         seen: false,
         seenAt: "",
       });
+
       const receiverId = reciverEmailAddress?.reciverId;
 
       const CheckUserCon = userConversationData?.find(
@@ -753,6 +784,7 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
+
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
@@ -761,6 +793,7 @@ const Chatbox = () => {
         avatar: getImageUrl?.data?.data?.url,
       };
       setLoadingForUploadImage(false);
+      setUploadingImageProgress(0);
       handleClose();
 
       dispatch(addUserMessage(data));
@@ -811,6 +844,7 @@ const Chatbox = () => {
     setOpen(false);
     setFile(null);
     setPreviewURL(null);
+    setVideoPreview(null);
   };
 
   return (
@@ -1094,6 +1128,16 @@ const Chatbox = () => {
                 <div class="fileUpload">
                   <input
                     type="file"
+                    accept="video/*"
+                    onChange={handleVideoChange}
+                    // className="hidden"
+                    className="upload"
+                  />
+                  <FaVideo className="" />
+                </div>
+                <div class="fileUpload">
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={handleFileChange}
                     // className="hidden"
@@ -1351,7 +1395,66 @@ const Chatbox = () => {
               />
             </div>
           )}
-          {previewURL && (
+
+          {videoPreview && (
+            <div className=" relative">
+              <video controls width="270" className="text-black">
+                <source src={videoPreview} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <TiDeleteOutline
+                className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                onClick={() => {
+                  setVideoPreview(null);
+                  handleClose();
+                }}
+              />
+            </div>
+          )}
+
+          {uploadingImageProgress > 0 ? (
+            <>
+              <Box
+                className="mx-auto w-full mt-3"
+                sx={{ position: "relative", display: "inline-flex" }}
+              >
+                <CircularProgress
+                  variant="determinate"
+                  value={uploadingImageProgress}
+                  className="mx-auto w-full text-black"
+                />
+                <Box
+                  sx={{
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    position: "absolute",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    component="div"
+                    color="text.secondary"
+                  >
+                    {`${Math.round(uploadingImageProgress)}%`}
+                  </Typography>
+                </Box>
+              </Box>
+              <p className="tw-full text-center mt-2">
+                {uploadingImageProgress <= 20
+                  ? "Startng..."
+                  : uploadingImageProgress <= 50
+                  ? "Compreesing..."
+                  : "Sending..."}
+              </p>
+            </>
+          ) : null}
+
+          {previewURL && !loadingForUploadImage && (
             <div className=" w-full">
               <button
                 type="button"
