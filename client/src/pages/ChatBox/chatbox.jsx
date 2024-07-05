@@ -397,12 +397,11 @@ const Chatbox = () => {
         addUserNotification({
           senderId: userDatas[0]?.senderId,
           reciverId: userDatas[0]?.reciverId,
-          firstMessage:
-            userDatas[0]?.message !== ""
-              ? userDatas[0]?.message
-              : userDatas[0]?.avatarVideo
-              ? "Video"
-              : "Image",
+          firstMessage: userDatas[0]?.message
+            ? userDatas[0]?.message
+            : userDatas[0]?.avatarVideo
+            ? "Video"
+            : "Image",
           date: userDatas[0]?.createdAt,
           uniqueId: userDatas[0]?.uniqueId,
         })
