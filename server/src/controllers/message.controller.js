@@ -298,6 +298,18 @@ const AddImageInClound = asyncHandler(async (req, res) => {
       .status(300)
       .json(new ApiResponse(300, "avatar image is required.."));
   }
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+  if (!allowedMimeTypes.includes(req?.files?.avatar[0]?.mimetype)) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Only image files are allowed."));
+  }
+
   const avatarSerPath = await fileUploadCloud(avatarLocalFile);
   if (!avatarSerPath) {
     return res
@@ -323,6 +335,19 @@ const AddVideoInClound = asyncHandler(async (req, res) => {
       .status(300)
       .json(new ApiResponse(300, "avatar Video is required.."));
   }
+
+  const allowedMimeTypes = [
+    "video/mp4",
+    "video/quicktime",
+    "video/mpeg",
+    "video/webm",
+  ];
+  if (!allowedMimeTypes.includes(req?.files?.avatarVideo[0]?.mimetype)) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Only video files are allowed."));
+  }
+
   const avatarVideoSerPath = await fileUploadCloud(avatarVideoLocalFile);
   if (!avatarVideoSerPath) {
     return res

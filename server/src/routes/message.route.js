@@ -38,7 +38,7 @@ router.route("/uploadImageInCloud").post(
   AddImageInClound
 );
 router.route("/uploadVideoInCloud").post(
-  // authMiddleWare,
+  authMiddleWare,
   upload.fields([
     {
       name: "avatarVideo",
