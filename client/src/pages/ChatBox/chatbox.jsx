@@ -48,6 +48,7 @@ import ChatList from "./ChatComponents/ChatList.jsx";
 import { IoSend } from "react-icons/io5";
 import { MdAddAPhoto } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
+import toast from "react-hot-toast";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 const style = {
   position: "absolute",
@@ -460,7 +461,28 @@ const Chatbox = () => {
 
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
+      if (!file.type.startsWith("video/")) {
+        toast.error("Please select a video file.", {
+          duration: 3000,
+          position: "top-center",
+        });
+        return; // Stop further processing
+      }
+      // Check the size of the file
+      const fileSizeInMB = file.size / (1024 * 1024); // Calculate file size in MB
+      if (fileSizeInMB > 50) {
+        toast.error(
+          "Selected video exceeds the maximum allowed size of 50 MB.",
+          {
+            duration: 3000,
+            position: "top-center",
+          }
+        );
+        return; // Stop further processing
+      }
+
       setVideoAvatar(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -692,6 +714,26 @@ const Chatbox = () => {
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
+      if (!selectedFile.type.startsWith("image/")) {
+        toast.error("Please select an image file.", {
+          duration: 3000,
+          position: "top-center",
+        });
+        return; // Stop further processing
+      }
+
+      const fileSizeInMB = selectedFile.size / (1024 * 1024); // Calculate file size in MB
+      if (fileSizeInMB > 10) {
+        toast.error(
+          "Selected Image exceeds the maximum allowed size of 10 MB.",
+          {
+            duration: 3000,
+            position: "top-center",
+          }
+        );
+        return; // Stop further processing
+      }
+
       const compressedFile = await imageCompression(selectedFile, {
         maxSizeMB: 1,
         maxWidthOrHeight: 1024,
