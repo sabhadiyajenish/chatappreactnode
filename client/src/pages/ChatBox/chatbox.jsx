@@ -301,6 +301,8 @@ const Chatbox = () => {
           reciverId: reloadUserNotification?.reciverId,
           firstMessage: reloadUserNotification?.message
             ? reloadUserNotification?.message
+            : reloadUserNotification?.avatarVideo
+            ? "Video"
             : "Image",
           date: reloadUserNotification?.createdAt,
           uniqueId: reloadUserNotification?.uniqueId,
@@ -393,15 +395,17 @@ const Chatbox = () => {
     });
 
     socket?.on("getMessageNotificationInMongoDb", (userDatas) => {
+      const validMessage = userDatas[0]?.message
+        ? userDatas[0]?.message
+        : userDatas[0]?.avatarVideo
+        ? "Video"
+        : "Image";
+      console.log("jenish<<<<<", userDatas[0], validMessage);
       dispatch(
         addUserNotification({
           senderId: userDatas[0]?.senderId,
           reciverId: userDatas[0]?.reciverId,
-          firstMessage: userDatas[0]?.message
-            ? userDatas[0]?.message
-            : userDatas[0]?.avatarVideo
-            ? "Video"
-            : "Image",
+          firstMessage: validMessage,
           date: userDatas[0]?.createdAt,
           uniqueId: userDatas[0]?.uniqueId,
         })

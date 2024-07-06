@@ -26,9 +26,11 @@ export const fileUploadCloud = async (filePathName) => {
   }
 };
 
-export const deleteImage = async (publicId) => {
+export const deleteImage = async (publicId, type) => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: type,
+    });
     console.log(result);
     return result;
   } catch (error) {

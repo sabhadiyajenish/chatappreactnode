@@ -11,12 +11,14 @@ import {
 } from "../utils/cloudinary.js";
 
 function extractPublicIdFromUrl(url) {
-  const startIndex = url.lastIndexOf("/") + 1;
-  const endIndex =
-    url.lastIndexOf(".") !== -1 ? url.lastIndexOf(".") : url.length;
-  return url.substring(startIndex, endIndex);
+  // Example URL: https://res.cloudinary.com/your_cloud_name/image/upload/public_id.jpg
+  const regex = /\/([^\/]+)\.[a-zA-Z0-9]{3,4}(?:$|\?)/;
+  const match = url.match(regex);
+  if (match && match.length > 1) {
+    return match[1]; // public_id is captured by the first group in the regex
+  }
+  return null; // Return null if no match found
 }
-
 const addMessage = asyncHandler(async (req, res, next) => {
   const {
     senderId,
@@ -117,7 +119,12 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
       if (userMessage.userDelete === true) {
         if (userMessage?.avatar) {
           const publicId = extractPublicIdFromUrl(userMessage?.avatar);
-          const pub = await deleteImage(publicId);
+          const pub = await deleteImage(publicId, "image");
+          console.log("delete image<<<<<<<<<", pub);
+        }
+        if (userMessage?.avatarVideo) {
+          const publicId = extractPublicIdFromUrl(userMessage?.avatarVideo);
+          const pub = await deleteImage(publicId, "video");
           console.log("delete image<<<<<<<<<", pub);
         }
         await Message.findByIdAndDelete({
@@ -126,7 +133,12 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
       } else if (userMessage.reciverDelete === true) {
         if (userMessage?.avatar) {
           const publicId = extractPublicIdFromUrl(userMessage?.avatar);
-          const pub = await deleteImage(publicId);
+          const pub = await deleteImage(publicId, "image");
+          console.log("delete image<<<<<<<<<", pub);
+        }
+        if (userMessage?.avatarVideo) {
+          const publicId = extractPublicIdFromUrl(userMessage?.avatarVideo);
+          const pub = await deleteImage(publicId, "video");
           console.log("delete image<<<<<<<<<", pub);
         }
         await Message.findByIdAndDelete({
@@ -143,7 +155,13 @@ const deleteMessage = asyncHandler(async (req, res, next) => {
   } else {
     if (userMessage?.avatar) {
       const publicId = extractPublicIdFromUrl(userMessage?.avatar);
-      const pub = await deleteImage(publicId);
+      console.log("public keyu is<<<<", publicId);
+      const pub = await deleteImage(publicId, "image");
+      console.log("delete image<<<<<<<<<", pub);
+    }
+    if (userMessage?.avatarVideo) {
+      const publicId = extractPublicIdFromUrl(userMessage?.avatarVideo);
+      const pub = await deleteImage(publicId, "video");
       console.log("delete image<<<<<<<<<", pub);
     }
     await Message.findByIdAndDelete({
@@ -354,23 +372,21 @@ const AddVideoInClound = asyncHandler(async (req, res) => {
       .status(300)
       .json(new ApiResponse(300, "avatar Video is required.."));
   }
-  const thumbnailUrl = cloudinaryFile.url(
-    avatarVideoSerPath.public_id + ".jpg",
-    {
-      resource_type: "video",
-      format: "jpg",
-      quality: "auto",
-      width: 300,
-      height: 300,
-      crop: "thumb",
-    }
-  );
+  const thumbnailUrl = cloudinaryFile.url(avatarVideoSerPath.public_id, {
+    resource_type: "video",
+    format: "jpg",
+    quality: "auto",
+    width: 300,
+    height: 300,
+    crop: "thumb",
+  });
+  let cleanImageUrl = thumbnailUrl.split("?")[0];
   return res.status(200).json(
     new ApiResponse(
       200,
       {
         url: avatarVideoSerPath?.url,
-        thumb: thumbnailUrl,
+        thumb: cleanImageUrl,
       },
       "Video upload in clound successfully"
     )

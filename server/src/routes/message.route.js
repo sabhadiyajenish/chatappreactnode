@@ -25,8 +25,6 @@ router.route("/deleteMessage").post(authMiddleWare, deleteMessage);
 router.route("/clearChatMessage").post(authMiddleWare, clearChatMessage);
 router.route("/updateSeenStatus").post(authMiddleWare, updateSeenStatus);
 
-router.route("/updateSeenStatus").post(authMiddleWare, updateSeenStatus);
-
 router.route("/uploadImageInCloud").post(
   authMiddleWare,
   upload.fields([
