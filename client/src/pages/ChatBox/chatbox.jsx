@@ -50,6 +50,7 @@ import { MdAddAPhoto } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import toast from "react-hot-toast";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
+import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -77,6 +78,9 @@ const Chatbox = () => {
     userLists,
   } = useSelector((state) => state.messageData);
   const [open, setOpen] = React.useState(false);
+  const [openVideoSentCall, setOpenVideoSentCall] = useState(false);
+  const [reciveUserCallInvitationData, setReciveUserCallInvitationData] =
+    useState("");
   const [socket, setSocket] = useState(null);
   const [userData, setUserDatas] = useState([]);
   const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
@@ -186,6 +190,13 @@ const Chatbox = () => {
   useEffect(() => {
     setUserConversationDatas(conversationData);
   }, [conversationData]);
+
+  useEffect(() => {
+    if (reciveUserCallInvitationData) {
+      console.log("come here after they opnw new chat<<<<<<<<<<<<<<");
+      setOpenVideoSentCall(true);
+    }
+  }, [reciveUserCallInvitationData]);
 
   useEffect(() => {
     if (searchUserByName) {
@@ -449,6 +460,15 @@ const Chatbox = () => {
     socket?.on("getUserData", (cate) => {
       setUserDatas((mess) => mess.concat(cate));
     });
+    socket?.on("getVideoCallInvitation", (userVideoCall) => {
+      setReciveUserCallInvitationData(userVideoCall);
+      // setUserDatas((mess) => mess.concat(cate));
+    });
+    socket?.on("getCutVideoCall", (userCutVideoCall) => {
+      console.log("here only come this jenish.....<<<<<<<<<<<<<<<");
+
+      handleVideocallSentClose();
+    });
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
   useEffect(() => {
@@ -469,6 +489,31 @@ const Chatbox = () => {
     };
   }, [handleOpenEmoji]);
 
+  const handleVideocallSentClose = (event, reason) => {
+    if (reason !== "backdropClick") {
+      setOpenVideoSentCall(false);
+      setReciveUserCallInvitationData(null);
+    }
+  };
+  const handleVideoCallSentInvitation = () => {
+    const checkActiveUserIfHave = activeUser?.find(
+      (userList) => userList.userId === reciverEmailAddress?.reciverId
+    );
+    if (!checkActiveUserIfHave) {
+      toast.error(`${reciverEmailAddress?.email} is Not Online`, {
+        duration: 3000,
+        position: "top-center",
+      });
+      return;
+    }
+    socket?.emit("sentVideoCallInvitation", {
+      senderId: emailLocal?.userId,
+      reciverId: reciverEmailAddress?.reciverId,
+      reciverEmail: reciverEmailAddress?.email,
+      senderEmail: emailLocal?.email,
+    });
+    // setOpenVideoSentCall(true);
+  };
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
 
@@ -1089,10 +1134,18 @@ const Chatbox = () => {
                   )}
                 </div>
                 <div>
+                  <FaVideo
+                    className={`md:ml-5 ml-2 cursor-pointer ${
+                      modeTheme === "dark" ? "text-white" : null
+                    }`}
+                    onClick={handleVideoCallSentInvitation}
+                  />
+                </div>
+                <div>
                   <Menu as="div" className="relative">
                     <Menu.Button>
                       <HiOutlineDotsVertical
-                        className={`mt-[10px] ml-8 cursor-pointer ${
+                        className={`mt-[10px] ml-4 cursor-pointer ${
                           modeTheme === "dark" ? "text-white" : null
                         } `}
                       />
@@ -1487,113 +1540,126 @@ const Chatbox = () => {
           </div>
         </div>
       </div>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          {previewURL && (
-            <div className=" relative">
-              <img
-                src={previewURL}
-                alt="Preview"
-                style={{ height: "100%", width: "100%" }}
-              />
-              <TiDeleteOutline
-                className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
-                onClick={() => {
-                  setFile(null);
-                  setPreviewURL(null);
-                  handleClose();
-                }}
-              />
-            </div>
-          )}
 
-          {videoPreview && (
-            <div className=" relative">
-              <video controls width="270" className="text-black">
-                <source src={videoPreview} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <TiDeleteOutline
-                className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
-                onClick={() => {
-                  setVideoPreview(null);
-                  handleClose();
-                }}
-              />
-            </div>
-          )}
+      {openVideoSentCall && (
+        <VideoCallSentModel
+          openVideoSentCall={openVideoSentCall}
+          handleVideocallSentClose={handleVideocallSentClose}
+          reciveUserCallInvitationData={reciveUserCallInvitationData}
+          emailLocal={emailLocal}
+          socket={socket}
+        />
+      )}
 
-          {uploadingImageProgress > 0 ? (
-            <>
-              <Box
-                className="mx-auto w-full mt-3"
-                sx={{ position: "relative", display: "inline-flex" }}
-              >
-                <CircularProgress
-                  variant="determinate"
-                  value={uploadingImageProgress}
-                  className="mx-auto w-full text-black"
+      {open && (
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            {previewURL && (
+              <div className=" relative">
+                <img
+                  src={previewURL}
+                  alt="Preview"
+                  style={{ height: "100%", width: "100%" }}
                 />
-                <Box
-                  sx={{
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    right: 0,
-                    position: "absolute",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                <TiDeleteOutline
+                  className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                  onClick={() => {
+                    setFile(null);
+                    setPreviewURL(null);
+                    handleClose();
                   }}
-                >
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    color="text.secondary"
-                  >
-                    {`${Math.round(uploadingImageProgress)}%`}
-                  </Typography>
-                </Box>
-              </Box>
-              <p className="tw-full text-center mt-2">
-                {uploadingImageProgress <= 20
-                  ? "Startng..."
-                  : uploadingImageProgress <= 50
-                  ? "Compreesing..."
-                  : "Sending..."}
-              </p>
-            </>
-          ) : null}
+                />
+              </div>
+            )}
 
-          {previewURL && !loadingForUploadImage && (
-            <div className=" w-full">
-              <button
-                type="button"
-                onClick={UploadFileOnCloud}
-                className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-              >
-                {loadingForUploadImage ? "sending... " : "Send"}
-              </button>
-            </div>
-          )}
-          {videoPreview && !loadingForUploadImage && (
-            <div className=" w-full">
-              <button
-                type="button"
-                onClick={UploadVideoFileOnCloud}
-                className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-              >
-                {loadingForUploadImage ? "sending... " : "Send Video"}
-              </button>
-            </div>
-          )}
-        </Box>
-      </Modal>
+            {videoPreview && (
+              <div className=" relative">
+                <video controls width="270" className="text-black">
+                  <source src={videoPreview} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <TiDeleteOutline
+                  className=" absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                  onClick={() => {
+                    setVideoPreview(null);
+                    handleClose();
+                  }}
+                />
+              </div>
+            )}
+
+            {uploadingImageProgress > 0 ? (
+              <>
+                <Box
+                  className="mx-auto w-full mt-3"
+                  sx={{ position: "relative", display: "inline-flex" }}
+                >
+                  <CircularProgress
+                    variant="determinate"
+                    value={uploadingImageProgress}
+                    className="mx-auto w-full text-black"
+                  />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: "absolute",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      component="div"
+                      color="text.secondary"
+                    >
+                      {`${Math.round(uploadingImageProgress)}%`}
+                    </Typography>
+                  </Box>
+                </Box>
+                <p className="tw-full text-center mt-2">
+                  {uploadingImageProgress <= 20
+                    ? "Startng..."
+                    : uploadingImageProgress <= 50
+                    ? "Compreesing..."
+                    : "Sending..."}
+                </p>
+              </>
+            ) : null}
+
+            {previewURL && !loadingForUploadImage && (
+              <div className=" w-full">
+                <button
+                  type="button"
+                  onClick={UploadFileOnCloud}
+                  className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                >
+                  {loadingForUploadImage ? "sending... " : "Send"}
+                </button>
+              </div>
+            )}
+            {videoPreview && !loadingForUploadImage && (
+              <div className=" w-full">
+                <button
+                  type="button"
+                  onClick={UploadVideoFileOnCloud}
+                  className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                >
+                  {loadingForUploadImage ? "sending... " : "Send Video"}
+                </button>
+              </div>
+            )}
+          </Box>
+        </Modal>
+      )}
     </>
   );
 };
