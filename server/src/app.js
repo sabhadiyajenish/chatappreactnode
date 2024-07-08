@@ -269,6 +269,48 @@ io.on("connection", (socket) => {
     }
   );
 
+  socket.on(
+    "CutVideoCallByOutsideUser",
+    ({ senderId, reciverId, reciverEmail, senderEmail }) => {
+      const receiver = users.find((user) => user.userId === reciverId);
+      const sender = users.find((user) => user.userId === senderId);
+
+      if (receiver) {
+        io.to(receiver?.socketId)
+          .to(sender?.socketId)
+          .emit("getCutVideoCallByOutsideUser", {
+            senderId,
+            reciverId,
+            reciverEmail,
+            senderEmail,
+            createdAt: new Date(),
+          });
+        io.to(sender?.socketId).emit("getCutVideoCallAfterPopup", {
+          senderId,
+          reciverId,
+          reciverEmail,
+          senderEmail,
+          createdAt: new Date(),
+        });
+      } else {
+        io.to(sender?.socketId).emit("getCutVideoCallByOutsideUser", {
+          senderId,
+          reciverId,
+          reciverEmail,
+          senderEmail,
+          createdAt: new Date(),
+        });
+        io.to(sender?.socketId).emit("getCutVideoCallAfterPopup", {
+          senderId,
+          reciverId,
+          reciverEmail,
+          senderEmail,
+          createdAt: new Date(),
+        });
+      }
+    }
+  );
+
   socket.on("addUserTypingStatus", ({ status, reciverId, senderId }) => {
     const receiver = users.find((user) => user.userId === reciverId);
     const sender = users.find((user) => user.userId === senderId);

@@ -51,6 +51,7 @@ import { LuSend } from "react-icons/lu";
 import toast from "react-hot-toast";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
+import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -79,6 +80,8 @@ const Chatbox = () => {
   } = useSelector((state) => state.messageData);
   const [open, setOpen] = React.useState(false);
   const [openVideoSentCall, setOpenVideoSentCall] = useState(false);
+  const [cutVideoCallAfterCut, setCutVideoCallAfterCut] = useState(false);
+
   const [reciveUserCallInvitationData, setReciveUserCallInvitationData] =
     useState("");
   const [socket, setSocket] = useState(null);
@@ -468,6 +471,12 @@ const Chatbox = () => {
       console.log("here only come this jenish.....<<<<<<<<<<<<<<<");
 
       handleVideocallSentClose();
+    });
+    socket?.on("getCutVideoCallByOutsideUser", (userCutVideoCall) => {
+      handleVideocallSentClose();
+    });
+    socket?.on("getCutVideoCallAfterPopup", (userCutVideoCall) => {
+      setCutVideoCallAfterCut(true);
     });
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
@@ -1550,7 +1559,12 @@ const Chatbox = () => {
           socket={socket}
         />
       )}
-
+      {cutVideoCallAfterCut && (
+        <VideoCallCutAfterModel
+          cutVideoCallAfterCut={cutVideoCallAfterCut}
+          setCutVideoCallAfterCut={setCutVideoCallAfterCut}
+        />
+      )}
       {open && (
         <Modal
           open={open}

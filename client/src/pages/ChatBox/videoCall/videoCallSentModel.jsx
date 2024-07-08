@@ -29,7 +29,14 @@ const VideoCallSentModel = ({
       senderEmail: reciveUserCallInvitationData?.senderEmail,
     });
   };
-
+  const CutVideoCallByOutsideUser = () => {
+    socket?.emit("CutVideoCallByOutsideUser", {
+      senderId: reciveUserCallInvitationData?.senderId,
+      reciverId: reciveUserCallInvitationData?.reciverId,
+      reciverEmail: reciveUserCallInvitationData?.reciverEmail,
+      senderEmail: reciveUserCallInvitationData?.senderEmail,
+    });
+  };
   return (
     <Modal
       open={openVideoSentCall}
@@ -74,7 +81,7 @@ const VideoCallSentModel = ({
 
                 <div
                   className=" w-16 h-16 rounded-full bg-red-500"
-                  onClick={CutVideoCall}
+                  onClick={CutVideoCallByOutsideUser}
                 >
                   <FaVideoSlash
                     className={" w-7 h-7 mt-3 cursor-pointer m-auto"}
