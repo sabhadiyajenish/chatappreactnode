@@ -25,6 +25,7 @@ app.options(
     credentials: true,
   })
 );
+
 // const allowedOrigin = "http://localhost:5173";
 // const io = new Server(2525, {
 //   cors: {
@@ -122,6 +123,20 @@ io.on("connection", (socket) => {
     console.log("Connected users:", users);
   });
 
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
+  });
+  socket.on("signal", ({ signalData, roomId, senderId }) => {
+    console.log(
+      "comen here>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
+      signalData,
+      roomId,
+      senderId
+    );
+    io.to(roomId).emit("signal", { signalData, senderId: senderId });
+  });
+
   socket.on(
     "addMessage",
     ({
@@ -217,7 +232,7 @@ io.on("connection", (socket) => {
 
   socket.on(
     "sentVideoCallInvitation",
-    ({ senderId, reciverId, reciverEmail, senderEmail }) => {
+    ({ senderId, reciverId, reciverEmail, senderEmail, roomId }) => {
       const receiver = users.find((user) => user.userId === reciverId);
       const sender = users.find((user) => user.userId === senderId);
 
@@ -229,6 +244,7 @@ io.on("connection", (socket) => {
             reciverId,
             reciverEmail,
             senderEmail,
+            roomId,
             createdAt: new Date(),
           });
       } else {
@@ -237,6 +253,7 @@ io.on("connection", (socket) => {
           reciverId,
           reciverEmail,
           senderEmail,
+          roomId,
           createdAt: new Date(),
         });
       }

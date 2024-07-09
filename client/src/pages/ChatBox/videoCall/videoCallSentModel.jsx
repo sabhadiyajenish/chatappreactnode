@@ -20,6 +20,15 @@ const VideoCallSentModel = ({
   reciveUserCallInvitationData,
   socket,
   emailLocal = {},
+  uniqueRoomId,
+  localVideoRef,
+  SimplePeer,
+  setPeer,
+  remoteVideoRef,
+  setIsCallAccepted,
+  setIsCalling,
+  isCallAccepted,
+  handleAcceptInvitation,
 }) => {
   const CutVideoCall = () => {
     socket?.emit("cutVideoCall", {
@@ -37,6 +46,79 @@ const VideoCallSentModel = ({
       senderEmail: reciveUserCallInvitationData?.senderEmail,
     });
   };
+
+  // const handleAcceptInvitation = async () => {
+  //   socket.emit("joinRoom", uniqueRoomId); // Join the room for video call
+
+  //   // Start local video stream
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({
+  //       audio: true,
+  //     });
+
+  //     if (localVideoRef.current) {
+  //       localVideoRef.current.srcObject = stream;
+  //       const peerInstance = new SimplePeer({ initiator: true, stream });
+  //       setPeer(peerInstance);
+
+  //       peerInstance.on("signal", (data) => {
+  //         socket.emit("signal", {
+  //           signalData: data,
+  //           roomId: uniqueRoomId,
+  //           senderId: emailLocal?.userId,
+  //         });
+  //       });
+
+  //       peerInstance.on("stream", (remoteStream) => {
+  //         if (remoteVideoRef.current) {
+  //           remoteVideoRef.current.srcObject = remoteStream;
+  //           setIsCallAccepted(true); // Update state to indicate call accepted
+  //           console.log("Remote stream received:", remoteStream);
+  //         }
+  //       });
+
+  //       peerInstance.signal(); // Signal to establish WebRTC connection
+  //     } else {
+  //       console.log("come here video aduiod partss");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error accessing media devices:", error);
+  //     // Handle specific error scenarios
+  //     if (
+  //       error.name === "NotFoundError" ||
+  //       error.name === "DevicesNotFoundError"
+  //     ) {
+  //       // Devices not found
+  //       alert(
+  //         "Media devices not found. Please ensure your camera and microphone are connected and accessible."
+  //       );
+  //     } else if (
+  //       error.name === "NotAllowedError" ||
+  //       error.name === "PermissionDeniedError"
+  //     ) {
+  //       // Permission denied by user
+  //       alert(
+  //         "Permission to access media devices was denied. Please grant permission to proceed."
+  //       );
+  //     } else if (
+  //       error.name === "OverconstrainedError" ||
+  //       error.name === "ConstraintNotSatisfiedError"
+  //     ) {
+  //       // Constraints not satisfied
+  //       alert(
+  //         "Media device constraints not satisfied. Please check your device settings."
+  //       );
+  //     } else {
+  //       // Other errors
+  //       alert(
+  //         "Error accessing media devices. Please check your setup and try again."
+  //       );
+  //     }
+  //   }
+
+  //   setIsCalling(true); // Update state to indicate calling
+  // };
+
   return (
     <Modal
       open={openVideoSentCall}
@@ -65,6 +147,23 @@ const VideoCallSentModel = ({
               </div>
             </Box>
           </div>
+          {isCallAccepted && (
+            <div>
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{ width: "240px", height: "180px" }}
+              ></video>
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                style={{ width: "240px", height: "180px" }}
+              ></video>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -75,9 +174,16 @@ const VideoCallSentModel = ({
               </h1>
               <p className="text-center my-8">Receiving...</p>
               <div className="flex justify-evenly">
-                <div className=" w-16 h-16 rounded-full bg-green-400">
-                  <FaVideo className={" w-7 h-7 mt-3 cursor-pointer m-auto"} />
-                </div>
+                {!isCallAccepted && (
+                  <div
+                    className=" w-16 h-16 rounded-full bg-green-400"
+                    onClick={handleAcceptInvitation}
+                  >
+                    <FaVideo
+                      className={" w-7 h-7 mt-3 cursor-pointer m-auto"}
+                    />
+                  </div>
+                )}
 
                 <div
                   className=" w-16 h-16 rounded-full bg-red-500"
@@ -90,6 +196,23 @@ const VideoCallSentModel = ({
               </div>
             </Box>
           </div>
+          {isCallAccepted && (
+            <div>
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{ width: "240px", height: "180px" }}
+              ></video>
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                style={{ width: "240px", height: "180px" }}
+              ></video>
+            </div>
+          )}
         </>
       )}
     </Modal>
