@@ -45,16 +45,21 @@ const addMessage = asyncHandler(async (req, res, next) => {
       conversationId: converData._id,
       senderId: senderId,
       reciverId: reciverId,
-      message: message,
       uniqueId: uniqueId,
     };
 
     // Add optional fields if they are present
+    if (message) {
+      messageData.message = message;
+      messageData.Filetype = "message";
+    }
     if (avatar) {
       messageData.avatar = avatar;
+      messageData.Filetype = "image";
     }
     if (avatarVideo) {
       messageData.avatarVideo = avatarVideo;
+      messageData.Filetype = "video";
     }
     if (avatarVideoThumb) {
       messageData.avatarVideoThumb = avatarVideoThumb;
@@ -79,16 +84,21 @@ const addMessage = asyncHandler(async (req, res, next) => {
     conversationId: userData[0]?._id,
     senderId: senderId,
     reciverId: reciverId,
-    message: message,
     uniqueId: uniqueId,
   };
 
   // Add optional fields if they are present
+  if (message) {
+    messageData.message = message;
+    messageData.Filetype = "message";
+  }
   if (avatar) {
     messageData.avatar = avatar;
+    messageData.Filetype = "image";
   }
   if (avatarVideo) {
     messageData.avatarVideo = avatarVideo;
+    messageData.Filetype = "video";
   }
   if (avatarVideoThumb) {
     messageData.avatarVideoThumb = avatarVideoThumb;

@@ -95,7 +95,6 @@ const ChatMessage = ({
         console.error("Error downloading image:", error);
       });
   };
-  console.log("<<<<<<", dt);
   return (
     <>
       {dt.senderId === emailLocal?.userId &&

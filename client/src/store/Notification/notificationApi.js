@@ -36,7 +36,6 @@ export const deleteNotificationData = createAsyncThunk(
         `/notification/deleteNotification`,
         data
       );
-      console.log("data is user conversations...<<<<<", responce?.data);
       return responce?.data;
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);

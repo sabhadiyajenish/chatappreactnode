@@ -36,6 +36,9 @@ const MessageSchema = mongoose.Schema({
   avatarVideoThumb: {
     type: String,
   },
+  Filetype: {
+    type: String,
+  },
   seen: { type: Boolean, default: false },
   seenAt: { type: Date },
   userDelete: {

@@ -42,7 +42,6 @@ export const getConversation = createAsyncThunk(
   async (data) => {
     try {
       const responce = await axios.get(`/messages/${data}`);
-      console.log("data is user conversations...<<<<<", responce?.data);
       return responce?.data;
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);
@@ -54,7 +53,6 @@ export const deleteMessageData = createAsyncThunk(
   async (data, data1) => {
     try {
       const responce = await axios.post(`/messages/deleteMessage`, data);
-      console.log("data is user conversations...<<<<<", responce?.data);
       return responce?.data;
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);

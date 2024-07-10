@@ -127,14 +127,16 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     console.log(`Socket ${socket.id} joined room ${roomId}`);
   });
-  socket.on("signal", ({ signalData, roomId, senderId }) => {
+  socket.on("signal", ({ signalData, receiverId }) => {
     console.log(
       "comen here>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
       signalData,
-      roomId,
-      senderId
+      receiverId
     );
-    io.to(roomId).emit("signal", { signalData, senderId: senderId });
+    const receiver = users.find((user) => user.userId === receiverId);
+
+    console.log(receiver, "<<<<<<<<<<<<<<<<<<<", users);
+    io.to(receiver?.socketId).emit("streamUser", { signalData, receiverId });
   });
 
   socket.on(
@@ -285,7 +287,22 @@ io.on("connection", (socket) => {
       }
     }
   );
+  socket.on(
+    "AcceptVideoCallByUser",
+    ({ senderId, reciverId, reciverEmail, senderEmail }) => {
+      const sender = users.find((user) => user.userId === senderId);
 
+      if (sender) {
+        io.to(sender?.socketId).emit("getAcceptVideoCallByUser", {
+          senderId,
+          reciverId,
+          reciverEmail,
+          senderEmail,
+          createdAt: new Date(),
+        });
+      }
+    }
+  );
   socket.on(
     "CutVideoCallByOutsideUser",
     ({ senderId, reciverId, reciverEmail, senderEmail }) => {

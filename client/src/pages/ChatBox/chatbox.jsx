@@ -132,7 +132,7 @@ const Chatbox = () => {
   const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
   const [videoPreview, setVideoPreview] = useState(null);
   const [videoAvatar, setVideoAvatar] = useState(null);
-
+  const [acceptCallStatus, setAcceptCallStatus] = useState(false);
   const [uniqueRoomId, setUniqueRoomId] = useState("");
   const [isCalling, setIsCalling] = useState(false); // Flag for initiating a call
   const [isCallAccepted, setIsCallAccepted] = useState(false); // Flag for call acceptance
@@ -203,7 +203,6 @@ const Chatbox = () => {
 
   useEffect(() => {
     if (reciveUserCallInvitationData) {
-      console.log("come here after they opnw new chat<<<<<<<<<<<<<<");
       setOpenVideoSentCall(true);
     }
   }, [reciveUserCallInvitationData]);
@@ -389,6 +388,7 @@ const Chatbox = () => {
       }
     }
   }, [deleteMessageForUpdated]);
+  let pc;
 
   useEffect(() => {
     socket?.emit("addUser", emailLocal?.userId);
@@ -486,18 +486,43 @@ const Chatbox = () => {
     socket?.on("getCutVideoCallAfterPopup", (userCutVideoCall) => {
       setCutVideoCallAfterCut(true);
     });
+    socket?.on("getAcceptVideoCallByUser", (userCutVideoCall) => {
+      console.log("accepted<><><><><><><><><><><><>");
+      setAcceptCallStatus(true);
+    });
 
-    socket?.on("signal", ({ signalData, senderId }) => {
-      console.log(`Received signal from ${senderId}`, signalData);
+    socket?.on("streamUser", async ({ signalData, receiverId }) => {
+      console.log(`Received signal from ${receiverId}`, signalData);
+      if (signalData.type === "offer") {
+        pc = new RTCPeerConnection();
 
-      // Check if signalData is a MediaStream
-      if (signalData instanceof MediaStream) {
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = signalData;
+        pc.ontrack = (event) => {
+          console.log("Received remote stream:", event.streams[0]);
+          // Assuming remoteVideoRef is a reference to your <video> element
+          if (remoteVideoRef.current.srcObject !== event.streams[0]) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+          }
+        };
+
+        try {
+          await pc.setRemoteDescription(
+            new RTCSessionDescription({ type: "offer", sdp: signalData.sdp })
+          );
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(
+            new RTCSessionDescription({ type: "answer", sdp: answer.sdp })
+          );
+
+          socket.emit("answer", pc.localDescription);
+
+          if (signalData.candidate) {
+            pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+          }
+        } catch (error) {
+          console.error("Error setting up peer connection:", error);
         }
-      } else {
-        console.error("Received signalData is not a MediaStream:", signalData);
       }
+      console.log("enter here<<<<<<<<<<<<<<<------------", remoteVideoRef);
     });
 
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
@@ -526,9 +551,10 @@ const Chatbox = () => {
     if (reason !== "backdropClick") {
       setOpenVideoSentCall(false);
       setReciveUserCallInvitationData(null);
+      setAcceptCallStatus(false);
     }
   };
-  const handleVideoCallSentInvitation = () => {
+  const handleVideoCallSentInvitation = async () => {
     const checkActiveUserIfHave = activeUser?.find(
       (userList) => userList.userId === reciverEmailAddress?.reciverId
     );
@@ -541,95 +567,35 @@ const Chatbox = () => {
     }
     const roomId = generateUniqueRoomId();
     setUniqueRoomId(roomId);
-    socket?.emit("sentVideoCallInvitation", {
-      senderId: emailLocal?.userId,
-      reciverId: reciverEmailAddress?.reciverId,
-      reciverEmail: reciverEmailAddress?.email,
-      senderEmail: emailLocal?.email,
-      roomId: roomId,
-    });
+    // socket.emit("joinRoom", roomId); // Join the room for video call
 
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-
-          let peerInstance = new SimplePeer({ initiator: true, stream });
-
-          setPeer(peerInstance);
-
-          peerInstance.on("signal", (data) => {
-            socket.emit("signal", {
-              signalData: data,
-              roomId,
-              senderId: emailLocal?.userId,
-            });
-          });
-          console.log("start local video call here>>>>>", 1);
-
-          peerInstance.on("data", (remoteStream) => {
-            // if (remoteVideoRef.current) {
-            console.log("start local video call here>>>>>", 5, remoteStream);
-            remoteVideoRef.current.srcObject = remoteStream;
-            setIsCallAccepted(true); // Update state to indicate call accepted
-            // }
-          });
-        } else {
-          console.log("start local video call here>>>>>", 5);
-        }
-      })
-      .catch((error) => {
-        console.error("Error accessing media devices:", error);
-      });
-
-    setIsCalling(true);
-    // setOpenVideoSentCall(true);
-  };
-
-  const handleAcceptInvitation = async () => {
-    socket.emit("joinRoom", uniqueRoomId); // Join the room for video call
-
-    // Start local video stream
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("start local video call here>>>>>", 0);
-
+      // Displaying video
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        const peerInstance = new SimplePeer({ initiator: true, stream });
-        setPeer(peerInstance);
-        console.log("start local video call here>>>>>", 1);
-
-        peerInstance.on("signal", (data) => {
-          socket.emit("signal", {
-            signalData: data,
-            roomId: uniqueRoomId,
-            senderId: emailLocal?.userId,
-          });
-        });
-        console.log("start local video call here>>>>>", 2);
-
-        peerInstance.on("stream", (remoteStream) => {
-          console.log("start local video call here>>>>>", 3);
-
-          if (remoteVideoRef.current) {
-            console.log("start local video call here>>>>>", 4);
-
-            remoteVideoRef.current.srcObject = remoteStream;
-            setIsCallAccepted(true); // Update state to indicate call accepted
-            console.log("Remote stream received:", remoteStream);
-          }
-        });
-        console.log("start local video call here>>>>>", 5);
-
-        peerInstance.signal(); // Signal to establish WebRTC connection
-      } else {
-        console.log("come here video aduiod partss", localVideoRef);
       }
+      let peer;
+      peer = new SimplePeer({ initiator: true });
+      peer.addStream(stream);
+      // Listen for signals from the receiver
+      peer.on("signal", (data) => {
+        // Send the signal (ICE candidate, SDP) to the receiver
+        // Send this 'data' object through your signaling server
+        socket.emit("signal", {
+          signalData: data,
+          receiverId: reciverEmailAddress?.reciverId,
+        });
+        console.log("come on signal peer");
+        socket?.emit("sentVideoCallInvitation", {
+          senderId: emailLocal?.userId,
+          reciverId: reciverEmailAddress?.reciverId,
+          reciverEmail: reciverEmailAddress?.email,
+          senderEmail: emailLocal?.email,
+          roomId: roomId,
+        });
+      });
     } catch (error) {
-      console.error("Error accessing media devices:", error);
-      // Handle specific error scenarios
       if (
         error.name === "NotFoundError" ||
         error.name === "DevicesNotFoundError"
@@ -652,17 +618,21 @@ const Chatbox = () => {
       ) {
         // Constraints not satisfied
         alert(
-          "Media device constraints not satisfied. Please check your device settings."
+          "Media device constraints not satisfied. Please check your device settings.",
+          error
         );
       } else {
         // Other errors
         alert(
-          "Error accessing media devices. Please check your setup and try again."
+          "Error accessing media devices. Please check your setup and try again.",
+          error
         );
       }
+      // Handle error
     }
 
-    setIsCalling(true); // Update state to indicate calling
+    setIsCalling(true);
+    // setOpenVideoSentCall(true);
   };
 
   const handleVideoChange = (e) => {
@@ -1707,7 +1677,9 @@ const Chatbox = () => {
           setIsCallAccepted={setIsCallAccepted}
           setIsCalling={setIsCalling}
           isCallAccepted={isCallAccepted}
-          handleAcceptInvitation={handleAcceptInvitation}
+          acceptCallStatus={acceptCallStatus}
+          setAcceptCallStatus={setAcceptCallStatus}
+          reciverEmailAddress={reciverEmailAddress}
         />
       )}
       {cutVideoCallAfterCut && (
@@ -1825,7 +1797,25 @@ const Chatbox = () => {
           </Box>
         </Modal>
       )}
-      <video ref={localVideoRef} autoPlay playsInline muted />
+      <div>
+        <h1>My Video</h1>
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          className="bg-red border border-red-500"
+        />
+      </div>
+      <div>
+        <h1>Remote Video Video</h1>
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          className="bg-red border border-red-500"
+        />
+      </div>
+
       <video ref={remoteVideoRef} autoPlay playsInline />
     </>
   );
