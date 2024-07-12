@@ -115,15 +115,16 @@ const ChatList = ({
             aria-describedby="modal-modal-description"
           >
             <Box sx={style}>
-              <div className="w-full p-0 m-0">
+              <div className="w-full p-0 m-0 flex justify-between items-center ">
+                <h1 className="text-white ml-2">All User List</h1>
                 <IoMdCloseCircle
-                  className={` w-10 h-10 float-right mt-[-8px] mr-[-13px] ${
+                  className={` w-10 h-10 float-right  mr-[-4px] ${
                     modeTheme === "dark" ? "text-white" : null
                   }`}
                   onClick={handleClose}
                 />
               </div>
-              <div className="w-full mt-5">
+              <div className="w-full mt-3">
                 <div
                   className={`relative flex items-center w-full h-12 rounded-full mb-3 focus-within:shadow-lg ${
                     modeTheme === "dark"
