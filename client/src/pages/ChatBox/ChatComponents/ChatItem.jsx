@@ -20,6 +20,7 @@ const ChatItem = ({
   lastSeenText,
   checkOnorNot,
   modeTheme,
+  setShowMainpart,
 }) => {
   return (
     <div
@@ -32,7 +33,7 @@ const ChatItem = ({
           : modeTheme === "dark"
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
-      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2  py-2 my-2 mx-3 rounded-md cursor-pointer `}
+      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-3 md:mx-3 mx-[6px] rounded-md cursor-pointer `}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
           setReciverEmailaddress({
@@ -43,7 +44,7 @@ const ChatItem = ({
             _id: dt?._id,
           });
           setReciverChatData(dt?._id);
-
+          setShowMainpart(true);
           const data1 = {
             senderId: emailLocal?.userId,
             reciverId: dt._id,
@@ -99,72 +100,74 @@ const ChatItem = ({
         }
       }}
     >
-      <div className="flex  items-center">
-        <div style={{ position: "relative" }}>
-          <img
-            alt="gdg"
-            src={dt?.avatar || Glrs}
-            className="lg:w-16 md:w-12 w-10 lg:h-16 md:h-12 h-10  rounded-full object-cover"
-          />
-          {activeUser.map((dr, key1) =>
-            dr?.userId === dt?._id ? (
-              <span
-                className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
-                key={key1}
-              ></span>
-            ) : (
-              ""
-            )
-          )}
-        </div>
-        <div className="lg:ml-8 md:ml-3 ml-2">
-          <p
-            className={`${
-              reciverEmailAddress?.email === dt.email
-                ? modeTheme === "dark"
-                  ? "text-white "
-                  : " text-black "
-                : " text-white text-[18px]"
-            } text-start  font-semibold`}
-          >
-            {dt?.userName?.substring(0, 10)}
-            {dt?.userName?.length <= 10 ? null : ".."}
-          </p>
-          {countMessage?.map((itm, key1) =>
-            itm.senderId === dt._id ? (
-              <p
-                className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]"
-                key={key1}
-              >
-                {itm?.firstMessage?.substring(0, 10)}
-                {itm?.firstMessage?.length <= 10 ? null : ".."}
-              </p>
-            ) : null
-          )}
-          {checkOnorNot && checkLastSeen ? (
+      <div className="flex justify-between items-center  w-full ">
+        <div className="flex items-center">
+          <div style={{ position: "relative" }}>
+            <img
+              alt="gdg"
+              src={dt?.avatar || Glrs}
+              className="lg:w-16 md:w-12 w-12 lg:h-16 md:h-12 h-12  rounded-full object-cover"
+            />
+            {activeUser.map((dr, key1) =>
+              dr?.userId === dt?._id ? (
+                <span
+                  className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                  key={key1}
+                ></span>
+              ) : (
+                ""
+              )
+            )}
+          </div>
+          <div className="lg:ml-8 md:ml-3 ml-2">
             <p
-              className={` ${
+              className={`${
                 reciverEmailAddress?.email === dt.email
                   ? modeTheme === "dark"
-                    ? "text-[#DDE6ED]"
-                    : "text-[#65448d]"
-                  : "text-[#dfd7e9]"
-              } text-[15px] mt-1 text-center`}
+                    ? "text-white "
+                    : " text-black "
+                  : " text-white text-[18px]"
+              } text-start  font-semibold`}
             >
-              {checkOnorNot && checkLastSeen && lastSeenText}
+              {dt?.userName?.substring(0, 10)}
+              {dt?.userName?.length <= 10 ? null : ".."}
             </p>
-          ) : null}
-        </div>
-      </div>
-      {countMessage?.map((itm, key1) =>
-        itm.senderId === dt._id ? (
-          <div className="mr-3" key={key1}>
-            <h1 className="h-7 w-7 rounded-full bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
-              {itm?.count < 10 ? itm?.count : "9+"}
-            </h1>
+            {countMessage?.map((itm, key1) =>
+              itm.senderId === dt._id ? (
+                <p
+                  className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]"
+                  key={key1}
+                >
+                  {itm?.firstMessage?.substring(0, 10)}
+                  {itm?.firstMessage?.length <= 10 ? null : ".."}
+                </p>
+              ) : null
+            )}
+            {checkOnorNot && checkLastSeen ? (
+              <p
+                className={` ${
+                  reciverEmailAddress?.email === dt.email
+                    ? modeTheme === "dark"
+                      ? "text-[#DDE6ED]"
+                      : "text-[#65448d]"
+                    : "text-[#dfd7e9]"
+                } text-[15px] mt-1 text-center`}
+              >
+                {checkOnorNot && checkLastSeen && lastSeenText}
+              </p>
+            ) : null}
           </div>
-        ) : null
-      )}
+        </div>
+        {countMessage?.map((itm, key1) =>
+          itm.senderId === dt._id ? (
+            <div className="mr-3" key={key1}>
+              <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
+                {itm?.count < 10 ? itm?.count : "9+"}
+              </h1>
+            </div>
+          ) : null
+        )}
+      </div>
     </div>
   );
 };

@@ -18,6 +18,7 @@ const ChatList = ({
   LastSeenUser,
   modeTheme,
   formatLastSeen,
+  setShowMainpart,
 }) => (
   <>
     <div
@@ -63,6 +64,7 @@ const ChatList = ({
             lastSeenText={lastSeenText}
             checkOnorNot={checkOnorNot}
             modeTheme={modeTheme}
+            setShowMainpart={setShowMainpart}
           />
         );
       })}

@@ -6,7 +6,6 @@
 .child1_chat_div {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
-  /* gap: 30px 20px; */
 }
 .all_chat_div {
   width: 100%;

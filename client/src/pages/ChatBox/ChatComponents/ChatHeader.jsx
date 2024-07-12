@@ -10,7 +10,7 @@ const ChatHeader = ({
 }) => (
   <div
     style={{ borderBottom: "1px solid black" }}
-    className={`p-1 flex justify-center items-center flex-wrap ${
+    className={`p-1  flex md:gap-0 gap-x-4 justify-center items-center flex-wrap ${
       modeTheme === "dark" ? "bg-[#272626]" : "bg-[#d5e1df]"
     } `}
   >
@@ -18,7 +18,7 @@ const ChatHeader = ({
       <img
         alt="gdg"
         src={userOneData?.avatar || Glrs}
-        className="w-16 h-16 rounded-full border-2  border-red-300"
+        className="md:w-16 w-12 md:h-16 h-12 rounded-full object-cover border-2  border-red-300"
       />
       {seeLoginActiveInfo?.online && (
         <span className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"></span>

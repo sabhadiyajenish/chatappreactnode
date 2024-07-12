@@ -12,7 +12,7 @@ import Modal from "@mui/material/Modal";
 import CircularProgress from "@mui/material/CircularProgress";
 import imageCompression from "browser-image-compression";
 // import SendIcon from "@mui/icons-material/Send";
-import { FaVideo } from "react-icons/fa6";
+import { FaArrowLeftLong, FaVideo } from "react-icons/fa6";
 import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
 import {
@@ -50,6 +50,7 @@ import { IoSend } from "react-icons/io5";
 import { MdAddAPhoto } from "react-icons/md";
 import { LuSend } from "react-icons/lu";
 import toast from "react-hot-toast";
+import { FaArrowLeft } from "react-icons/fa";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
@@ -129,6 +130,7 @@ const Chatbox = () => {
     online: false,
   });
   const [page, setPage] = useState(1);
+  const [showMainPart, setShowMainpart] = useState(false);
   const [ramdomMuted, setRandomMuted] = useState(false);
   const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
   const [videoPreview, setVideoPreview] = useState(null);
@@ -997,14 +999,36 @@ const Chatbox = () => {
       const progress = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
       );
-      console.log(`Upload Progress: ${progress}%,${progressEvent}`);
+      console.log(`Upload Progress:${progressEvent.loaded}`);
       // Update your progress state here (e.g., using setState in React)
-      setUploadingImageProgress(progress);
+      // setUploadingImageProgress(progress);
     },
   };
   const UploadVideoFileOnCloud = async () => {
     setLoadingForUploadImage(true);
-    setUploadingImageProgress(20);
+    let intervalId;
+    setUploadingImageProgress(10);
+    const calculateIncrement = () => {
+      if (videoAvatar.size < 23 * 1024 * 1024) {
+        return 15;
+      } else {
+        return 10;
+      }
+    };
+    const increment = calculateIncrement();
+
+    const updateProgress = () => {
+      setUploadingImageProgress((prev) => {
+        const newProgress = prev + increment;
+        if (newProgress >= 100) {
+          clearInterval(intervalId);
+          return 100;
+        }
+        return newProgress;
+      });
+    };
+    // Start interval to update progress
+    intervalId = setInterval(updateProgress, 1500);
 
     formData.append("avatarVideo", videoAvatar);
     const getVideoUrl = await axios.post(
@@ -1012,7 +1036,7 @@ const Chatbox = () => {
       formData,
       config
     );
-    // setUploadingImageProgress(20);
+    setUploadingImageProgress(20);
     if (getVideoUrl?.data?.data?.url) {
       const uniqueId = generateUniqueId();
 
@@ -1056,12 +1080,14 @@ const Chatbox = () => {
         avatarVideo: getVideoUrl?.data?.data?.url,
         avatarVideoThumb: getVideoUrl?.data?.data?.thumb,
       };
+      clearInterval(intervalId);
       setLoadingForUploadImage(false);
       setUploadingImageProgress(0);
       handleClose();
 
       dispatch(addUserMessage(data));
     } else {
+      clearInterval(intervalId);
       setUploadingImageProgress(0);
       setLoadingForUploadImage(false);
     }
@@ -1195,9 +1221,11 @@ const Chatbox = () => {
   return (
     <>
       <div className="main_chat_div">
-        <div className="child1_chat_div">
+        <div className="grid md:grid-cols-4 grid-cols-2  w-full">
           <div
-            className={`w-full h-[96vh]  border border-dark   ${
+            className={`w-full h-[96vh] md:col-span-1  col-span-2 ${
+              showMainPart ? "md:block hidden" : "block"
+            }   border border-dark   ${
               modeTheme === "dark" ? "bg-dark" : null
             }`}
           >
@@ -1230,18 +1258,19 @@ const Chatbox = () => {
                 LastSeenUser={LastSeenUser}
                 formatLastSeen={formatLastSeen}
                 modeTheme={modeTheme}
+                setShowMainpart={setShowMainpart}
               />
             )}
           </div>
           {reciverEmailAddress?.email === "" ? (
             <>
               <div
-                className={`h-[96vh] flex justify-center items-center ${
-                  modeTheme === "dark" ? "bg-dark" : null
-                } `}
+                className={` md:block  ${
+                  showMainPart ? "block" : "hidden"
+                }   col-span-2 ${modeTheme === "dark" ? "bg-dark" : null} `}
               >
                 <h2
-                  className={` text-4xl font-thin ${
+                  className={`flex justify-center h-[96vh]  items-center text-4xl font-thin ${
                     modeTheme === "dark" ? "text-white" : null
                   } `}
                 >
@@ -1251,19 +1280,36 @@ const Chatbox = () => {
             </>
           ) : (
             <div
-              className={`all_chat_div  ${
-                modeTheme === "dark" ? "bg-dark" : null
-              }`}
+              className={`all_chat_div col-span-2 md:block  ${
+                showMainPart ? "block" : "hidden"
+              }  ${modeTheme === "dark" ? "bg-dark" : null}`}
             >
               <div
                 className={`center_icon_div  ${
                   modeTheme === "dark" ? "bg-[#526D82]" : "bg-[#bce2d4]"
                 }`}
               >
+                <div className="md:hidden  block">
+                  <p
+                    className="mr-6"
+                    onClick={() => {
+                      setShowMainpart(false);
+                      setReciverEmailaddress({
+                        email: "",
+                        reciverId: "",
+                        avatar: "",
+                        userName: "",
+                        _id: "",
+                      });
+                    }}
+                  >
+                    <FaArrowLeftLong className="text-white" />
+                  </p>
+                </div>
                 <img
                   alt="gdg"
                   src={reciverEmailAddress?.avatar}
-                  className="img_girls_icon mt-[6px] object-cover"
+                  className="md:w-16 w-12 md:h-16 h-12 rounded-full  mt-[6px] object-cover md:mr-0 mr-3"
                 />
                 <div className="md:ml-5">
                   <p
@@ -1313,7 +1359,7 @@ const Chatbox = () => {
                 </div>
                 <div>
                   <FaVideo
-                    className={`md:ml-5 ml-2 cursor-pointer ${
+                    className={`ml-5 cursor-pointer ${
                       modeTheme === "dark" ? "text-white" : null
                     }`}
                     onClick={handleVideoCallSentInvitation}
@@ -1323,7 +1369,7 @@ const Chatbox = () => {
                   <Menu as="div" className="relative">
                     <Menu.Button>
                       <HiOutlineDotsVertical
-                        className={`mt-[10px] ml-4 cursor-pointer ${
+                        className={`mt-[10px] ml-5 cursor-pointer ${
                           modeTheme === "dark" ? "text-white" : null
                         } `}
                       />
@@ -1533,7 +1579,7 @@ const Chatbox = () => {
             </div>
           )}
           <div
-            className={`all_chat_div overflow-y-scroll  pb-3 ${
+            className={`all_chat_div col-span-1 overflow-y-scroll md:block hidden  pb-3 ${
               modeTheme === "dark" ? "bg-dark" : "bg-slate-200"
             }`}
           >
