@@ -93,7 +93,9 @@ const Register = asyncHandler(async (req, res) => {
 const LoginUser = asyncHandler(async (req, res) => {
   const { email, userName, password } = req.body;
   if (!email && !userName) {
-    throw new ApiError(400, "email or userName is Required.");
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "email or userName is Required."));
   }
 
   const userCheck = await User.findOne({
@@ -101,26 +103,35 @@ const LoginUser = asyncHandler(async (req, res) => {
   });
 
   if (!userCheck) {
-    throw new ApiError(409, "Please enter Valid userName or Email");
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Please enter Valid userName or Email"));
   }
 
   if (userCheck.loginType !== UserLoginType.EMAIL_PASSWORD) {
     // If user is registered with some other method, we will ask him/her to use the same method as registered.
     // This shows that if user is registered with methods other than email password, he/she will not be able to login with password. Which makes password field redundant for the SSO
-    throw new ApiError(
-      400,
-      "You have previously registered using " +
-        userCheck.loginType?.toLowerCase() +
-        ". Please use the " +
-        userCheck.loginType?.toLowerCase() +
-        " login option to access your account."
-    );
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          {},
+          "You have previously registered using " +
+            userCheck.loginType?.toLowerCase() +
+            ". Please use the " +
+            userCheck.loginType?.toLowerCase() +
+            " login option to access your account."
+        )
+      );
   }
 
   const passwordVerify = await userCheck.isPasswordCompare(password);
 
   if (!passwordVerify) {
-    throw new ApiError(400, "Please Enter Valid Credential.");
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Please Enter Valid Credential."));
   }
 
   const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(

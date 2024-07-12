@@ -129,6 +129,7 @@ const Chatbox = () => {
     online: false,
   });
   const [page, setPage] = useState(1);
+  const [ramdomMuted, setRandomMuted] = useState(false);
   const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
   const [videoPreview, setVideoPreview] = useState(null);
   const [videoAvatar, setVideoAvatar] = useState(null);
@@ -493,13 +494,34 @@ const Chatbox = () => {
 
     socket?.on("streamUser", async ({ signalData, receiverId }) => {
       console.log(`Received signal from ${receiverId}`, signalData);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // if (localVideoRef.current) {
+      //   localVideoRef.current.srcObject = stream;
+      // }
       if (signalData.type === "offer") {
         pc = new RTCPeerConnection();
 
         pc.ontrack = (event) => {
           console.log("Received remote stream:", event.streams[0]);
+
+          if (event.track.kind === "audio") {
+            // `event.streams[0]` will contain the incoming audio stream
+            const remoteAudio = new Audio();
+            remoteAudio.srcObject = event.streams[0];
+            console.log(
+              "here log is audio remote sideggggggggggggggg",
+              remoteAudio
+            );
+            remoteAudio.play(); // Start playing the received audio
+          }
+
           // Assuming remoteVideoRef is a reference to your <video> element
           if (remoteVideoRef.current.srcObject !== event.streams[0]) {
+            console.log(
+              "Received remote stream and come inside for setting<<:",
+              event.streams[0]
+            );
+
             remoteVideoRef.current.srcObject = event.streams[0];
           }
         };
@@ -516,10 +538,15 @@ const Chatbox = () => {
           socket.emit("answer", pc.localDescription);
 
           if (signalData.candidate) {
-            pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+            await pc.addIceCandidate(new RTCIceCandidate(signalData.candidate));
           }
         } catch (error) {
+          toast.error(`Error setting up peer connection:`, {
+            duration: 3000,
+            position: "top-center",
+          });
           console.error("Error setting up peer connection:", error);
+          return;
         }
       }
       console.log("enter here<<<<<<<<<<<<<<<------------", remoteVideoRef);
@@ -552,6 +579,9 @@ const Chatbox = () => {
       setOpenVideoSentCall(false);
       setReciveUserCallInvitationData(null);
       setAcceptCallStatus(false);
+      if (pc) {
+        pc.close();
+      }
     }
   };
   const handleVideoCallSentInvitation = async () => {
@@ -571,6 +601,7 @@ const Chatbox = () => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("strea local is here<<<<<<<<<<<", stream);
       // Displaying video
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
@@ -595,38 +626,64 @@ const Chatbox = () => {
           roomId: roomId,
         });
       });
+      const closeStream = () => {
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
+      };
+      // closeStream();
     } catch (error) {
       if (
         error.name === "NotFoundError" ||
         error.name === "DevicesNotFoundError"
       ) {
         // Devices not found
-        alert(
-          "Media devices not found. Please ensure your camera and microphone are connected and accessible."
+        toast.error(
+          `Media devices not found. Please ensure your camera and microphone are connected and accessible.`,
+          {
+            duration: 3000,
+            position: "top-center",
+          }
         );
+        return;
       } else if (
         error.name === "NotAllowedError" ||
         error.name === "PermissionDeniedError"
       ) {
         // Permission denied by user
-        alert(
-          "Permission to access media devices was denied. Please grant permission to proceed."
+
+        toast.error(
+          `Permission to access media devices was denied. Please grant permission to proceed.`,
+          {
+            duration: 3000,
+            position: "top-center",
+          }
         );
+        return;
       } else if (
         error.name === "OverconstrainedError" ||
         error.name === "ConstraintNotSatisfiedError"
       ) {
         // Constraints not satisfied
-        alert(
-          "Media device constraints not satisfied. Please check your device settings.",
-          error
+
+        toast.error(
+          `"Media device constraints not satisfied. Please check your device settings.`,
+          {
+            duration: 3000,
+            position: "top-center",
+          }
         );
+        return;
       } else {
         // Other errors
-        alert(
-          "Error accessing media devices. Please check your setup and try again.",
-          error
+        toast.error(
+          `Error accessing media devices. Please check your setup and try again.`,
+          {
+            duration: 3000,
+            position: "top-center",
+          }
         );
+        return;
       }
       // Handle error
     }
@@ -1206,7 +1263,7 @@ const Chatbox = () => {
                 <img
                   alt="gdg"
                   src={reciverEmailAddress?.avatar}
-                  className="img_girls_icon mt-[6px]"
+                  className="img_girls_icon mt-[6px] object-cover"
                 />
                 <div className="md:ml-5">
                   <p
@@ -1619,7 +1676,7 @@ const Chatbox = () => {
                           <img
                             alt="gdg"
                             src={dt?.avatar ? dt?.avatar : Glrs}
-                            className=" w-16 h-16 rounded-full "
+                            className=" w-16 h-16 rounded-full object-cover"
                           />
                           {activeUser.map((dr, key1) => {
                             return dr.userId === dt._id ? (
@@ -1680,6 +1737,7 @@ const Chatbox = () => {
           acceptCallStatus={acceptCallStatus}
           setAcceptCallStatus={setAcceptCallStatus}
           reciverEmailAddress={reciverEmailAddress}
+          setRandomMuted={setRandomMuted}
         />
       )}
       {cutVideoCallAfterCut && (
@@ -1797,26 +1855,6 @@ const Chatbox = () => {
           </Box>
         </Modal>
       )}
-      <div>
-        <h1>My Video</h1>
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          className="bg-red border border-red-500"
-        />
-      </div>
-      <div>
-        <h1>Remote Video Video</h1>
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          className="bg-red border border-red-500"
-        />
-      </div>
-
-      <video ref={remoteVideoRef} autoPlay playsInline />
     </>
   );
 };

@@ -104,7 +104,7 @@ const ChatItem = ({
           <img
             alt="gdg"
             src={dt?.avatar || Glrs}
-            className="lg:w-16 md:w-12 w-10 lg:h-16 md:h-12 h-10  rounded-full"
+            className="lg:w-16 md:w-12 w-10 lg:h-16 md:h-12 h-10  rounded-full object-cover"
           />
           {activeUser.map((dr, key1) =>
             dr?.userId === dt?._id ? (

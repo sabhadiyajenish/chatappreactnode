@@ -21,6 +21,7 @@ import {
 } from "../../utils/validation/RegisterValidate.jsx";
 import { LOCAL_PATH, USERS } from "../../utils/constant.jsx";
 import { getOneUser } from "../../store/Users/userApi.js";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const {
@@ -39,22 +40,35 @@ const Login = () => {
   });
 
   const LoginUser = async (logData) => {
-    const res = await axios.post(USERS.LOGIN_USER_API, logData);
-    console.log("res", res);
-    if (res && res?.data?.success) {
-      localStorage.setItem("accessToken", res?.data?.data?.accessToken);
-      localStorage.setItem("refreshToken", res?.data?.data?.refreshToken);
-      const userInfo = {
-        email: res?.data?.data?.user?.email,
-        userId: res?.data?.data?.user?._id,
-      };
-      localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
-      dispatch(SetLoginAuth(res?.data?.data));
-      dispatch(getOneUser());
-      navigate("/");
-      alert(res?.data?.message);
-    } else {
-      navigate("/login");
+    try {
+      const res = await axios.post(USERS.LOGIN_USER_API, logData);
+      console.log("res", res);
+      if (res && res?.data?.success) {
+        localStorage.setItem("accessToken", res?.data?.data?.accessToken);
+        localStorage.setItem("refreshToken", res?.data?.data?.refreshToken);
+        const userInfo = {
+          email: res?.data?.data?.user?.email,
+          userId: res?.data?.data?.user?._id,
+        };
+        localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
+        dispatch(SetLoginAuth(res?.data?.data));
+        dispatch(getOneUser());
+        navigate("/");
+        toast.success(`${res?.data?.message || ""}.`, {
+          duration: 3000,
+          position: "top-center",
+        });
+      } else {
+        console.log("jenish res", res);
+        navigate("/login");
+      }
+    } catch (error) {
+      toast.error(`${error?.response?.data?.message || ""}.`, {
+        duration: 3000,
+        position: "top-center",
+      });
+
+      console.log(error);
     }
   };
 

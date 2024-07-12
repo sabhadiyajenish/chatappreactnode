@@ -25,6 +25,7 @@ const VideoCallSentModel = ({
   acceptCallStatus,
   reciverEmailAddress,
   setAcceptCallStatus,
+  setRandomMuted,
 }) => {
   const CutVideoCall = () => {
     socket?.emit("cutVideoCall", {
@@ -80,6 +81,11 @@ const VideoCallSentModel = ({
                     <FaVideoSlash
                       className={" w-7 h-7 mt-3 cursor-pointer m-auto"}
                     />
+                  </div>
+                  <div>
+                    <button onClick={() => setRandomMuted((prev) => !prev)}>
+                      Toggle Muted
+                    </button>
                   </div>
                 </div>
               </Box>

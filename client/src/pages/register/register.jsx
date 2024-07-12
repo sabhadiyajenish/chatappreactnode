@@ -14,6 +14,7 @@ import {
 } from "../../utils/validation/RegisterValidate.jsx";
 import "./register.css";
 import { USERS } from "../../utils/constant.jsx";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const {
@@ -47,7 +48,10 @@ const Register = () => {
       })
       .then((datas) => {
         if (datas?.data?.message) {
-          alert(datas?.data?.message);
+          toast.success(`${datas?.data?.message || ""}.`, {
+            duration: 3000,
+            position: "top-center",
+          });
           navigate("/login");
         }
         if (datas?.data?.success == "false") {
