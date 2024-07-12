@@ -1259,6 +1259,10 @@ const Chatbox = () => {
                 formatLastSeen={formatLastSeen}
                 modeTheme={modeTheme}
                 setShowMainpart={setShowMainpart}
+                allUserListData={allUserListData}
+                loadingUsers={loadingUsers}
+                setSearchUserByName={setSearchUserByName}
+                searchUserByName={searchUserByName}
               />
             )}
           </div>
@@ -1289,7 +1293,7 @@ const Chatbox = () => {
                   modeTheme === "dark" ? "bg-[#526D82]" : "bg-[#bce2d4]"
                 }`}
               >
-                <div className="md:hidden  block">
+                <div className="md:hidden block">
                   <p
                     className="mr-6"
                     onClick={() => {
@@ -1303,7 +1307,11 @@ const Chatbox = () => {
                       });
                     }}
                   >
-                    <FaArrowLeftLong className="text-white" />
+                    <FaArrowLeftLong
+                      className={` ${
+                        modeTheme === "dark" ? "text-white" : null
+                      } `}
+                    />
                   </p>
                 </div>
                 <img
@@ -1531,7 +1539,7 @@ const Chatbox = () => {
                     // className="hidden"
                     className="upload"
                   />
-                  <FaVideo className="" />
+                  <FaVideo className="md:ml-0 -ml-[2px]" />
                 </div>
                 <div className="fileUpload">
                   <input
