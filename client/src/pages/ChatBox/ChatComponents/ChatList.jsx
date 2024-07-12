@@ -85,6 +85,7 @@ const ChatList = ({
           return (
             <ChatItem
               index={key}
+              key={key}
               dt={dt}
               reciverEmailAddress={reciverEmailAddress}
               setReciverEmailaddress={setReciverEmailaddress}

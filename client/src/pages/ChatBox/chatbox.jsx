@@ -1238,7 +1238,11 @@ const Chatbox = () => {
             />
             {loadingConversation ? (
               [1, 2, 3, 4, 5, 6]?.map((dt, key) => (
-                <ConversationLoadingPage index={key} modeTheme={modeTheme} />
+                <ConversationLoadingPage
+                  key={key}
+                  index={key}
+                  modeTheme={modeTheme}
+                />
               ))
             ) : (
               <ChatList
@@ -1469,7 +1473,7 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
-                    {Object.keys(getMessage).map((date) => {
+                    {Object.keys(getMessage).map((date, key) => {
                       const CheckFilterDate = getMessage[date].some((obj) =>
                         obj.senderId === emailLocal?.userId
                           ? !obj.userDelete === true
@@ -1477,7 +1481,7 @@ const Chatbox = () => {
                       );
 
                       return (
-                        <div key={date}>
+                        <div key={key}>
                           {CheckFilterDate && (
                             <div className="text-center flex justify-center my-4">
                               <h2
@@ -1499,6 +1503,7 @@ const Chatbox = () => {
                             return (
                               <ChatMessage
                                 dt={dt}
+                                key={index}
                                 indexKey={index}
                                 emailLocal={emailLocal}
                                 reciverEmailAddress={reciverEmailAddress}
