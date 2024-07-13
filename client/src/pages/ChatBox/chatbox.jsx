@@ -39,6 +39,7 @@ import { TiDeleteOutline } from "react-icons/ti";
 import axios from "../../utils/commonAxios.jsx";
 import ChatMessage from "./chatMessage/chatMessage.jsx";
 import moment from "moment";
+import TextareaAutosize from "react-textarea-autosize";
 import {
   addUserNotification,
   deleteNotificationData,
@@ -1175,7 +1176,16 @@ const Chatbox = () => {
   let typingTimeout;
 
   const handleTyping = (e) => {
-    setMessage(e.target.value);
+    const newText = e.target.value;
+    const lines = newText.split("\n");
+
+    if (lines.length > 3) {
+      console.log("enter here<<<<<<<<<<<<<<");
+      e.preventDefault();
+      return;
+    }
+
+    setMessage(newText);
     socket?.emit("addUserTypingStatus", {
       status: true,
       senderId: emailLocal?.userId,
@@ -1528,7 +1538,7 @@ const Chatbox = () => {
               </div>
 
               <div
-                className={`center_input_div flex justify-center cursor-pointer items-center  ${
+                className={`center_input_div flex justify-center items-center cursor-pointer  ${
                   modeTheme === "dark" ? "bg-dark" : null
                 }`}
               >
@@ -1536,7 +1546,7 @@ const Chatbox = () => {
                   className="mt-[15px] ml-2  cursor-pointer "
                   onClick={handleOpen}
                 /> */}
-                <div className="fileUpload">
+                {/* <div className="fileUpload">
                   <input
                     type="file"
                     accept="video/*"
@@ -1554,26 +1564,28 @@ const Chatbox = () => {
                     // className="hidden"
                     className="upload"
                   />
-                  <MdOutlineAddAPhoto className="-ml-[2px]" />
-                </div>
+                  <MdOutlineAddAPhoto className="-ml-[2px] " />
+                </div> */}
                 <MdEmojiEmotions
-                  className={`w-8 h-8 md:ml-1 ml-3 mr-3 mt-3  ${
+                  className={`md:w-10 w-12 md:h-10 h-12 md:ml-[6px] ml-3 mr-3 mt-2 ${
                     modeTheme === "dark" ? "text-white" : null
                   }`}
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
                 />
-                <input
+                <TextareaAutosize
                   ref={messageRef} // Attach the ref here
                   onKeyDown={handleKeyDown}
                   value={message}
+                  maxRows={2.5}
                   onChange={handleTyping}
-                  className={`input_message ${
+                  className={`w-full mt-[12px] md:mt-[6px] rounded-xl px-2 py-1 ${
                     modeTheme === "dark"
                       ? "text-[#fff] bg-dark border border-sky-100"
                       : null
                   } `}
                   placeholder="Enter Message here..."
                 />
+
                 <div
                   onClick={handleSend}
                   className="w-9 h-9  rounded-full bg-[#b6f76c] mt-[10px] mr-3 ml-3"

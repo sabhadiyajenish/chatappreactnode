@@ -102,7 +102,7 @@ const ChatMessage = ({
       dt?.userDelete === false ? (
         <>
           {dt.senderId === emailLocal?.userId && !dt.userDelete && (
-            <div className="you_chat md:pl-20 pl-5 " key={indexKey}>
+            <div className="you_chat md:pl-20 pl-12" key={indexKey}>
               {dt.message ? (
                 <p
                   className={`you_chat_text  pl-2 text-start pr-2 py-1 chat_time ${
