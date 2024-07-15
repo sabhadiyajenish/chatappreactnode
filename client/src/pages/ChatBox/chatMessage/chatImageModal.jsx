@@ -12,7 +12,6 @@ const style = {
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
-  p: 4,
 };
 const ChatImageModal = ({ open, handleClose, imageUrl }) => {
   return (
@@ -22,9 +21,13 @@ const ChatImageModal = ({ open, handleClose, imageUrl }) => {
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Box sx={style} className="h-full">
+      <Box sx={style} className="h-fit  md:w-1/2 w-full md:p-2">
         <div className="w-full h-full">
-          <img src={imageUrl} alt="userSendImages" className="w-full h-full" />
+          <img
+            src={imageUrl}
+            alt="userSendImages"
+            className="w-full h-full object-cover"
+          />
         </div>
       </Box>
     </Modal>

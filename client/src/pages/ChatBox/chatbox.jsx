@@ -1309,7 +1309,7 @@ const Chatbox = () => {
               >
                 <div className="md:hidden block">
                   <p
-                    className="mr-6"
+                    className="mr-4"
                     onClick={() => {
                       setShowMainpart(false);
                       setReciverEmailaddress({
@@ -1331,7 +1331,7 @@ const Chatbox = () => {
                 <img
                   alt="gdg"
                   src={reciverEmailAddress?.avatar}
-                  className="md:w-16 w-12 md:h-16 h-12 rounded-full  mt-[6px] object-cover md:mr-0 mr-3"
+                  className="md:w-16 w-12 md:h-16 h-12 rounded-full  mt-[6px] object-cover md:mr-0 mr-1"
                 />
                 <div className="md:ml-5">
                   <p
@@ -1543,10 +1543,10 @@ const Chatbox = () => {
                 }`}
               >
                 {/* <HiOutlineDotsVertical
-                  className="mt-[15px] ml-2  cursor-pointer "
+                  className="mt-[10px] ml-2 w-10 h-10 text-white  cursor-pointer "
                   onClick={handleOpen}
                 /> */}
-                {/* <div className="fileUpload">
+                <div className="fileUpload">
                   <input
                     type="file"
                     accept="video/*"
@@ -1565,7 +1565,7 @@ const Chatbox = () => {
                     className="upload"
                   />
                   <MdOutlineAddAPhoto className="-ml-[2px] " />
-                </div> */}
+                </div>
                 <MdEmojiEmotions
                   className={`md:w-10 w-12 md:h-10 h-12 md:ml-[6px] ml-3 mr-3 mt-2 ${
                     modeTheme === "dark" ? "text-white" : null

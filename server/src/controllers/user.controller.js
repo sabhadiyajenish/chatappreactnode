@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { fileUploadCloud } from "../utils/cloudinary.js";
 import { UserLoginType, cookieOptions } from "../utils/constant.js";
 import jwt from "jsonwebtoken";
+import { nodeCache } from "../app.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -68,7 +69,7 @@ const Register = asyncHandler(async (req, res) => {
   if (!avatarSerPath) {
     throw new ApiError(400, "avatar image is required...");
   }
-
+  nodeCache.del("allUserList");
   const user = await User.create({
     userName: userName.toLowerCase(),
     email,
@@ -141,6 +142,7 @@ const LoginUser = asyncHandler(async (req, res) => {
   const loggedInUser = await User.findById(userCheck?._id).select(
     "-password -refreshToken"
   );
+  nodeCache.del("allUserList");
 
   return res
     .status(200)

@@ -9,6 +9,8 @@ import {
   deleteImage,
   fileUploadCloud,
 } from "../utils/cloudinary.js";
+import NodeCache from "node-cache";
+import { nodeCache } from "../app.js";
 
 function extractPublicIdFromUrl(url) {
   // Example URL: https://res.cloudinary.com/your_cloud_name/image/upload/public_id.jpg
@@ -68,6 +70,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
     const messageComeData = new Message(messageData);
 
     const messageDataValue = await messageComeData.save();
+    nodeCache.del(`message${senderId}-${reciverId}`);
     return res
       .status(200)
       .json(
@@ -107,6 +110,8 @@ const addMessage = asyncHandler(async (req, res, next) => {
 
   // console.log(">>>message>>>", messageComewithComIdData);
   const messageData1 = await messageComewithComIdData.save();
+  nodeCache.del(`message${senderId}-${reciverId}`);
+
   return res
     .status(200)
     .json(new ApiResponse(200, messageData1, "message inserted successfully"));
@@ -204,33 +209,43 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
 });
 const getMessage = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId } = req.body;
-
-  const userData = await Coversation.find({
-    members: { $all: [senderId, reciverId] },
-  });
-  if (!userData) {
-    return res
-      .status(200)
-      .json(new ApiResponse(500, "something is wrong in conversation id"));
-  }
-  const allMessages = await Message.find({
-    conversationId: userData[0]?._id,
-    $or: [{ userDelete: false }, { reciverDelete: false }],
-  })
-    .sort({ createdAt: -1 }) // Sort in descending order by createdAt
-    .limit(50);
-
-  const formatDate = (date) => date.toISOString().split("T")[0];
-
-  // Organize messages by date
-  const messagesByDate = allMessages.reverse().reduce((acc, message) => {
-    const date = formatDate(new Date(message.createdAt));
-    if (!acc[date]) {
-      acc[date] = [];
+  let messagesByDate;
+  if (nodeCache.has(`message${senderId}-${reciverId}`)) {
+    messagesByDate = JSON.parse(
+      nodeCache.get(`message${senderId}-${reciverId}`)
+    );
+  } else {
+    const userData = await Coversation.find({
+      members: { $all: [senderId, reciverId] },
+    });
+    if (!userData) {
+      return res
+        .status(200)
+        .json(new ApiResponse(500, "something is wrong in conversation id"));
     }
-    acc[date].push(message);
-    return acc;
-  }, {});
+    const allMessages = await Message.find({
+      conversationId: userData[0]?._id,
+      $or: [{ userDelete: false }, { reciverDelete: false }],
+    })
+      .sort({ createdAt: -1 }) // Sort in descending order by createdAt
+      .limit(50);
+
+    const formatDate = (date) => date.toISOString().split("T")[0];
+
+    // Organize messages by date
+    messagesByDate = allMessages.reverse().reduce((acc, message) => {
+      const date = formatDate(new Date(message.createdAt));
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(message);
+      return acc;
+    }, {});
+    nodeCache.set(
+      `message${senderId}-${reciverId}`,
+      JSON.stringify(messagesByDate)
+    );
+  }
 
   return res.status(200).json(
     new ApiResponse(
@@ -244,26 +259,40 @@ const getMessage = asyncHandler(async (req, res, next) => {
 
 const getConversation = asyncHandler(async (req, res) => {
   const { senderId } = req.params;
-  const userData = await Coversation.find({
-    members: { $in: [senderId] },
-  });
-  let getUserId = [];
-  userData?.map((dr, key) =>
-    dr.members.filter((dt, kk) => {
-      if (dt !== senderId) {
-        getUserId.push(dt);
-      }
-    })
-  );
+  // nodeCache.get();
+  let userIs;
+  if (nodeCache.has(`conversation${senderId}`)) {
+    userIs = JSON.parse(nodeCache.get(`conversation${senderId}`));
+  } else {
+    const userData = await Coversation.find({
+      members: { $in: [senderId] },
+    });
+    let getUserId = [];
+    userData?.map((dr, key) =>
+      dr.members.filter((dt, kk) => {
+        if (dt !== senderId) {
+          getUserId.push(dt);
+        }
+      })
+    );
 
-  const userIs = await tagModel.find({ _id: getUserId });
+    userIs = await tagModel.find({ _id: getUserId });
+    nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
+  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, userIs, "get user conversation successfully"));
 });
 
 const getAllUser = asyncHandler(async (req, res, next) => {
-  const userIs = await tagModel.find();
+  let userIs;
+  if (nodeCache.has("allUserList")) {
+    userIs = JSON.parse(nodeCache.get("allUserList"));
+  } else {
+    userIs = await tagModel.find();
+    nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, userIs, "get All User successfully"));

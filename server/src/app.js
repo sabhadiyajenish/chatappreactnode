@@ -4,12 +4,16 @@ import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import passport from "passport";
 import session from "express-session";
+import NodeCache from "node-cache";
+
 const io = new Server(2525, {
   cors: {
     origin: true,
   },
 });
 const app = express();
+
+const nodeCache = new NodeCache();
 
 app.use(
   cors({
@@ -468,6 +472,7 @@ app.use("/api/v1/notification", messageNotificationRoutes);
 // });
 
 export default app;
+export { nodeCache };
 
 // let arr = ["jenish", "rahul", "maulik", "chetan", "pradip", "mohit", "ram", "sita", "gita"];
 // const arr1 = ["gunjan", "sumit", "arpit", "sdd"];
