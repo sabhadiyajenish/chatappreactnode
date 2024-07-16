@@ -1552,7 +1552,9 @@ const Chatbox = () => {
                 }`}
               >
                 <HiOutlineDotsVertical
-                  className="mt-[10px] ml-2 w-10 h-10 text-white  cursor-pointer "
+                  className={`mt-[10px] ml-2 w-10 h-10  cursor-pointer ${
+                    modeTheme === "dark" ? "text-white" : null
+                  }`}
                   onClick={() => setOpenButtonModel(true)}
                 />
 
@@ -1922,6 +1924,14 @@ const Chatbox = () => {
           handleCloseButtonModel={handleCloseButtonModel}
           handleFileChange={handleFileChange}
           handleVideoChange={handleVideoChange}
+          emailLocal={emailLocal}
+          dispatch={dispatch}
+          reciverEmailAddress={reciverEmailAddress}
+          socket={socket}
+          activeUser={activeUser}
+          modeTheme={modeTheme}
+          generateUniqueId={generateUniqueId}
+          userConversationData={userConversationData}
         />
       )}
     </>

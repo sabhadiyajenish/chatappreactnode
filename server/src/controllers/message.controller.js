@@ -31,6 +31,8 @@ const addMessage = asyncHandler(async (req, res, next) => {
     message = "",
     uniqueId,
     avatar = "",
+    latitude = "",
+    longitude = "",
   } = req.body;
   const userData = await Coversation.find({
     members: { $all: [senderId, reciverId] },
@@ -66,11 +68,17 @@ const addMessage = asyncHandler(async (req, res, next) => {
     if (avatarVideoThumb) {
       messageData.avatarVideoThumb = avatarVideoThumb;
     }
+    if (longitude && latitude) {
+      messageData.latitude = latitude;
+      messageData.longitude = longitude;
+    }
 
     const messageComeData = new Message(messageData);
 
     const messageDataValue = await messageComeData.save();
     nodeCache.del(`message${senderId}-${reciverId}`);
+    nodeCache.del(`message${reciverId}-${senderId}`);
+
     return res
       .status(200)
       .json(
@@ -106,11 +114,16 @@ const addMessage = asyncHandler(async (req, res, next) => {
   if (avatarVideoThumb) {
     messageData.avatarVideoThumb = avatarVideoThumb;
   }
+  if (longitude && latitude) {
+    messageData.latitude = latitude;
+    messageData.longitude = longitude;
+  }
   const messageComewithComIdData = new Message(messageData);
 
   // console.log(">>>message>>>", messageComewithComIdData);
   const messageData1 = await messageComewithComIdData.save();
   nodeCache.del(`message${senderId}-${reciverId}`);
+  nodeCache.del(`message${reciverId}-${senderId}`);
 
   return res
     .status(200)

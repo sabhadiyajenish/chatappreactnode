@@ -39,6 +39,12 @@ const MessageSchema = mongoose.Schema({
   Filetype: {
     type: String,
   },
+  latitude: {
+    type: String,
+  },
+  longitude: {
+    type: String,
+  },
   seen: { type: Boolean, default: false },
   seenAt: { type: Date },
   userDelete: {

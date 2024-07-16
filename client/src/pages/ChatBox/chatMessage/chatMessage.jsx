@@ -6,6 +6,8 @@ import { deleteMessageData } from "../../../store/Message/authApi";
 import { useDispatch } from "react-redux";
 import { SiTicktick } from "react-icons/si";
 import ChatImageModal from "./chatImageModal";
+import MapPreview from "../ChatComponents/MapPreview";
+
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   let hours = date.getHours();
@@ -95,6 +97,10 @@ const ChatMessage = ({
         console.error("Error downloading image:", error);
       });
   };
+  const openGoogleMaps = () => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${dt?.latitude},${dt?.longitude}`;
+    window.open(url, "_blank");
+  };
   return (
     <>
       {dt.senderId === emailLocal?.userId &&
@@ -157,6 +163,20 @@ const ChatMessage = ({
                   >
                     {dt.createdAt && formatDate(dt.createdAt)}
                   </span>
+                </div>
+              ) : dt.latitude && dt.longitude ? (
+                <div className="flex items-center justify-center md:h-40 h-28 md:w-80 w-60 mr-1  border-[2px] border-red-500 relative">
+                  <img
+                    src="https://img.freepik.com/premium-vector/map-with-destination-location-point-city-map-with-street-river-gps-map-navigator-concept_34645-1078.jpg"
+                    className="w-full h-full object-cover"
+                    onClick={openGoogleMaps}
+                  />
+                  <p
+                    className={` absolute bottom-0 right-0  bg-black text-white px-2 font-mono `}
+                  >
+                    Current Location
+                  </p>
+                  {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
                 </div>
               ) : null}
 
@@ -400,6 +420,20 @@ const ChatMessage = ({
                 >
                   {dt.createdAt && formatDate(dt.createdAt)}
                 </span>
+              </div>
+            ) : dt.latitude && dt.longitude ? (
+              <div className="flex items-center justify-center h-40 w-80  border-[2px] ml-1 border-red-500 relative">
+                <img
+                  src="https://img.freepik.com/premium-vector/map-with-destination-location-point-city-map-with-street-river-gps-map-navigator-concept_34645-1078.jpg"
+                  className="w-full h-full object-cover"
+                  onClick={openGoogleMaps}
+                />
+                <p
+                  className={` absolute bottom-0 right-0  bg-black text-white px-2 font-mono `}
+                >
+                  Current Location
+                </p>
+                {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
               </div>
             ) : null}
           </div>

@@ -9,7 +9,7 @@ import { BsFillFileEarmarkArrowUpFill } from "react-icons/bs";
 import { FaLocationDot } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import MapPreview from "./MapPreview";
-
+import { addUserMessage } from "../../../store/Message/authApi";
 const style = {
   position: "absolute",
   top: "50%",
@@ -25,6 +25,14 @@ const ButtonModel = ({
   handleCloseButtonModel,
   handleVideoChange,
   handleFileChange,
+  emailLocal,
+  dispatch,
+  reciverEmailAddress,
+  socket,
+  activeUser,
+  modeTheme,
+  generateUniqueId,
+  userConversationData,
 }) => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
@@ -36,6 +44,48 @@ const ButtonModel = ({
         (position) => {
           const { latitude, longitude } = position.coords;
           setLocation({ latitude, longitude });
+          const uniqueId = generateUniqueId();
+
+          socket?.emit("addMessage", {
+            senderId: emailLocal?.userId,
+            reciverId: reciverEmailAddress?.reciverId,
+            latitude: latitude,
+            longitude: longitude,
+            userDelete: false,
+            reciverDelete: false,
+            uniqueId: uniqueId,
+            userName: emailLocal?.email,
+            seen: false,
+            seenAt: "",
+          });
+          const receiverId = reciverEmailAddress?.reciverId;
+
+          const CheckUserCon = userConversationData?.find(
+            (dr) => dr?._id === receiverId
+          );
+          if (!CheckUserCon) {
+            const newUser = {
+              _id: receiverId,
+              email: reciverEmailAddress?.email,
+              avatar: reciverEmailAddress?.avatar,
+              userName: reciverEmailAddress?.userName,
+              senderId: emailLocal?.userId,
+              reciverId: receiverId,
+            };
+
+            socket?.emit("addUserNew", newUser);
+          }
+          const data = {
+            senderId: emailLocal?.userId,
+            conversationId: "",
+            reciverId: reciverEmailAddress?.reciverId,
+            uniqueId: uniqueId,
+            latitude: latitude,
+            longitude: longitude,
+          };
+
+          dispatch(addUserMessage(data));
+          handleCloseButtonModel(false);
           setError(null);
           setPermissionBlocked(false);
         },
@@ -57,6 +107,11 @@ const ButtonModel = ({
             setError(error.message);
           }
           setLocation(null);
+        },
+        {
+          enableHighAccuracy: true, // Request high accuracy
+          timeout: 5000, // Timeout after 5 seconds
+          maximumAge: 0, // Don't use a cached position
         }
       );
     } else {
