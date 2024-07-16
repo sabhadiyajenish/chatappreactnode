@@ -145,13 +145,13 @@
   float: right;
 }
 .fileUpload {
-  background: #00bcbe;
+  background: #6586df;
 
   -webkit-border-radius: 15px;
   -moz-border-radius: 15px;
   border-radius: 50px;
   color: #fff;
-  font-size: 1em;
+  font-size: 2.5em;
   font-weight: bold;
   overflow: hidden;
   padding: 8px; /*14px/16px*/

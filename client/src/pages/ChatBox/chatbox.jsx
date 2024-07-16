@@ -55,6 +55,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
+import ButtonModel from "./ChatComponents/ButtonModel.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -130,6 +131,8 @@ const Chatbox = () => {
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
+  const [openButtonModel, setOpenButtonModel] = useState(false);
+
   const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
   const [ramdomMuted, setRandomMuted] = useState(false);
@@ -586,6 +589,9 @@ const Chatbox = () => {
         pc.close();
       }
     }
+  };
+  const handleCloseButtonModel = () => {
+    setOpenButtonModel(false);
   };
   const handleVideoCallSentInvitation = async () => {
     const checkActiveUserIfHave = activeUser?.find(
@@ -1219,7 +1225,10 @@ const Chatbox = () => {
   const isUserTyping =
     reciverEmailAddress?.reciverId === isTyping?.senderId && isTyping?.status;
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => {
+    setOpen(true);
+    setOpenButtonModel(false);
+  };
   const handleClose = () => {
     setOpen(false);
     setFile(null);
@@ -1542,30 +1551,11 @@ const Chatbox = () => {
                   modeTheme === "dark" ? "bg-dark" : null
                 }`}
               >
-                {/* <HiOutlineDotsVertical
+                <HiOutlineDotsVertical
                   className="mt-[10px] ml-2 w-10 h-10 text-white  cursor-pointer "
-                  onClick={handleOpen}
-                /> */}
-                <div className="fileUpload">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoChange}
-                    // className="hidden"
-                    className="upload"
-                  />
-                  <FaVideo className="md:ml-0 -ml-[2px]" />
-                </div>
-                <div className="fileUpload">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    // className="hidden"
-                    className="upload"
-                  />
-                  <MdOutlineAddAPhoto className="-ml-[2px] " />
-                </div>
+                  onClick={() => setOpenButtonModel(true)}
+                />
+
                 <MdEmojiEmotions
                   className={`md:w-10 w-12 md:h-10 h-12 md:ml-[6px] ml-3 mr-3 mt-2 ${
                     modeTheme === "dark" ? "text-white" : null
@@ -1925,6 +1915,14 @@ const Chatbox = () => {
             )}
           </Box>
         </Modal>
+      )}
+      {openButtonModel && (
+        <ButtonModel
+          openButtonModel={openButtonModel}
+          handleCloseButtonModel={handleCloseButtonModel}
+          handleFileChange={handleFileChange}
+          handleVideoChange={handleVideoChange}
+        />
       )}
     </>
   );
