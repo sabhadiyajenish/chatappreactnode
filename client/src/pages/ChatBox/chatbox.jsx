@@ -199,14 +199,33 @@ const Chatbox = () => {
       socket.disconnect();
     };
   }, []);
+
+  function moveObjectToTop(mainArray, notificationArray) {
+    mainArray = [...mainArray];
+
+    for (let notificationObj of notificationArray) {
+      const index = mainArray.findIndex(
+        (obj) => obj._id === notificationObj.senderId
+      );
+      if (index !== -1) {
+        const obj = mainArray.splice(index, 1)[0];
+        mainArray.unshift(obj);
+      }
+    }
+
+    return mainArray;
+  }
   useEffect(() => {
     if (Array.isArray(notificationDatas) && notificationDatas?.length !== 0) {
       setCountMessage(notificationDatas);
+      if (conversationData) {
+        let mainArray = moveObjectToTop(conversationData, notificationDatas);
+        setUserConversationDatas(mainArray);
+      }
+    } else if (conversationData) {
+      setUserConversationDatas(conversationData);
     }
-  }, [notificationDatas]);
-  useEffect(() => {
-    setUserConversationDatas(conversationData);
-  }, [conversationData]);
+  }, [notificationDatas, conversationData]);
 
   useEffect(() => {
     if (reciveUserCallInvitationData) {
@@ -330,6 +349,9 @@ const Chatbox = () => {
             ? reloadUserNotification?.message
             : reloadUserNotification?.avatarVideo
             ? "Video"
+            : reloadUserNotification?.latitude &&
+              reloadUserNotification?.longitude
+            ? "Map"
             : "Image",
           date: reloadUserNotification?.createdAt,
           uniqueId: reloadUserNotification?.uniqueId,
@@ -344,6 +366,9 @@ const Chatbox = () => {
           ? reloadUserNotification?.message
           : reloadUserNotification?.avatarVideo
           ? "Video"
+          : reloadUserNotification?.latitude &&
+            reloadUserNotification?.longitude
+          ? "Map"
           : "Image"
       }`;
       if ("Notification" in window) {
