@@ -19,7 +19,7 @@ const addNotification = asyncHandler(async (req, res, next) => {
   if (checkHaveRecord) {
     checkHaveRecord.count = checkHaveRecord.count + 1;
     checkHaveRecord.uniqueId = uniqueId;
-
+    checkHaveRecord.date = new Date();
     await checkHaveRecord.save();
     return res
       .status(200)
@@ -54,7 +54,7 @@ const getNotification = asyncHandler(async (req, res, next) => {
 
   const checkHaveRecord = await Notification.find({
     $or: [{ senderId: senderId }, { reciverId: senderId }],
-  });
+  }).sort({ date: 1 });
   // .populate({ path: "senderId", select: "email userName" })
   // .populate({ path: "reciverId", select: "email userName" });
 
