@@ -33,6 +33,9 @@ const addMessage = asyncHandler(async (req, res, next) => {
     avatar = "",
     latitude = "",
     longitude = "",
+    name = "",
+    filePath = "",
+    size = "",
   } = req.body;
   const userData = await Coversation.find({
     members: { $all: [senderId, reciverId] },
@@ -71,6 +74,13 @@ const addMessage = asyncHandler(async (req, res, next) => {
     if (longitude && latitude) {
       messageData.latitude = latitude;
       messageData.longitude = longitude;
+    }
+    if (filePath && name && size) {
+      messageData.fileDocsPdf = {
+        name,
+        filePath,
+        size,
+      };
     }
 
     const messageComeData = new Message(messageData);
@@ -118,6 +128,14 @@ const addMessage = asyncHandler(async (req, res, next) => {
     messageData.latitude = latitude;
     messageData.longitude = longitude;
   }
+  if (filePath && name && size) {
+    messageData.fileDocsPdf = {
+      name,
+      filePath,
+      size,
+    };
+  }
+
   const messageComewithComIdData = new Message(messageData);
 
   // console.log(">>>message>>>", messageComewithComIdData);
@@ -131,8 +149,9 @@ const addMessage = asyncHandler(async (req, res, next) => {
 });
 
 const deleteMessage = asyncHandler(async (req, res, next) => {
-  const { messageId, title = "", senderId } = req.body;
-
+  const { messageId, title = "", senderId, reciverId } = req.body;
+  nodeCache.del(`message${senderId}-${reciverId}`);
+  nodeCache.del(`message${reciverId}-${senderId}`);
   const userMessage = await Message.findOne({ uniqueId: messageId });
   const Sender = new mongoose.Types.ObjectId(senderId);
   if (!userMessage) {
@@ -312,8 +331,9 @@ const getAllUser = asyncHandler(async (req, res, next) => {
 });
 
 const clearChatMessage = asyncHandler(async (req, res, next) => {
-  const { uniqueIds = [], senderId } = req.body;
-
+  const { uniqueIds = [], senderId, reciverId } = req.body;
+  nodeCache.del(`message${senderId}-${reciverId}`);
+  nodeCache.del(`message${reciverId}-${senderId}`);
   const userMessage = await Message.find({ uniqueId: uniqueIds });
   const Sender = new mongoose.Types.ObjectId(senderId);
 
@@ -445,6 +465,72 @@ const AddVideoInClound = asyncHandler(async (req, res) => {
   );
 });
 
+const AddFilePdfDocsInClound = asyncHandler(async (req, res) => {
+  console.log("Come in <<<<<<<<<<<<<<<<<<<<");
+
+  // Check if avatarFile exists and has at least one file
+  if (
+    !req.files ||
+    !req.files.avatarFile ||
+    req.files.avatarFile.length === 0
+  ) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Avatar File is required."));
+  }
+
+  const avatarFileLocalPath = req.files.avatarFile[0].path;
+  console.log("Avatar File Local Path:", avatarFileLocalPath);
+
+  // Check if avatarVideo exists and has at least one file
+  if (!req.files.avatarFile || req.files.avatarFile.length === 0) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Avatar  File is required."));
+  }
+
+  const avatarVideoLocalPath = req.files.avatarFile[0].path;
+  console.log("Avatar File  Path:", avatarVideoLocalPath);
+
+  // Validate MIME type of avatarVideo
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/zip",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+  if (!allowedMimeTypes.includes(req.files.avatarFile[0].mimetype)) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          "Only specific file types are allowed for avatar File."
+        )
+      );
+  }
+
+  // Example function fileUploadCloud to upload files to cloud
+  const avatarVideoSerPath = await fileUploadCloud(avatarVideoLocalPath);
+  if (!avatarVideoSerPath) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(400, "Failed to upload avatar File file to cloud.")
+      );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        avatarVideoSerPath,
+      },
+      "Avatar Video uploaded to cloud successfully."
+    )
+  );
+});
+
 export {
   addMessage,
   getMessage,
@@ -455,4 +541,5 @@ export {
   updateSeenStatus,
   AddImageInClound,
   AddVideoInClound,
+  AddFilePdfDocsInClound,
 };

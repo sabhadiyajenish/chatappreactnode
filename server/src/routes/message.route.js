@@ -11,6 +11,7 @@ import {
   updateSeenStatus,
   AddImageInClound,
   AddVideoInClound,
+  AddFilePdfDocsInClound,
 } from "../controllers/message.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -44,5 +45,15 @@ router.route("/uploadVideoInCloud").post(
     },
   ]),
   AddVideoInClound
+);
+router.route("/uploadFilePdfDocsInCloud").post(
+  // authMiddleWare,
+  upload.fields([
+    {
+      name: "avatarFile",
+      maxCount: 1,
+    },
+  ]),
+  AddFilePdfDocsInClound
 );
 export default router;

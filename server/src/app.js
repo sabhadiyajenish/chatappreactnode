@@ -160,6 +160,7 @@ io.on("connection", (socket) => {
       userName,
       latitude,
       longitude,
+      fileDocsPdf,
     }) => {
       const receiver = users.find((user) => user.userId === reciverId);
       const sender = users.find((user) => user.userId === senderId);
@@ -180,6 +181,7 @@ io.on("connection", (socket) => {
               uniqueId,
               latitude,
               longitude,
+              fileDocsPdf,
               seen,
               seenAt,
               createdAt: new Date(),
@@ -199,6 +201,7 @@ io.on("connection", (socket) => {
             userName,
             latitude,
             longitude,
+            fileDocsPdf,
             seen,
             seenAt,
             createdAt: new Date(),
@@ -218,6 +221,7 @@ io.on("connection", (socket) => {
             uniqueId,
             latitude,
             longitude,
+            fileDocsPdf,
             seen,
             seenAt,
             createdAt: new Date(),
@@ -237,6 +241,7 @@ io.on("connection", (socket) => {
             longitude,
             uniqueId,
             userName,
+            fileDocsPdf,
             seen,
             seenAt,
             createdAt: new Date(),

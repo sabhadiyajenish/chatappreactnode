@@ -45,6 +45,11 @@ const MessageSchema = mongoose.Schema({
   longitude: {
     type: String,
   },
+  fileDocsPdf: {
+    name: { type: String },
+    filePath: { type: String },
+    size: { type: String },
+  },
   seen: { type: Boolean, default: false },
   seenAt: { type: Date },
   userDelete: {

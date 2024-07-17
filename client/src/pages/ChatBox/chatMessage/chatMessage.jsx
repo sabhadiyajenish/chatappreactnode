@@ -7,6 +7,13 @@ import { useDispatch } from "react-redux";
 import { SiTicktick } from "react-icons/si";
 import ChatImageModal from "./chatImageModal";
 import MapPreview from "../ChatComponents/MapPreview";
+import { FcDocument } from "react-icons/fc";
+import { RiDownloadCloudLine } from "react-icons/ri";
+import {
+  formatBytes,
+  truncateFileName,
+  truncateFileNameViaMessage,
+} from "../ChatComponents/ButtonModel";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -101,6 +108,57 @@ const ChatMessage = ({
     const url = `https://www.google.com/maps/search/?api=1&query=${dt?.latitude},${dt?.longitude}`;
     window.open(url, "_blank");
   };
+  const getFileTypeFromUrl = (fileUrl) => {
+    const urlParts = fileUrl.split(".");
+    const extension = urlParts[urlParts.length - 1].toLowerCase(); // Get the extension part and convert to lowercase
+
+    switch (extension) {
+      case "pdf":
+        return "pdf";
+      case "zip":
+        return "zip";
+      case "doc":
+      case "docx":
+        return "doc"; // Example for other file types, add more cases as needed
+      default:
+        return null; // Unknown file type
+    }
+  };
+  const handleDownloadfile = async (fileUrl) => {
+    try {
+      const fileType = getFileTypeFromUrl(fileUrl);
+
+      if (!fileType) {
+        throw new Error("Unable to determine file type.");
+      }
+
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+
+      // Create a temporary anchor element
+      const downloadLink = document.createElement("a");
+      downloadLink.href = window.URL.createObjectURL(new Blob([blob]));
+      downloadLink.setAttribute("download", `file.${fileType}`);
+
+      // Append the anchor element to the body
+      document.body.appendChild(downloadLink);
+
+      // Click the link to trigger the download
+      downloadLink.click();
+
+      // Clean up: remove the temporary link
+      document.body.removeChild(downloadLink);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  };
+
+  const handleClickForDownloadFiles = (url) => {
+    const fileUrl = url;
+    console.log("file url is ", fileUrl);
+    handleDownloadfile(fileUrl);
+  };
+
   return (
     <>
       {dt.senderId === emailLocal?.userId &&
@@ -178,6 +236,40 @@ const ChatMessage = ({
                   </p>
                   {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
                 </div>
+              ) : dt.fileDocsPdf ? (
+                <div className="md:w-80 w-60 h-20 border-[1px] mr-2 border-green-400 rounded-md flex justify-between items-center">
+                  <div className="flex items-center">
+                    <div className="w-16 h-full bg-green-200">
+                      <FcDocument className="w-12 h-20 ml-2" />
+                    </div>
+                    <div className=" ml-2">
+                      <p
+                        className={`font-medium text-start  ${
+                          modeTheme === "dark" ? "text-white" : null
+                        }`}
+                      >
+                        {truncateFileNameViaMessage(dt.fileDocsPdf?.name, 20)}
+                      </p>
+                      <p
+                        className={`font-medium text-start  ${
+                          modeTheme === "dark" ? "text-white" : null
+                        }`}
+                      >
+                        {formatBytes(dt.fileDocsPdf?.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <RiDownloadCloudLine
+                      onClick={() =>
+                        handleClickForDownloadFiles(dt.fileDocsPdf?.filePath)
+                      }
+                      className={` w-12 h-12 mr-1  cursor-pointer ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                    />
+                  </div>
+                </div>
               ) : null}
 
               <Menu as="div" className="relative">
@@ -222,6 +314,7 @@ const ChatMessage = ({
                               messageId: dt?.uniqueId,
                               title: "Me",
                               senderId: emailLocal?.userId,
+                              reciverId: reciverEmailAddress?.reciverId,
                             };
                             dispatch(deleteMessageData(data));
                           }}
@@ -338,6 +431,8 @@ const ChatMessage = ({
 
                           const data = {
                             messageId: dt?.uniqueId,
+                            reciverId: reciverEmailAddress?.reciverId,
+                            senderId: emailLocal?.userId,
                             title: "Me",
                           };
                           dispatch(deleteMessageData(data));
@@ -434,6 +529,40 @@ const ChatMessage = ({
                   Current Location
                 </p>
                 {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
+              </div>
+            ) : dt.fileDocsPdf ? (
+              <div className="md:w-80 w-60 h-20 border-[1px] ml-2 border-green-400 rounded-md flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-16 h-full bg-green-200">
+                    <FcDocument className="w-12 h-20 ml-2" />
+                  </div>
+                  <div className=" ml-2">
+                    <p
+                      className={`font-medium text-start  ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                    >
+                      {truncateFileNameViaMessage(dt.fileDocsPdf?.name, 20)}
+                    </p>
+                    <p
+                      className={`font-medium text-start  ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                    >
+                      {formatBytes(dt.fileDocsPdf?.size)}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <RiDownloadCloudLine
+                    onClick={() =>
+                      handleClickForDownloadFiles(dt.fileDocsPdf?.filePath)
+                    }
+                    className={` w-12 h-12 mr-1  cursor-pointer ${
+                      modeTheme === "dark" ? "text-white" : null
+                    }`}
+                  />
+                </div>
               </div>
             ) : null}
           </div>

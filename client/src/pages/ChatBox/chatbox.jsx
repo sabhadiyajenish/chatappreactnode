@@ -45,6 +45,7 @@ import {
   deleteNotificationData,
   getUserNotification,
 } from "../../store/Notification/notificationApi.js";
+import { FcDocument } from "react-icons/fc";
 import ChatHeader from "./ChatComponents/ChatHeader.jsx";
 import ChatList from "./ChatComponents/ChatList.jsx";
 import { IoSend } from "react-icons/io5";
@@ -55,7 +56,10 @@ import { FaArrowLeft } from "react-icons/fa";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
-import ButtonModel from "./ChatComponents/ButtonModel.jsx";
+import ButtonModel, {
+  formatBytes,
+  truncateFileName,
+} from "./ChatComponents/ButtonModel.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -132,6 +136,7 @@ const Chatbox = () => {
     online: false,
   });
   const [openButtonModel, setOpenButtonModel] = useState(false);
+  const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
 
   const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
@@ -411,6 +416,7 @@ const Chatbox = () => {
           messageId: deleteMessageForUpdated?.uniqueId,
           title: "All",
           senderId: deleteMessageForUpdated?.senderId,
+          reciverId: reciverEmailAddress?.reciverId,
         };
         dispatch(deleteMessageData(data));
         setDeleteMessageForUpdated(false);
@@ -1124,7 +1130,100 @@ const Chatbox = () => {
       setLoadingForUploadImage(false);
     }
   };
+  const UploadPdfDocsFileOnCloud = async () => {
+    setLoadingForUploadImage(true);
+    let intervalId;
+    setUploadingImageProgress(10);
+    const calculateIncrement = () => {
+      if (selectedPdfDocsFile.size < 8 * 1024 * 1024) {
+        return 15;
+      } else {
+        return 10;
+      }
+    };
+    const increment = calculateIncrement();
 
+    const updateProgress = () => {
+      setUploadingImageProgress((prev) => {
+        const newProgress = prev + increment;
+        if (newProgress >= 100) {
+          clearInterval(intervalId);
+          return 100;
+        }
+        return newProgress;
+      });
+    };
+    // Start interval to update progress
+    intervalId = setInterval(updateProgress, 1500);
+
+    formData.append("avatarFile", selectedPdfDocsFile);
+    const getPdfDocsUrl = await axios.post(
+      "/messages/uploadFilePdfDocsInCloud",
+      formData,
+      config
+    );
+    setUploadingImageProgress(20);
+    console.log("get file form cloudn is<<<<<<", getPdfDocsUrl);
+    if (getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.url) {
+      const uniqueId = generateUniqueId();
+
+      socket?.emit("addMessage", {
+        fileDocsPdf: {
+          name: getPdfDocsUrl?.data?.data?.avatarVideoSerPath
+            ?.original_filename,
+          filePath: getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.url,
+          size: getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.bytes,
+        },
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+        userDelete: false,
+        reciverDelete: false,
+        uniqueId: uniqueId,
+        userName: emailLocal?.email,
+        seen: false,
+        seenAt: "",
+      });
+
+      const receiverId = reciverEmailAddress?.reciverId;
+
+      const CheckUserCon = userConversationData?.find(
+        (dr) => dr?._id === receiverId
+      );
+
+      if (!CheckUserCon) {
+        const newUser = {
+          _id: receiverId,
+          email: reciverEmailAddress?.email,
+          avatar: reciverEmailAddress?.avatar,
+          userName: reciverEmailAddress?.userName,
+          senderId: emailLocal?.userId,
+          reciverId: receiverId,
+        };
+
+        socket?.emit("addUserNew", newUser);
+      }
+
+      const data = {
+        senderId: emailLocal?.userId,
+        conversationId: "",
+        reciverId: reciverEmailAddress?.reciverId,
+        uniqueId: uniqueId,
+        name: getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.original_filename,
+        filePath: getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.url,
+        size: getPdfDocsUrl?.data?.data?.avatarVideoSerPath?.bytes,
+      };
+      clearInterval(intervalId);
+      setLoadingForUploadImage(false);
+      setUploadingImageProgress(0);
+      handleClose();
+
+      dispatch(addUserMessage(data));
+    } else {
+      clearInterval(intervalId);
+      setUploadingImageProgress(0);
+      setLoadingForUploadImage(false);
+    }
+  };
   const UploadFileOnCloud = async () => {
     setLoadingForUploadImage(true);
     setUploadingImageProgress(20);
@@ -1260,6 +1359,7 @@ const Chatbox = () => {
     setPreviewURL(null);
     setVideoPreview(null);
     setVideoAvatar(null);
+    setPdfDocsSelectedFile(null);
   };
 
   return (
@@ -1460,6 +1560,7 @@ const Chatbox = () => {
                                 }
                                 const data = {
                                   senderId: emailLocal?.userId,
+                                  reciverId: reciverEmailAddress?.reciverId,
                                   uniqueIds,
                                 };
                                 dispatch(clearChatMessageData(data));
@@ -1876,6 +1977,28 @@ const Chatbox = () => {
               </div>
             )}
 
+            {selectedPdfDocsFile && (
+              <div className="relative">
+                <div className="w-full h-20 border-[1px] border-green-400 rounded-md flex items-center">
+                  <div className="w-16 h-full bg-green-200">
+                    <FcDocument className="w-12 h-20" />
+                  </div>
+                  <div className="w-full ml-2">
+                    <p className="font-medium">
+                      {truncateFileName(selectedPdfDocsFile.name, 20)}
+                    </p>
+                    <p className="font-medium">
+                      {formatBytes(selectedPdfDocsFile.size)}
+                    </p>
+                  </div>
+                </div>
+                <TiDeleteOutline
+                  className="absolute -top-3 -right-3 text-[#fff] w-8 h-8 bg-[#345445] p-1 cursor-pointer rounded-full"
+                  onClick={handleClose}
+                />
+              </div>
+            )}
+
             {uploadingImageProgress > 0 ? (
               <>
                 <Box
@@ -1940,6 +2063,17 @@ const Chatbox = () => {
                 </button>
               </div>
             )}
+            {selectedPdfDocsFile && !loadingForUploadImage && (
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={UploadPdfDocsFileOnCloud}
+                  className="text-white mt-3 w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                >
+                  {loadingForUploadImage ? "sending... " : "Send File"}
+                </button>
+              </div>
+            )}
           </Box>
         </Modal>
       )}
@@ -1957,6 +2091,8 @@ const Chatbox = () => {
           modeTheme={modeTheme}
           generateUniqueId={generateUniqueId}
           userConversationData={userConversationData}
+          setPdfDocsSelectedFile={setPdfDocsSelectedFile}
+          handleOpen={handleOpen}
         />
       )}
     </>

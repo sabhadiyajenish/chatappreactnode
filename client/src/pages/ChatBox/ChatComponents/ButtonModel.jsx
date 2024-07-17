@@ -15,9 +15,10 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 340,
+  width: 320,
   border: "2px solid #000",
   boxShadow: 24,
+  borderRadius: "10px",
   p: 2,
 };
 const ButtonModel = ({
@@ -33,6 +34,8 @@ const ButtonModel = ({
   modeTheme,
   generateUniqueId,
   userConversationData,
+  setPdfDocsSelectedFile,
+  handleOpen,
 }) => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
@@ -123,6 +126,41 @@ const ButtonModel = ({
       setPermissionBlocked(false);
     }
   };
+
+  const handleGetFileChange = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Perform file type validation based on accept attribute
+    if (
+      !(
+        file.type === "application/pdf" ||
+        file.type === "application/zip" ||
+        file.type === "application/msword" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type === "application/vnd.ms-excel" ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      )
+    ) {
+      toast.error("Please select a PDF, ZIP, DOC, DOCX, XLS, or XLSX file.", {
+        duration: 3000,
+        position: "top-center",
+      });
+      return; // Stop further processing
+    }
+
+    // Set the selected file in state
+    console.log("file is <<<<<", file);
+    setPdfDocsSelectedFile(file);
+    handleOpen();
+    handleCloseButtonModel();
+  };
+
   return (
     <>
       <Modal
@@ -163,8 +201,8 @@ const ButtonModel = ({
               <div className="fileUpload">
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
+                  accept=".pdf,.zip,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={handleGetFileChange}
                   // className="hidden"
                   className="upload"
                 />
@@ -190,5 +228,24 @@ const ButtonModel = ({
     </>
   );
 };
+export const formatBytes = (bytes) => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
 
+export const truncateFileName = (fileName, maxLength) => {
+  if (fileName.length <= maxLength) return fileName;
+  const truncated = fileName.substring(0, maxLength);
+  const fileExtension = fileName.split(".").pop(); // Get file extension
+  return `${truncated}...${fileExtension}`;
+};
+export const truncateFileNameViaMessage = (fileName, maxLength) => {
+  if (fileName.length <= maxLength) return fileName;
+  const truncated = fileName.substring(0, maxLength);
+
+  return `${truncated}...`;
+};
 export default ButtonModel;
