@@ -5,13 +5,16 @@ import { Server } from "socket.io";
 import passport from "passport";
 import session from "express-session";
 import NodeCache from "node-cache";
+import http from "http";
 
-const io = new Server(process.env.SOCKET_PORT || 2525, {
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
   cors: {
     origin: true,
   },
 });
-const app = express();
 
 const nodeCache = new NodeCache();
 
@@ -486,7 +489,7 @@ app.use("/api/v1/notification", messageNotificationRoutes);
 //     // socket.emit("me", socket.id);
 // });
 
-export default app;
+export default server;
 export { nodeCache };
 
 // let arr = ["jenish", "rahul", "maulik", "chetan", "pradip", "mohit", "ram", "sita", "gita"];

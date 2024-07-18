@@ -2,7 +2,7 @@ import Cookies from "js-cookie";
 
 // export const LOCAL_PATH = "http://localhost:5000/api/v1";
 export const LOCAL_PATH = "http://192.168.1.23:5000/api/v1";
-export const SOCKET_URL = "http://192.168.1.23:2525";
+export const SOCKET_URL = "http://192.168.1.23:5000";
 // export const SOCKET_URL = "http://localhost:2525";
 
 let accessTokenFromStorage =
