@@ -1677,10 +1677,12 @@ const Chatbox = () => {
               </div>
 
               <div
-                className={`center_input_div flex justify-center items-center cursor-pointer  ${
+                className={`center_input_div flex justify-center items-center cursor-pointer relative  ${
                   modeTheme === "dark" ? "bg-dark" : null
                 }`}
               >
+                {/* <div className=" absolute -top-16 w-full h-16 bg-red-300"></div> */}
+
                 <HiOutlineDotsVertical
                   className={`mt-[10px] ml-2 w-10 h-10  cursor-pointer ${
                     modeTheme === "dark" ? "text-white" : null
