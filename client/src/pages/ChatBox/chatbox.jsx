@@ -357,6 +357,8 @@ const Chatbox = () => {
             : reloadUserNotification?.latitude &&
               reloadUserNotification?.longitude
             ? "Map"
+            : reloadUserNotification?.fileDocsPdf
+            ? "File"
             : "Image",
           date: reloadUserNotification?.createdAt,
           uniqueId: reloadUserNotification?.uniqueId,
@@ -374,6 +376,8 @@ const Chatbox = () => {
           : reloadUserNotification?.latitude &&
             reloadUserNotification?.longitude
           ? "Map"
+          : reloadUserNotification?.fileDocsPdf
+          ? "File"
           : "Image"
       }`;
       if ("Notification" in window) {

@@ -6,7 +6,7 @@ import passport from "passport";
 import session from "express-session";
 import NodeCache from "node-cache";
 
-const io = new Server(2525, {
+const io = new Server(process.env.SOCKET_PORT || 2525, {
   cors: {
     origin: true,
   },
