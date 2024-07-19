@@ -33,7 +33,7 @@ const ChatItem = ({
           : modeTheme === "dark"
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
-      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-3 md:mx-3 mx-[6px] rounded-md cursor-pointer `}
+      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-[6px] md:mx-3 mx-[6px] rounded-md cursor-pointer `}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
           setReciverEmailaddress({

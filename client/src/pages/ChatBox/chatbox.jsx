@@ -1307,32 +1307,34 @@ const Chatbox = () => {
     }
   };
 
-  let typingTimeout;
+  useEffect(() => {
+    socket?.emit("addUserTypingStatus", {
+      status: true,
+      senderId: emailLocal?.userId,
+      reciverId: reciverEmailAddress?.reciverId,
+    });
+    let typingTimeout = setTimeout(() => {
+      console.log("enter here stop<<<<<<<<<");
+
+      socket?.emit("addUserTypingStatus", {
+        status: false,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+      });
+    }, 1500); // Reset typing status after 1 second of inactivity
+    return () => clearTimeout(typingTimeout); // Clear previous timeout if any
+  }, [message]);
 
   const handleTyping = (e) => {
     const newText = e.target.value;
     const lines = newText.split("\n");
 
     if (lines.length > 3) {
-      console.log("enter here<<<<<<<<<<<<<<");
       e.preventDefault();
       return;
     }
 
     setMessage(newText);
-    socket?.emit("addUserTypingStatus", {
-      status: true,
-      senderId: emailLocal?.userId,
-      reciverId: reciverEmailAddress?.reciverId,
-    });
-    typingTimeout = setTimeout(() => {
-      socket?.emit("addUserTypingStatus", {
-        status: false,
-        senderId: emailLocal?.userId,
-        reciverId: reciverEmailAddress?.reciverId,
-      });
-    }, 2000); // Reset typing status after 1 second of inactivity
-    return () => clearTimeout(typingTimeout); // Clear previous timeout if any
   };
 
   const isUserOnline = activeUser?.some(
@@ -1677,7 +1679,7 @@ const Chatbox = () => {
               </div>
 
               <div
-                className={`center_input_div flex justify-center items-center cursor-pointer relative  ${
+                className={`center_input_div flex justify-center items-center cursor-pointer md:pb-0 pb-2 relative  ${
                   modeTheme === "dark" ? "bg-dark" : null
                 }`}
               >
@@ -1702,7 +1704,7 @@ const Chatbox = () => {
                   value={message}
                   maxRows={2.5}
                   onChange={handleTyping}
-                  className={`w-full mt-[12px] md:mt-[6px] rounded-xl px-2 py-1 ${
+                  className={`w-full mt-[8px] md:mt-[6px] rounded-xl px-2 py-1 ${
                     modeTheme === "dark"
                       ? "text-[#fff] bg-dark border border-sky-100"
                       : null
