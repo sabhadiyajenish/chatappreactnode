@@ -21,10 +21,10 @@ export default function NavBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { authTokenGet, loading } = useSelector((state) => {
-    //get redux data here
-    return state.userAuthData;
+  const { authUser } = useSelector((state) => {
+    return state.counter;
   });
+  const { notificationDatas } = useSelector((state) => state.notificationData);
 
   const LogoutUser = () => {
     localStorage.removeItem("token");
@@ -82,6 +82,15 @@ export default function NavBar() {
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">View notifications</span>
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
+                  {notificationDatas.length !== 0 ? (
+                    <div className=" absolute h-5 w-5 bg-[red] -top-1 right-0 text-white text-center text-[15px] font-thin rounded-full">
+                      <p className="-mt-[3.5px]">
+                        {notificationDatas.length <= 9
+                          ? notificationDatas.length
+                          : "9+"}
+                      </p>
+                    </div>
+                  ) : null}
                 </button>
 
                 {/* Profile dropdown */}
@@ -91,8 +100,12 @@ export default function NavBar() {
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">Open user menu</span>
                       <img
-                        className="h-8 w-8 rounded-full"
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                        className="h-8 w-8 rounded-full object-cover"
+                        src={
+                          authUser
+                            ? authUser?.avatar
+                            : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                        }
                         alt=""
                       />
                     </Menu.Button>

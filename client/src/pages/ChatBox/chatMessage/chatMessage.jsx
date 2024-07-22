@@ -524,7 +524,7 @@ const ChatMessage = ({
                 </span>
               </div>
             ) : dt.latitude && dt.longitude ? (
-              <div className="flex items-center justify-center md:h-40 h-28 md:w-80 w-60 mr-1  border-[2px] border-red-500 relative cursor-pointer">
+              <div className="flex items-center justify-center md:h-40 h-28 md:w-80 w-60 ml-1  border-[2px] border-red-500 relative cursor-pointer">
                 <img
                   src="https://img.freepik.com/premium-vector/map-with-destination-location-point-city-map-with-street-river-gps-map-navigator-concept_34645-1078.jpg"
                   className="w-full h-full object-cover"
