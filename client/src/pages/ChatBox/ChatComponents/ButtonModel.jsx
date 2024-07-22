@@ -113,7 +113,7 @@ const ButtonModel = ({
         },
         {
           enableHighAccuracy: true, // Request high accuracy
-          timeout: 5000, // Timeout after 5 seconds
+          timeout: 12000, // Timeout after 5 seconds
           maximumAge: 0, // Don't use a cached position
         }
       );

@@ -4,6 +4,8 @@ import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import axios from "axios";
+import querystring from "querystring";
 import {
   cloudinaryFile,
   deleteImage,
@@ -531,6 +533,62 @@ const AddFilePdfDocsInClound = asyncHandler(async (req, res) => {
   );
 });
 
+const getMapDatas = asyncHandler(async (req, res, next) => {
+  const clientId = "f8ea4c60-7b90-4242-a9ab-8d7768fa332e";
+  const clientSecret = "sPICanD3cVP41jrTjpHk8vjXbSpIEyRJ";
+  const apiUrl = "https://api.olamaps.io";
+
+  try {
+    // Step 1: Get Access Token
+    const tokenEndpoint =
+      "https://account.olamaps.io/realms/olamaps/protocol/openid-connect/token";
+    const tokenData = {
+      grant_type: "client_credentials",
+      scope: "openid",
+      client_id: clientId,
+      client_secret: clientSecret,
+    };
+
+    const tokenResponse = await axios.post(
+      tokenEndpoint,
+      querystring.stringify(tokenData),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Step 2: Use Access Token to call autocomplete API
+    const searchText = "Surat"; // assuming searchText comes from query params
+
+    const autocompleteResponse = await axios.get(
+      `${apiUrl}/places/v1/autocomplete`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          input: searchText,
+        },
+      }
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, autocompleteResponse, "get All User successfully")
+      );
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return res
+      .status(400)
+      .json(new ApiResponse(400, error, "Error fetching data"));
+  }
+});
+
 export {
   addMessage,
   getMessage,
@@ -542,4 +600,5 @@ export {
   AddImageInClound,
   AddVideoInClound,
   AddFilePdfDocsInClound,
+  getMapDatas,
 };

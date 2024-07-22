@@ -7,6 +7,12 @@ import session from "express-session";
 import NodeCache from "node-cache";
 import http from "http";
 
+import { ApolloServer } from "@apollo/server";
+import { expressMiddleware } from "@apollo/server/express4";
+import userModel from "./models/user.model.js";
+import Message from "./models/message.model.js";
+import Coversation from "./models/conversation.model.js";
+
 const app = express();
 const server = http.createServer(app);
 
@@ -108,9 +114,65 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+const AppoloSer = new ApolloServer({
+  typeDefs: `
+  type User {
+      _id: ID!,
+      email:String,
+      password:String,
+      userName:String
+  }
+
+   type ConverSation {
+      _id: ID!,
+      members:[User]!,
+
+  }
+
+   type Message {
+      _id: ID!,
+      conversationId:ConverSation,
+      seen:Boolean,
+      senderId:[User]!
+  }
+
+  type Query {
+      getAllUsers:[User]
+      getAllMessage:[Message]
+      getUserById(id:ID!):User
+  }
+  `,
+  resolvers: {
+    Query: {
+      getAllUsers: async () => await userModel.find({}),
+      getAllMessage: async () => await Message.find(),
+      getUserById: async (parents, { id }) =>
+        await userModel.findById({ _id: id }),
+    },
+    Message: {
+      senderId: async (user) => {
+        return await userModel.find({ _id: user.senderId });
+      },
+    },
+    ConverSation: {
+      members: async (conv) => {
+        console.log("<<<<<<<<", conv);
+        const dt = await Coversation.findById(conv);
+        const data = await userModel.find({ _id: { $in: dt.members } });
+        return data;
+      },
+    },
+  },
+});
+async function AppoloServerStart() {
+  await AppoloSer.start();
+  app.use("/graphql", expressMiddleware(AppoloSer));
+}
+AppoloServerStart();
 import userRoutes from "./routes/user.route.js";
 import messageRoutes from "./routes/message.route.js";
 import messageNotificationRoutes from "./routes/notification.route.js";
+import { Query } from "mongoose";
 
 let users = [];
 let lastSeen = {};
@@ -472,6 +534,7 @@ app.get("/", (req, res) => {
     "This Apis Working Perfectly in Vercel it is just for checking pupose only so dont mind."
   );
 });
+
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/notification", messageNotificationRoutes);

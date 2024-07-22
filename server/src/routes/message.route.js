@@ -12,11 +12,14 @@ import {
   AddImageInClound,
   AddVideoInClound,
   AddFilePdfDocsInClound,
+  getMapDatas,
 } from "../controllers/message.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = express.Router(); // eslint-disable-line new-cap
 // get cart
+router.route("/getMapDatas").get(getMapDatas);
+
 router.route("/").post(authMiddleWare, addMessage);
 router.route("/getmessage").post(authMiddleWare, getMessage);
 
