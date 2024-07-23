@@ -265,17 +265,19 @@ const getMessage = asyncHandler(async (req, res, next) => {
       .status(200)
       .json(new ApiResponse(500, "something is wrong in conversation id"));
   }
-  const allMessages = await Message.find({
+  let allMessages = await Message.find({
     conversationId: userData[0]?._id,
     $or: [{ userDelete: false }, { reciverDelete: false }],
   })
     .sort({ createdAt: -1 }) // Sort in descending order by createdAt
     .skip(skip)
     .limit(limit);
+
   lengthAllMessages = await Message.find({
     conversationId: userData[0]?._id,
     $or: [{ userDelete: false }, { reciverDelete: false }],
-  }).count();
+  }).length;
+
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   // Organize messages by date
