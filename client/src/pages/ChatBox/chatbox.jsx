@@ -71,6 +71,12 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
+const style5 = {
+  height: 30,
+  border: "1px solid green",
+  margin: 6,
+  padding: 8,
+};
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -137,6 +143,7 @@ const Chatbox = () => {
   });
   const [openButtonModel, setOpenButtonModel] = useState(false);
   const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
+  const [product1, setProduct1] = useState(Array.from({ length: 30 }));
 
   const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
@@ -1367,7 +1374,15 @@ const Chatbox = () => {
     setVideoAvatar(null);
     setPdfDocsSelectedFile(null);
   };
-
+  const handleScroll = (event) => {
+    const target = event.target;
+    if (target.scrollTop === 0 && !loading) {
+      console.log("jenish here<<<<<<<<<<<<><><><><><><><>");
+      setTimeout(() => {
+        setProduct1((pre) => pre.concat(Array.from({ length: 20 })));
+      }, 1500);
+    }
+  };
   return (
     <>
       <div className="main_chat_div">
@@ -1601,6 +1616,7 @@ const Chatbox = () => {
                 className={`center_chat_div relative ${
                   modeTheme === "dark" ? "bg-dark" : null
                 }`}
+                id="center_chat_div"
               >
                 {loading ? (
                   <div className="h-[80vh] flex justify-center items-center">
@@ -1624,7 +1640,80 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
-                    {Object.keys(getMessage).map((date, key) => {
+                    <InfiniteScroll
+                      dataLength={product1.length}
+                      // next={() => {
+                      //   console.log("jenish<<<<<<<<<<<<<<<<<<");
+                      //   setTimeout(() => {
+                      //     setProduct1((pre) =>
+                      //       pre.concat(Array.from({ length: 20 }))
+                      //     );
+                      //   }, 1500);
+                      // }}
+                      hasMore={true}
+                      // loader={
+                      //   <h4 className="text-white text-center">Loading...</h4>
+                      // }
+                      onScroll={handleScroll}
+                      scrollableTarget="center_chat_div"
+                    >
+                      {/* {product1.map((i, index) => (
+                        <div style={style5} key={index} className="text-white">
+                          div - #{index}
+                        </div>
+                      ))} */}
+                      {Object.keys(getMessage).map((date, key) => {
+                        const CheckFilterDate = getMessage[date].some((obj) =>
+                          obj.senderId === emailLocal?.userId
+                            ? !obj.userDelete === true
+                            : !obj.reciverDelete === true
+                        );
+
+                        return (
+                          <div key={key}>
+                            {CheckFilterDate && (
+                              <div className="text-center flex justify-center my-4">
+                                <h2
+                                  className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                    modeTheme === "dark"
+                                      ? "bg-[#7190a8]"
+                                      : "bg-[#4682B4]"
+                                  }  " `}
+                                >
+                                  {TodayDateOnly === date
+                                    ? "Today"
+                                    : yesterdayDate === date
+                                    ? "Yesterday"
+                                    : date}
+                                </h2>
+                              </div>
+                            )}
+                            {getMessage[date]?.map((dt, index) => {
+                              return (
+                                <ChatMessage
+                                  dt={dt}
+                                  key={index}
+                                  indexKey={index}
+                                  emailLocal={emailLocal}
+                                  reciverEmailAddress={reciverEmailAddress}
+                                  reciverChatData={reciverChatData}
+                                  socket={socket}
+                                  date={date}
+                                  messageDom={messageDom}
+                                  getMessage={getMessage}
+                                  setGetMessage={setGetMessage}
+                                  lastMessageIndex={lastMessageIndex}
+                                  latestDate={latestDate}
+                                  activeUser={activeUser}
+                                  modeTheme={modeTheme}
+                                />
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </InfiniteScroll>
+                    {/* {Object.keys(getMessage).map((date, key) => {
                       const CheckFilterDate = getMessage[date].some((obj) =>
                         obj.senderId === emailLocal?.userId
                           ? !obj.userDelete === true
@@ -1673,7 +1762,7 @@ const Chatbox = () => {
                           })}
                         </div>
                       );
-                    })}
+                    })} */}
                   </>
                 )}
               </div>

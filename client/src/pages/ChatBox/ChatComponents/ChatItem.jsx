@@ -80,23 +80,6 @@ const ChatItem = ({
             (datas) => datas?.senderId !== dt?._id
           );
           setCountMessage(setCount);
-          if (Array.isArray(setCount) && setCount?.length !== 0) {
-            localStorage.setItem("userCountInfo", JSON.stringify(setCount));
-          } else {
-            localStorage.setItem(
-              "userCountInfo",
-              JSON.stringify([
-                {
-                  reciverId: "jenish",
-                  senderId: "jjs",
-                  firstMessage: "",
-                  count: 0,
-                  date: "",
-                  uniqueId: "",
-                },
-              ])
-            );
-          }
         }
       }}
     >
