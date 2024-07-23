@@ -5,6 +5,7 @@ const Message = createSlice({
   initialState: {
     oneUserMessage: [],
     conversationData: [],
+    messageLength: false,
     userLists: [],
     loading: false,
     loadingUsers: false,
@@ -19,6 +20,7 @@ const Message = createSlice({
       .addCase(getUserMessage.fulfilled, (state, action) => {
         const { payload } = action;
         state.oneUserMessage = payload?.data;
+        state.messageLength = payload?.message;
         state.loading = false;
       })
       .addCase(getUserMessage.rejected, (state) => {

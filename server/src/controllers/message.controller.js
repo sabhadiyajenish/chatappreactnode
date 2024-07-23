@@ -242,50 +242,63 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, messages, "message Seen successfully"));
 });
 const getMessage = asyncHandler(async (req, res, next) => {
-  const { senderId, reciverId } = req.body;
+  const { senderId, reciverId, skip = 0, limit = 10 } = req.body;
   let messagesByDate;
-  if (nodeCache.has(`message${senderId}-${reciverId}`)) {
-    messagesByDate = JSON.parse(
-      nodeCache.get(`message${senderId}-${reciverId}`)
-    );
-  } else {
-    const userData = await Coversation.find({
-      members: { $all: [senderId, reciverId] },
-    });
-    if (!userData) {
-      return res
-        .status(200)
-        .json(new ApiResponse(500, "something is wrong in conversation id"));
-    }
-    const allMessages = await Message.find({
-      conversationId: userData[0]?._id,
-      $or: [{ userDelete: false }, { reciverDelete: false }],
-    })
-      .sort({ createdAt: -1 }) // Sort in descending order by createdAt
-      .limit(50);
-
-    const formatDate = (date) => date.toISOString().split("T")[0];
-
-    // Organize messages by date
-    messagesByDate = allMessages.reverse().reduce((acc, message) => {
-      const date = formatDate(new Date(message.createdAt));
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(message);
-      return acc;
-    }, {});
-    nodeCache.set(
-      `message${senderId}-${reciverId}`,
-      JSON.stringify(messagesByDate)
-    );
+  let lengthAllMessages;
+  // if (nodeCache.has(`message${senderId}-${reciverId}`)) {
+  //   const userData = await Coversation.find({
+  //     members: { $all: [senderId, reciverId] },
+  //   });
+  //   lengthAllMessages = await Message.find({
+  //     conversationId: userData[0]?._id,
+  //     $or: [{ userDelete: false }, { reciverDelete: false }],
+  //   }).count();
+  //   messagesByDate = JSON.parse(
+  //     nodeCache.get(`message${senderId}-${reciverId}`)
+  //   );
+  // } else {
+  const userData = await Coversation.find({
+    members: { $all: [senderId, reciverId] },
+  });
+  if (!userData) {
+    return res
+      .status(200)
+      .json(new ApiResponse(500, "something is wrong in conversation id"));
   }
+  const allMessages = await Message.find({
+    conversationId: userData[0]?._id,
+    $or: [{ userDelete: false }, { reciverDelete: false }],
+  })
+    .sort({ createdAt: -1 }) // Sort in descending order by createdAt
+    .skip(skip)
+    .limit(limit);
+  lengthAllMessages = await Message.find({
+    conversationId: userData[0]?._id,
+    $or: [{ userDelete: false }, { reciverDelete: false }],
+  }).count();
+  const formatDate = (date) => date.toISOString().split("T")[0];
+
+  // Organize messages by date
+  messagesByDate = allMessages.reverse().reduce((acc, message) => {
+    const date = formatDate(new Date(message.createdAt));
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(message);
+    return acc;
+  }, {});
+  nodeCache.set(
+    `message${senderId}-${reciverId}`,
+    JSON.stringify(messagesByDate)
+  );
+  // }
 
   return res.status(200).json(
     new ApiResponse(
       200,
       // allMessages.reverse(),
       messagesByDate,
+      lengthAllMessages,
       "get all message successfully"
     )
   );

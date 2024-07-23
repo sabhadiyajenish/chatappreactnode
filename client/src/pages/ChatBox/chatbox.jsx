@@ -86,6 +86,7 @@ const Chatbox = () => {
   const {
     tag,
     oneUserMessage,
+    messageLength,
     loading,
     loadingUsers,
     loadingConversation,
@@ -143,7 +144,7 @@ const Chatbox = () => {
   });
   const [openButtonModel, setOpenButtonModel] = useState(false);
   const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
-  const [product1, setProduct1] = useState(Array.from({ length: 30 }));
+  const [product1, setProduct1] = useState(1);
 
   const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
@@ -1378,8 +1379,14 @@ const Chatbox = () => {
     const target = event.target;
     if (target.scrollTop === 0 && !loading) {
       console.log("jenish here<<<<<<<<<<<<><><><><><><><>");
+      setProduct1((pre) => pre + 1);
       setTimeout(() => {
-        setProduct1((pre) => pre.concat(Array.from({ length: 20 })));
+        const data1 = {
+          senderId: emailLocal?.userId,
+          reciverId: reciverEmailAddress?.reciverId,
+          limit: product1 * 10,
+        };
+        dispatch(getUserMessage(data1));
       }, 1500);
     }
   };
@@ -1640,8 +1647,10 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
+                    <h1 className="text-white text-2xl">Loading...</h1>
+
                     <InfiniteScroll
-                      dataLength={product1.length}
+                      dataLength={messageLength || 0}
                       // next={() => {
                       //   console.log("jenish<<<<<<<<<<<<<<<<<<");
                       //   setTimeout(() => {
@@ -1670,46 +1679,48 @@ const Chatbox = () => {
                         );
 
                         return (
-                          <div key={key}>
-                            {CheckFilterDate && (
-                              <div className="text-center flex justify-center my-4">
-                                <h2
-                                  className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
-                                    modeTheme === "dark"
-                                      ? "bg-[#7190a8]"
-                                      : "bg-[#4682B4]"
-                                  }  " `}
-                                >
-                                  {TodayDateOnly === date
-                                    ? "Today"
-                                    : yesterdayDate === date
-                                    ? "Yesterday"
-                                    : date}
-                                </h2>
-                              </div>
-                            )}
-                            {getMessage[date]?.map((dt, index) => {
-                              return (
-                                <ChatMessage
-                                  dt={dt}
-                                  key={index}
-                                  indexKey={index}
-                                  emailLocal={emailLocal}
-                                  reciverEmailAddress={reciverEmailAddress}
-                                  reciverChatData={reciverChatData}
-                                  socket={socket}
-                                  date={date}
-                                  messageDom={messageDom}
-                                  getMessage={getMessage}
-                                  setGetMessage={setGetMessage}
-                                  lastMessageIndex={lastMessageIndex}
-                                  latestDate={latestDate}
-                                  activeUser={activeUser}
-                                  modeTheme={modeTheme}
-                                />
-                              );
-                            })}
-                          </div>
+                          <>
+                            <div key={key}>
+                              {CheckFilterDate && (
+                                <div className="text-center flex justify-center my-4">
+                                  <h2
+                                    className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                      modeTheme === "dark"
+                                        ? "bg-[#7190a8]"
+                                        : "bg-[#4682B4]"
+                                    }  " `}
+                                  >
+                                    {TodayDateOnly === date
+                                      ? "Today"
+                                      : yesterdayDate === date
+                                      ? "Yesterday"
+                                      : date}
+                                  </h2>
+                                </div>
+                              )}
+                              {getMessage[date]?.map((dt, index) => {
+                                return (
+                                  <ChatMessage
+                                    dt={dt}
+                                    key={index}
+                                    indexKey={index}
+                                    emailLocal={emailLocal}
+                                    reciverEmailAddress={reciverEmailAddress}
+                                    reciverChatData={reciverChatData}
+                                    socket={socket}
+                                    date={date}
+                                    messageDom={messageDom}
+                                    getMessage={getMessage}
+                                    setGetMessage={setGetMessage}
+                                    lastMessageIndex={lastMessageIndex}
+                                    latestDate={latestDate}
+                                    activeUser={activeUser}
+                                    modeTheme={modeTheme}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </>
                         );
                       })}
                     </InfiniteScroll>
