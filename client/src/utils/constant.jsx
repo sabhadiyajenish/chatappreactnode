@@ -6,7 +6,6 @@ import Cookies from "js-cookie";
 // export const SOCKET_URL = "http://192.168.1.23:5000";
 export const LOCAL_PATH = "https://chatappreactnode-1.onrender.com/api/v1";
 export const SOCKET_URL = "https://chatappreactnode-1.onrender.com";
-
 let accessTokenFromStorage =
   localStorage.getItem("accessToken") || Cookies.get("accessToken");
 console.log("Token for localhost<<>><><", accessTokenFromStorage);

@@ -1382,8 +1382,8 @@ const Chatbox = () => {
     const data1 = {
       senderId: emailLocal?.userId,
       reciverId: reciverEmailAddress?.reciverId,
-      limit: 10,
-      skip: (productPageNumber - 1) * 10,
+      limit: 20,
+      skip: (productPageNumber - 1) * 20,
     };
     const responce = await axios.post(`/messages/getmessage`, data1);
     if (responce?.data?.success) {
@@ -1396,7 +1396,7 @@ const Chatbox = () => {
   const handleScroll = (event) => {
     const target = event.target;
     if (target.scrollTop === 0 && !loading) {
-      if (productPageNumber <= Math.ceil(messageLength / 10))
+      if (productPageNumber <= Math.ceil(messageLength / 20))
         if (productPageNumber !== 1) {
           setPageLoadingonScroll(true);
           console.log("jenish here<<<<<<<<<<<<><><><><><><><>", messageLength);

@@ -242,7 +242,7 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, messages, "message Seen successfully"));
 });
 const getMessage = asyncHandler(async (req, res, next) => {
-  const { senderId, reciverId, skip = 0, limit = 10 } = req.body;
+  const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
   let messagesByDate;
   let lengthAllMessages;
   // if (nodeCache.has(`message${senderId}-${reciverId}`)) {
@@ -269,9 +269,9 @@ const getMessage = asyncHandler(async (req, res, next) => {
     conversationId: userData[0]?._id,
     $or: [{ userDelete: false }, { reciverDelete: false }],
   })
-    .sort({ createdAt: -1 }) // Sort in descending order by createdAt
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .sort({ createdAt: -1 }); // Sort in descending order by createdAt
 
   const allLength = await Message.find({
     conversationId: userData[0]?._id,
