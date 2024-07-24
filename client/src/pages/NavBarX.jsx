@@ -82,11 +82,11 @@ export default function NavBar() {
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">View notifications</span>
                   <BellIcon className="h-6 w-6" aria-hidden="true" />
-                  {notificationDatas.length !== 0 ? (
+                  {notificationDatas?.length !== 0 ? (
                     <div className=" absolute h-5 w-5 bg-[red] -top-1 right-0 text-white text-center text-[15px] font-thin rounded-full">
                       <p className="-mt-[3.5px]">
-                        {notificationDatas.length <= 9
-                          ? notificationDatas.length
+                        {notificationDatas?.length <= 9
+                          ? notificationDatas?.length
                           : "9+"}
                       </p>
                     </div>

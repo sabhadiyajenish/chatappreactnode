@@ -41,6 +41,7 @@ const ChatList = ({
   loadingUsers,
   searchUserByName,
   setSearchUserByName,
+  setProductPageNumber,
 }) => {
   const [openSearchModel, setOpenSearchModel] = useState(false);
 
@@ -104,6 +105,7 @@ const ChatList = ({
               checkOnorNot={checkOnorNot}
               modeTheme={modeTheme}
               setShowMainpart={setShowMainpart}
+              setProductPageNumber={setProductPageNumber}
             />
           );
         })}

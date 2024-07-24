@@ -131,6 +131,7 @@ const Chatbox = () => {
       count: 0,
     },
   ]);
+  const [pageLoadingonScroll, setPageLoadingonScroll] = useState(false);
   const [reciverChatData, setReciverChatData] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [getMessage, setGetMessage] = useState({});
@@ -144,7 +145,7 @@ const Chatbox = () => {
   });
   const [openButtonModel, setOpenButtonModel] = useState(false);
   const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
-  const [product1, setProduct1] = useState(1);
+  const [productPageNumber, setProductPageNumber] = useState(1);
 
   const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
@@ -172,8 +173,10 @@ const Chatbox = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    // setGetMessage(oneUserMessage);
     setGetMessage(oneUserMessage);
   }, [oneUserMessage]);
+  console.log("<<<<<<<<<<", getMessage);
   useEffect(() => {
     if (userData?.length === 0) {
       setUserDatas(tag?.data);
@@ -1375,19 +1378,37 @@ const Chatbox = () => {
     setVideoAvatar(null);
     setPdfDocsSelectedFile(null);
   };
+  const fetchDataFromMessageApi = async () => {
+    const data1 = {
+      senderId: emailLocal?.userId,
+      reciverId: reciverEmailAddress?.reciverId,
+      limit: 10,
+      skip: (productPageNumber - 1) * 10,
+    };
+    const responce = await axios.post(`/messages/getmessage`, data1);
+    if (responce?.data?.success) {
+      setGetMessage((prevObj) => ({
+        ...responce?.data?.data?.messagesByDate, // Copy the previous state
+        ...prevObj, // Add the new objects
+      }));
+    }
+  };
   const handleScroll = (event) => {
     const target = event.target;
     if (target.scrollTop === 0 && !loading) {
-      console.log("jenish here<<<<<<<<<<<<><><><><><><><>");
-      setProduct1((pre) => pre + 1);
-      setTimeout(() => {
-        const data1 = {
-          senderId: emailLocal?.userId,
-          reciverId: reciverEmailAddress?.reciverId,
-          limit: product1 * 10,
-        };
-        dispatch(getUserMessage(data1));
-      }, 1500);
+      if (productPageNumber <= Math.ceil(messageLength / 10))
+        if (productPageNumber !== 1) {
+          setPageLoadingonScroll(true);
+          console.log("jenish here<<<<<<<<<<<<><><><><><><><>", messageLength);
+          setTimeout(() => {
+            fetchDataFromMessageApi();
+
+            setProductPageNumber((pre) => pre + 1);
+            setPageLoadingonScroll(false);
+          }, 1500);
+        } else {
+          setProductPageNumber(2);
+        }
     }
   };
   return (
@@ -1439,6 +1460,7 @@ const Chatbox = () => {
                 loadingUsers={loadingUsers}
                 setSearchUserByName={setSearchUserByName}
                 searchUserByName={searchUserByName}
+                setProductPageNumber={setProductPageNumber}
               />
             )}
           </div>
@@ -1647,14 +1669,15 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-white text-2xl">Loading...</h1>
-
+                    {pageLoadingonScroll && (
+                      <h1 className="text-white text-2xl">Loading...</h1>
+                    )}
                     <InfiniteScroll
                       dataLength={messageLength || 0}
                       // next={() => {
                       //   console.log("jenish<<<<<<<<<<<<<<<<<<");
                       //   setTimeout(() => {
-                      //     setProduct1((pre) =>
+                      //     setProductPageNumber((pre) =>
                       //       pre.concat(Array.from({ length: 20 }))
                       //     );
                       //   }, 1500);
@@ -1939,7 +1962,7 @@ const Chatbox = () => {
                             const setCount = countMessage?.filter(
                               (datas) => datas?.senderId !== dt?._id
                             );
-
+                            setProductPageNumber(1);
                             setCountMessage(setCount);
 
                             if (

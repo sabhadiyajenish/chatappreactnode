@@ -21,6 +21,7 @@ const ChatItem = ({
   checkOnorNot,
   modeTheme,
   setShowMainpart,
+  setProductPageNumber,
 }) => {
   return (
     <div
@@ -70,6 +71,7 @@ const ChatItem = ({
 
             dispatch(updateSeenChatMessageData(dataForSeen));
           }
+          setProductPageNumber(1);
           dispatch(
             deleteNotificationData({
               reciverId: emailLocal?.userId,

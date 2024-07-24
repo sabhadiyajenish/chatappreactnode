@@ -273,11 +273,11 @@ const getMessage = asyncHandler(async (req, res, next) => {
     .skip(skip)
     .limit(limit);
 
-  lengthAllMessages = await Message.find({
+  const allLength = await Message.find({
     conversationId: userData[0]?._id,
     $or: [{ userDelete: false }, { reciverDelete: false }],
-  }).length;
-
+  });
+  lengthAllMessages = allLength.length;
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   // Organize messages by date
@@ -299,8 +299,10 @@ const getMessage = asyncHandler(async (req, res, next) => {
     new ApiResponse(
       200,
       // allMessages.reverse(),
-      messagesByDate,
-      lengthAllMessages,
+      {
+        messagesByDate,
+        lengthAllMessages,
+      },
       "get all message successfully"
     )
   );
