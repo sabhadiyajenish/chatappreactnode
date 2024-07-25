@@ -241,6 +241,7 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, messages, "message Seen successfully"));
 });
+
 const getMessage = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
   let messagesByDate;

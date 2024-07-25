@@ -1392,6 +1392,7 @@ const Chatbox = () => {
         ...prevObj, // Add the new objects
       }));
     }
+    setPageLoadingonScroll(false);
   };
   const handleScroll = (event) => {
     const target = event.target;
@@ -1404,7 +1405,6 @@ const Chatbox = () => {
             fetchDataFromMessageApi();
 
             setProductPageNumber((pre) => pre + 1);
-            setPageLoadingonScroll(false);
           }, 1500);
         } else {
           setProductPageNumber(2);
@@ -1670,30 +1670,16 @@ const Chatbox = () => {
                 ) : (
                   <>
                     {pageLoadingonScroll && (
-                      <h1 className="text-white text-2xl">Loading...</h1>
+                      <h1 className="text-white  mt-4 mb-2 text-1xl font-thin">
+                        Loading...
+                      </h1>
                     )}
                     <InfiniteScroll
                       dataLength={messageLength || 0}
-                      // next={() => {
-                      //   console.log("jenish<<<<<<<<<<<<<<<<<<");
-                      //   setTimeout(() => {
-                      //     setProductPageNumber((pre) =>
-                      //       pre.concat(Array.from({ length: 20 }))
-                      //     );
-                      //   }, 1500);
-                      // }}
                       hasMore={true}
-                      // loader={
-                      //   <h4 className="text-white text-center">Loading...</h4>
-                      // }
                       onScroll={handleScroll}
                       scrollableTarget="center_chat_div"
                     >
-                      {/* {product1.map((i, index) => (
-                        <div style={style5} key={index} className="text-white">
-                          div - #{index}
-                        </div>
-                      ))} */}
                       {Object.keys(getMessage).map((date, key) => {
                         const CheckFilterDate = getMessage[date].some((obj) =>
                           obj.senderId === emailLocal?.userId
