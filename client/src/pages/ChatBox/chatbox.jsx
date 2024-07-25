@@ -104,7 +104,7 @@ const Chatbox = () => {
   const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
 
   const [allUserListData, setAllUserListData] = useState();
-
+  const [data123, setData123] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
   const [LastSeenUser, setLastSeenUser] = useState({});
@@ -176,7 +176,7 @@ const Chatbox = () => {
     // setGetMessage(oneUserMessage);
     setGetMessage(oneUserMessage);
   }, [oneUserMessage]);
-  console.log("<<<<<<<<<<", getMessage);
+  console.log("<<<<<<<<<<get messages is here", getMessage);
   useEffect(() => {
     if (userData?.length === 0) {
       setUserDatas(tag?.data);
@@ -231,6 +231,7 @@ const Chatbox = () => {
 
     return mainArray;
   }
+
   useEffect(() => {
     if (Array.isArray(notificationDatas) && notificationDatas?.length !== 0) {
       setCountMessage(notificationDatas);
@@ -282,6 +283,7 @@ const Chatbox = () => {
   }
 
   useEffect(() => {
+    console.log("get messages is here<<<<<<<<", getMessage);
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
       // setCountMessage((prevMessages) => {
       //   // Initialize prevMessages as an empty array if it's null or undefined
@@ -876,6 +878,19 @@ const Chatbox = () => {
 
   const { lastMessageIndex, latestDate } = getLastMessageIndex();
 
+  const getTotalMessageCount = () => {
+    let totalCount = 0;
+
+    // Iterate over each date's array of messages
+    for (const date in getMessage) {
+      if (Array.isArray(getMessage[date])) {
+        // Sum up the lengths of each array of messages
+        totalCount += getMessage[date].length;
+      }
+    }
+
+    return totalCount;
+  };
   const downloadTxtFile = () => {
     // Create an array to hold formatted messages
     const formattedMessages = [];
@@ -1378,39 +1393,75 @@ const Chatbox = () => {
     setVideoAvatar(null);
     setPdfDocsSelectedFile(null);
   };
+  const hasMore = productPageNumber < Math.ceil(messageLength / 20);
+
   const fetchDataFromMessageApi = async () => {
     const data1 = {
       senderId: emailLocal?.userId,
       reciverId: reciverEmailAddress?.reciverId,
       limit: 20,
-      skip: (productPageNumber - 1) * 20,
+      skip: productPageNumber * 20,
     };
     const responce = await axios.post(`/messages/getmessage`, data1);
+    console.log("jenish here DATA messageLength", responce);
+
     if (responce?.data?.success) {
-      setGetMessage((prevObj) => ({
-        ...responce?.data?.data?.messagesByDate, // Copy the previous state
-        ...prevObj, // Add the new objects
-      }));
+      // setGetMessage((prevObj) => ({
+      //   ...prevObj, // Add the new objects
+      //   ...responce?.data?.data?.messagesByDate, // Copy the previous state
+      // }));
+
+      {
+        Object.keys(responce?.data?.data?.messagesByDate).map((date, key) => {
+          console.log(
+            "date<<<<<<<<<<<<<<<",
+            date,
+            responce?.data?.data?.messagesByDate[date]
+          );
+          setGetMessage((prevState) => {
+            return {
+              ...prevState,
+              [date]: [
+                ...responce?.data?.data?.messagesByDate[date],
+                ...(prevState[date] || []),
+              ],
+            };
+          });
+        });
+      }
+      setProductPageNumber((pre) => pre + 1);
     }
     setPageLoadingonScroll(false);
   };
-  const handleScroll = (event) => {
-    const target = event.target;
-    if (target.scrollTop === 0 && !loading) {
-      if (productPageNumber <= Math.ceil(messageLength / 20))
-        if (productPageNumber !== 1) {
-          setPageLoadingonScroll(true);
-          console.log("jenish here<<<<<<<<<<<<><><><><><><><>", messageLength);
-          setTimeout(() => {
-            fetchDataFromMessageApi();
-
-            setProductPageNumber((pre) => pre + 1);
-          }, 1500);
-        } else {
-          setProductPageNumber(2);
-        }
+  const handleScroll = () => {
+    // const target = event.target;
+    if (productPageNumber < Math.ceil(messageLength / 20)) {
+      console.log(
+        "jenish here<<<<<<<<<<<<><><><><><><><>",
+        messageLength,
+        Object.keys(getMessage).length
+      );
+      setTimeout(() => {
+        fetchDataFromMessageApi();
+      }, 0);
     }
+
+    // if (target.scrollTop === 0 && !loading) {
+    // if (productPageNumber <= Math.ceil(messageLength / 20))
+    //   if (productPageNumber !== 1) {
+    //     setPageLoadingonScroll(true);
+    //     console.log("jenish here<<<<<<<<<<<<><><><><><><><>", messageLength);
+    // setTimeout(() => {
+    //   fetchDataFromMessageApi();
+
+    // setProductPageNumber((pre) => pre + 1);
+    // }, 1500);
+    //   } else {
+    //     setProductPageNumber(2);
+    //   }
+    // }
   };
+
   return (
     <>
       <div className="main_chat_div">
@@ -1643,8 +1694,8 @@ const Chatbox = () => {
               </div>
               <div
                 className={`center_chat_div relative ${
-                  modeTheme === "dark" ? "bg-dark" : null
-                }`}
+                  getTotalMessageCount() > 19 ? "flex flex-col-reverse" : null
+                }  ${modeTheme === "dark" ? "bg-dark" : null}`}
                 id="center_chat_div"
               >
                 {loading ? (
@@ -1669,16 +1720,30 @@ const Chatbox = () => {
                   </div>
                 ) : (
                   <>
-                    {pageLoadingonScroll && (
+                    {/* {pageLoadingonScroll && (
                       <h1 className="text-white  mt-4 mb-2 text-1xl font-thin">
                         Loading...
                       </h1>
-                    )}
+                    )} */}
                     <InfiniteScroll
-                      dataLength={messageLength || 0}
-                      hasMore={true}
-                      onScroll={handleScroll}
+                      dataLength={Object.keys(getMessage).length}
+                      next={handleScroll}
+                      hasMore={hasMore}
+                      loader={
+                        <p className="text-center mt-3 text-white font-thin">
+                          ⏳&nbsp;Loading...
+                        </p>
+                      }
+                      endMessage={
+                        getTotalMessageCount() > 20 ? (
+                          <p className="text-center text-white font-bolder mt-2">
+                            You&apos;s Visited all Messages!🐰🥕
+                          </p>
+                        ) : null
+                      }
+                      className="flex flex-col-reverse overflow-visible"
                       scrollableTarget="center_chat_div"
+                      inverse={true}
                     >
                       {Object.keys(getMessage).map((date, key) => {
                         const CheckFilterDate = getMessage[date].some((obj) =>
@@ -1733,6 +1798,65 @@ const Chatbox = () => {
                         );
                       })}
                     </InfiniteScroll>
+                    {/* <InfiniteScroll
+                      dataLength={messageLength || 0}
+                      hasMore={true}
+                      onScroll={handleScroll}
+                      scrollableTarget="center_chat_div"
+                    > */}
+                    {/* {Object.keys(getMessage).map((date, key) => {
+                        const CheckFilterDate = getMessage[date].some((obj) =>
+                          obj.senderId === emailLocal?.userId
+                            ? !obj.userDelete === true
+                            : !obj.reciverDelete === true
+                        );
+
+                        return (
+                          <>
+                            <div key={key}>
+                              {CheckFilterDate && (
+                                <div className="text-center flex justify-center my-4">
+                                  <h2
+                                    className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                      modeTheme === "dark"
+                                        ? "bg-[#7190a8]"
+                                        : "bg-[#4682B4]"
+                                    }  " `}
+                                  >
+                                    {TodayDateOnly === date
+                                      ? "Today"
+                                      : yesterdayDate === date
+                                      ? "Yesterday"
+                                      : date}
+                                  </h2>
+                                </div>
+                              )}
+                              {getMessage[date]?.map((dt, index) => {
+                                return (
+                                  <ChatMessage
+                                    dt={dt}
+                                    key={index}
+                                    indexKey={index}
+                                    emailLocal={emailLocal}
+                                    reciverEmailAddress={reciverEmailAddress}
+                                    reciverChatData={reciverChatData}
+                                    socket={socket}
+                                    date={date}
+                                    messageDom={messageDom}
+                                    getMessage={getMessage}
+                                    setGetMessage={setGetMessage}
+                                    lastMessageIndex={lastMessageIndex}
+                                    latestDate={latestDate}
+                                    activeUser={activeUser}
+                                    modeTheme={modeTheme}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
+                      })} */}
+                    {/* </InfiniteScroll> */}
                     {/* {Object.keys(getMessage).map((date, key) => {
                       const CheckFilterDate = getMessage[date].some((obj) =>
                         obj.senderId === emailLocal?.userId

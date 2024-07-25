@@ -282,17 +282,25 @@ const getMessage = asyncHandler(async (req, res, next) => {
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   // Organize messages by date
-  messagesByDate = allMessages.reverse().reduce((acc, message) => {
-    const date = formatDate(new Date(message.createdAt));
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(message);
-    return acc;
-  }, {});
+  const obj = {};
+
+  allMessages?.map((dt) => {
+    const date = formatDate(new Date(dt.createdAt));
+    obj[date] = [];
+  });
+  allMessages
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .reduce((acc, message) => {
+      const date = formatDate(new Date(message.createdAt));
+      if (!obj[date]) {
+        obj[date] = [];
+      }
+      obj[date].push(message);
+      return acc;
+    }, {});
   nodeCache.set(
     `message${senderId}-${reciverId}`,
-    JSON.stringify(messagesByDate)
+    JSON.stringify({ messagesByDate: obj })
   );
   // }
 
@@ -301,7 +309,7 @@ const getMessage = asyncHandler(async (req, res, next) => {
       200,
       // allMessages.reverse(),
       {
-        messagesByDate,
+        messagesByDate: obj,
         lengthAllMessages,
       },
       "get all message successfully"
