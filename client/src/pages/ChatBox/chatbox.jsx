@@ -1745,58 +1745,60 @@ const Chatbox = () => {
                       scrollableTarget="center_chat_div"
                       inverse={true}
                     >
-                      {Object.keys(getMessage).map((date, key) => {
-                        const CheckFilterDate = getMessage[date].some((obj) =>
-                          obj.senderId === emailLocal?.userId
-                            ? !obj.userDelete === true
-                            : !obj.reciverDelete === true
-                        );
+                      {Object.keys(getMessage)
+                        .sort((a, b) => new Date(b) - new Date(a))
+                        .map((date, key) => {
+                          const CheckFilterDate = getMessage[date].some((obj) =>
+                            obj.senderId === emailLocal?.userId
+                              ? !obj.userDelete === true
+                              : !obj.reciverDelete === true
+                          );
 
-                        return (
-                          <>
-                            <div key={key}>
-                              {CheckFilterDate && (
-                                <div className="text-center flex justify-center my-4">
-                                  <h2
-                                    className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
-                                      modeTheme === "dark"
-                                        ? "bg-[#7190a8]"
-                                        : "bg-[#4682B4]"
-                                    }  " `}
-                                  >
-                                    {TodayDateOnly === date
-                                      ? "Today"
-                                      : yesterdayDate === date
-                                      ? "Yesterday"
-                                      : date}
-                                  </h2>
-                                </div>
-                              )}
-                              {getMessage[date]?.map((dt, index) => {
-                                return (
-                                  <ChatMessage
-                                    dt={dt}
-                                    key={index}
-                                    indexKey={index}
-                                    emailLocal={emailLocal}
-                                    reciverEmailAddress={reciverEmailAddress}
-                                    reciverChatData={reciverChatData}
-                                    socket={socket}
-                                    date={date}
-                                    messageDom={messageDom}
-                                    getMessage={getMessage}
-                                    setGetMessage={setGetMessage}
-                                    lastMessageIndex={lastMessageIndex}
-                                    latestDate={latestDate}
-                                    activeUser={activeUser}
-                                    modeTheme={modeTheme}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </>
-                        );
-                      })}
+                          return (
+                            <>
+                              <div key={key}>
+                                {CheckFilterDate && (
+                                  <div className="text-center flex justify-center my-4">
+                                    <h2
+                                      className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                        modeTheme === "dark"
+                                          ? "bg-[#7190a8]"
+                                          : "bg-[#4682B4]"
+                                      }  " `}
+                                    >
+                                      {TodayDateOnly === date
+                                        ? "Today"
+                                        : yesterdayDate === date
+                                        ? "Yesterday"
+                                        : date}
+                                    </h2>
+                                  </div>
+                                )}
+                                {getMessage[date]?.map((dt, index) => {
+                                  return (
+                                    <ChatMessage
+                                      dt={dt}
+                                      key={index}
+                                      indexKey={index}
+                                      emailLocal={emailLocal}
+                                      reciverEmailAddress={reciverEmailAddress}
+                                      reciverChatData={reciverChatData}
+                                      socket={socket}
+                                      date={date}
+                                      messageDom={messageDom}
+                                      getMessage={getMessage}
+                                      setGetMessage={setGetMessage}
+                                      lastMessageIndex={lastMessageIndex}
+                                      latestDate={latestDate}
+                                      activeUser={activeUser}
+                                      modeTheme={modeTheme}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </>
+                          );
+                        })}
                     </InfiniteScroll>
                     {/* <InfiniteScroll
                       dataLength={messageLength || 0}
