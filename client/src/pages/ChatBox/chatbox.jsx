@@ -2,19 +2,30 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 // import { addTag, getAllTag } from "../../../store/tag/tagAction";
-import "./chatbox.css";
 import Glrs from "../../assets/image/grls.jpg";
+import "./chatbox.css";
 
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
 import CircularProgress from "@mui/material/CircularProgress";
+import Modal from "@mui/material/Modal";
+import Typography from "@mui/material/Typography";
 import imageCompression from "browser-image-compression";
 // import SendIcon from "@mui/icons-material/Send";
 import { FaArrowLeftLong, FaVideo } from "react-icons/fa6";
 import { v4 as uuidv4 } from "uuid";
 // import { apiClient } from "../../../api/general";
+import { Menu, Transition } from "@headlessui/react";
+import moment from "moment";
+import { Fragment } from "react";
+import toast from "react-hot-toast";
+import { FcDocument } from "react-icons/fc";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import { IoSend } from "react-icons/io5";
+import { MdEmojiEmotions } from "react-icons/md";
+import { TiDeleteOutline } from "react-icons/ti";
+import InfiniteScroll from "react-infinite-scroll-component";
+import TextareaAutosize from "react-textarea-autosize";
+import SimplePeer from "simple-peer";
 import {
   addUserMessage,
   clearChatMessageData,
@@ -24,42 +35,25 @@ import {
   getUserMessage,
   updateSeenChatMessageData,
 } from "../../store/Message/authApi";
-import SimplePeer from "simple-peer";
-import { getOneUser } from "../../store/Users/userApi";
-import { SOCKET_URL } from "../../utils/constant";
-import InfiniteScroll from "react-infinite-scroll-component";
-import EmojiPicker from "emoji-picker-react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Fragment } from "react";
-import { MdEmojiEmotions, MdOutlineAddAPhoto } from "react-icons/md";
-import { Disclosure, Menu, Transition } from "@headlessui/react";
-import EmojiModel from "./emoji/emojiModel";
-import { HiOutlineDotsVertical } from "react-icons/hi";
-import { TiDeleteOutline } from "react-icons/ti";
-import axios from "../../utils/commonAxios.jsx";
-import ChatMessage from "./chatMessage/chatMessage.jsx";
-import moment from "moment";
-import TextareaAutosize from "react-textarea-autosize";
 import {
   addUserNotification,
   deleteNotificationData,
   getUserNotification,
 } from "../../store/Notification/notificationApi.js";
-import { FcDocument } from "react-icons/fc";
-import ChatHeader from "./ChatComponents/ChatHeader.jsx";
-import ChatList from "./ChatComponents/ChatList.jsx";
-import { IoSend } from "react-icons/io5";
-import { MdAddAPhoto } from "react-icons/md";
-import { LuSend } from "react-icons/lu";
-import toast from "react-hot-toast";
-import { FaArrowLeft } from "react-icons/fa";
-import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
-import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
-import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
+import { getOneUser } from "../../store/Users/userApi";
+import axios from "../../utils/commonAxios.jsx";
+import { SOCKET_URL } from "../../utils/constant";
 import ButtonModel, {
   formatBytes,
   truncateFileName,
 } from "./ChatComponents/ButtonModel.jsx";
+import ChatHeader from "./ChatComponents/ChatHeader.jsx";
+import ChatList from "./ChatComponents/ChatList.jsx";
+import ChatMessage from "./chatMessage/chatMessage.jsx";
+import EmojiModel from "./emoji/emojiModel";
+import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
+import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
+import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -70,12 +64,6 @@ const style = {
   border: "2px solid #000",
   boxShadow: 24,
   p: 4,
-};
-const style5 = {
-  height: 30,
-  border: "1px solid green",
-  margin: 6,
-  padding: 8,
 };
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -104,7 +92,6 @@ const Chatbox = () => {
   const [deleteMessageForUpdated, setDeleteMessageForUpdated] = useState(false);
 
   const [allUserListData, setAllUserListData] = useState();
-  const [data123, setData123] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const [userConversationData, setUserConversationDatas] = useState([]);
   const [activeUser, setActiveUser] = useState([]);
   const [LastSeenUser, setLastSeenUser] = useState({});
@@ -147,7 +134,6 @@ const Chatbox = () => {
   const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
   const [productPageNumber, setProductPageNumber] = useState(1);
 
-  const [page, setPage] = useState(1);
   const [showMainPart, setShowMainpart] = useState(false);
   const [ramdomMuted, setRandomMuted] = useState(false);
   const [uploadingImageProgress, setUploadingImageProgress] = useState(0);
@@ -176,7 +162,6 @@ const Chatbox = () => {
     // setGetMessage(oneUserMessage);
     setGetMessage(oneUserMessage);
   }, [oneUserMessage]);
-  console.log("<<<<<<<<<<get messages is here", getMessage);
   useEffect(() => {
     if (userData?.length === 0) {
       setUserDatas(tag?.data);
@@ -210,7 +195,6 @@ const Chatbox = () => {
     const socket = io(SOCKET_URL); // Initialize socket connection
     setSocket(socket); // Set the socket state
 
-    // Clean up function to disconnect the socket when the component unmounts
     return () => {
       socket.disconnect();
     };
@@ -283,61 +267,8 @@ const Chatbox = () => {
   }
 
   useEffect(() => {
-    console.log("get messages is here<<<<<<<<", getMessage);
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
-      // setCountMessage((prevMessages) => {
-      //   // Initialize prevMessages as an empty array if it's null or undefined
-      //   prevMessages = prevMessages || [];
-      //   // Find if the reciverId already exists in the state
-      //   const index = prevMessages.findIndex(
-      //     (msg) => msg.senderId === datafunction[0]?.senderId
-      //   );
-      //   // If it exists, update the count
-      //   if (index !== -1) {
-      //     const updatedMessages = [...prevMessages];
-      //     updatedMessages[index] = {
-      //       ...updatedMessages[index],
-      //       count: updatedMessages[index].count + 1,
-      //       date: (updatedMessages[index].date = datafunction[0]?.createdAt),
-      //       uniqueId: (updatedMessages[index].uniqueId =
-      //         datafunction[0]?.uniqueId),
-      //     };
-      //     if (Array.isArray(updatedMessages) && updatedMessages?.length !== 0) {
-      //       localStorage.setItem(
-      //         "userCountInfo",
-      //         JSON.stringify(updatedMessages)
-      //       );
-      //     }
-      //     return updatedMessages;
-      //   } else {
-      //     // If it doesn't exist, add a new entry
-      //     localStorage.setItem(
-      //       "userCountInfo",
-      //       JSON.stringify([
-      //         ...prevMessages,
-      //         {
-      //           reciverId: datafunction[0]?.reciverId,
-      //           senderId: datafunction[0]?.senderId,
-      //           firstMessage: datafunction[0]?.message,
-      //           uniqueId: datafunction[0]?.uniqueId,
-      //           date: datafunction[0]?.createdAt,
-      //           count: 1,
-      //         },
-      //       ])
-      //     );
-      //     return [
-      //       ...prevMessages,
-      //       {
-      //         reciverId: datafunction[0]?.reciverId,
-      //         senderId: datafunction[0]?.senderId,
-      //         firstMessage: datafunction[0]?.message,
-      //         uniqueId: datafunction[0]?.uniqueId,
-      //         date: datafunction[0]?.createdAt,
-      //         count: 1,
-      //       },
-      //     ];
-      //   }
-      // });
+      //datsa
     } else {
       socket?.emit("SetMessageSeenConfirm", {
         messageId: datafunction[0]?.uniqueId,
@@ -533,8 +464,6 @@ const Chatbox = () => {
       // setUserDatas((mess) => mess.concat(cate));
     });
     socket?.on("getCutVideoCall", (userCutVideoCall) => {
-      console.log("here only come this jenish.....<<<<<<<<<<<<<<<");
-
       handleVideocallSentClose();
     });
     socket?.on("getCutVideoCallByOutsideUser", (userCutVideoCall) => {
@@ -544,7 +473,6 @@ const Chatbox = () => {
       setCutVideoCallAfterCut(true);
     });
     socket?.on("getAcceptVideoCallByUser", (userCutVideoCall) => {
-      console.log("accepted<><><><><><><><><><><><>");
       setAcceptCallStatus(true);
     });
 
@@ -1343,8 +1271,6 @@ const Chatbox = () => {
       reciverId: reciverEmailAddress?.reciverId,
     });
     let typingTimeout = setTimeout(() => {
-      console.log("enter here stop<<<<<<<<<");
-
       socket?.emit("addUserTypingStatus", {
         status: false,
         senderId: emailLocal?.userId,
