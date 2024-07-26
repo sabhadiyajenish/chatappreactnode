@@ -14,8 +14,9 @@ const style = {
   width: 340,
   maxWidth: 400,
   minHeight: 350,
-  bgcolor: "grey",
+  bgcolor: "#344C64",
   border: "2px solid #000",
+  borderRadius: "30px",
   boxShadow: 24,
   p: 2,
 };
@@ -57,14 +58,14 @@ const ChatList = ({
       >
         <div className="md:block flex justify-between items-center   ">
           <h1
-            className={`text-center font-medium pb-3 md:ml-0 ml-2 ${
+            className={`text-center sm:text-[16px] text-[12px] font-medium pb-3 md:ml-0 ml-2 ${
               modeTheme === "dark" ? "text-white" : null
             }`}
           >
             Your Chat
           </h1>
           <MdAddCircle
-            className={`w-10 h-10 mt-[-8px] mr-1 md:hidden block cursor-pointer ${
+            className={`sm:w-10 sm:h-10 w-8 h-8 mt-[-8px] mr-1 md:hidden block cursor-pointer ${
               modeTheme === "dark" ? "text-white" : "text-gray-600"
             }`}
             onClick={() => setOpenSearchModel(true)}
@@ -118,9 +119,11 @@ const ChatList = ({
           >
             <Box sx={style}>
               <div className="w-full p-0 m-0 flex justify-between items-center ">
-                <h1 className="text-white ml-2">All User List</h1>
+                <h1 className="text-white ml-2 sm:text-[16px] text-[12px]">
+                  All User List
+                </h1>
                 <IoMdCloseCircle
-                  className={` w-10 h-10 float-right  mr-[-4px] ${
+                  className={` sm:w-10 sm:h-10 w-8 h-8 float-right  mr-[-4px] ${
                     modeTheme === "dark" ? "text-white" : null
                   }`}
                   onClick={handleClose}
@@ -246,12 +249,12 @@ const ChatList = ({
                               <img
                                 alt="gdg"
                                 src={dt?.avatar ? dt?.avatar : Glrs}
-                                className=" w-16 h-16 rounded-full object-cover"
+                                className="sm:w-16 sm:h-16 w-12 h-12 rounded-full object-cover"
                               />
                               {activeUser.map((dr, key1) => {
                                 return dr.userId === dt._id ? (
                                   <span
-                                    className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                                    className=" absolute bottom-0 right-1 bg-[#4CBB17] sm:w-4 w-3 sm:h-4 h-3 rounded-full"
                                     key={key1}
                                   ></span>
                                 ) : (
@@ -261,15 +264,15 @@ const ChatList = ({
                             </div>
                             <div>
                               <p
-                                className={`${
+                                className={`sm:text-[16px] text-[13px] ${
                                   modeTheme === "dark" ? "text-white" : null
                                 }`}
                               >
-                                {dt?.email?.substring(0, 20)}
-                                {dt?.email?.length <= 20 ? null : ".."}
+                                {dt?.email?.substring(0, 25)}
+                                {dt?.email?.length <= 25 ? null : ".."}
                               </p>
                               <p
-                                className={` text-start ${
+                                className={`sm:text-[16px] text-[13px] text-start ${
                                   modeTheme === "dark"
                                     ? "text-[#b7d7e8]"
                                     : "text-gray-600"

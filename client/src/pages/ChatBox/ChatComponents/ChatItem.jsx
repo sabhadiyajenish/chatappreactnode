@@ -96,7 +96,7 @@ const ChatItem = ({
             {activeUser.map((dr, key1) =>
               dr?.userId === dt?._id ? (
                 <span
-                  className="absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
+                  className="absolute bottom-0 right-1 bg-[#4CBB17] sm:w-4 sm:h-4 w-3 h-3 rounded-full"
                   key={key1}
                 ></span>
               ) : (
@@ -112,7 +112,7 @@ const ChatItem = ({
                     ? "text-white "
                     : " text-black "
                   : " text-white text-[18px]"
-              } text-start  font-semibold`}
+              } text-start  font-semibold sm:text-[15px] text-[14px]`}
             >
               {dt?.userName?.substring(0, 10)}
               {dt?.userName?.length <= 10 ? null : ".."}
@@ -120,7 +120,7 @@ const ChatItem = ({
             {countMessage?.map((itm, key1) =>
               itm.senderId === dt._id ? (
                 <p
-                  className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem]"
+                  className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem] sm:text-[15px] text-[14px]"
                   key={key1}
                 >
                   {itm?.firstMessage?.substring(0, 10)}
@@ -136,7 +136,7 @@ const ChatItem = ({
                       ? "text-[#DDE6ED]"
                       : "text-[#65448d]"
                     : "text-[#dfd7e9]"
-                } text-[15px] mt-1 text-center`}
+                }  mt-1 text-center sm:text-[15px] text-[14px]`}
               >
                 {checkOnorNot && checkLastSeen && lastSeenText}
               </p>
@@ -146,7 +146,7 @@ const ChatItem = ({
         {countMessage?.map((itm, key1) =>
           itm.senderId === dt._id ? (
             <div className="mr-3" key={key1}>
-              <h1 className="h-7 w-7 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center text-[15px]">
+              <h1 className="sm:h-7 sm:w-7 w-5 h-5 rounded-full  bg-[#00C000] text-white text-center flex justify-center items-center sm:text-[15px] text-[12px] font-mono">
                 {itm?.count < 10 ? itm?.count : "9+"}
               </h1>
             </div>

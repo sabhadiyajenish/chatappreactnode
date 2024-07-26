@@ -177,7 +177,7 @@ const ChatMessage = ({
             <div className="you_chat md:pl-20 pl-12" key={indexKey}>
               {dt.message ? (
                 <p
-                  className={`you_chat_text  pl-2 text-start pr-2 py-1 chat_time ${
+                  className={`you_chat_text sm:text-[20px] text-[15px] pl-2 text-start pr-2 py-1 chat_time ${
                     modeTheme === "dark"
                       ? "bg-[#27374D] text-[#DDE6ED]"
                       : "bg-[#25d366] text-white"
@@ -199,7 +199,7 @@ const ChatMessage = ({
                       {isExpanded ? " read Less" : "... read More"}
                     </span>
                   )}{" "}
-                  <span className="text-[11px] text-gray-200 ml-1">
+                  <span className="sm:text-[11px] text-[9px] text-gray-200 ml-1">
                     {dt.createdAt && formatDate(dt.createdAt)}
                   </span>
                 </p>
@@ -252,7 +252,10 @@ const ChatMessage = ({
                   <p
                     className={` absolute bottom-0 right-0  bg-black text-white px-2 font-mono `}
                   >
-                    Current Location
+                    Current Location{" "}
+                    <span className="sm:text-[11px] text-[9px] text-gray-200 ml-1">
+                      {dt.createdAt && formatDate(dt.createdAt)}
+                    </span>
                   </p>
                   {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
                 </div>
@@ -389,7 +392,7 @@ const ChatMessage = ({
 
           {date === latestDate && indexKey === lastMessageIndex && dt.seen && (
             <div
-              className={`text-end mr-6 mb-2  ${
+              className={`text-end mr-6 mb-4 sm:text-[16px] text-[12px] ${
                 modeTheme === "dark" ? "text-[#E0D8D1]" : "text-blue-500"
               }`}
             >
@@ -488,7 +491,7 @@ const ChatMessage = ({
             </Menu>
             {dt?.message ? (
               <p
-                className={`you_chat_text1   text-start chat_time1 ${
+                className={`you_chat_text1 sm:text-[20px] text-[15px]  text-start chat_time1 ${
                   modeTheme === "dark"
                     ? "bg-[#526D82] text-[#DDE6ED]"
                     : "bg-[#075e54] text-white"
@@ -552,8 +555,12 @@ const ChatMessage = ({
                 <p
                   className={` absolute bottom-0 right-0  bg-black text-white px-2 font-mono `}
                 >
-                  Current Location
+                  Current Location{" "}
+                  <span className="sm:text-[11px] text-[9px] text-gray-200 ml-1">
+                    {dt.createdAt && formatDate(dt.createdAt)}
+                  </span>
                 </p>
+
                 {/* <MapPreview latitude={dt.latitude} longitude={dt.longitude} /> */}
               </div>
             ) : dt.fileDocsPdf ? (

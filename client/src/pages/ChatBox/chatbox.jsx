@@ -1584,7 +1584,7 @@ const Chatbox = () => {
                       </p>
                       {isUserOnline && !isUserTyping && (
                         <p
-                          className={`text-[15px]  text-start ml-4 ${
+                          className={`text-[15px]  text-start sm:ml-4 ml-2 ${
                             modeTheme === "dark"
                               ? "text-[#DDE6ED]"
                               : "text-green-500"
@@ -1632,7 +1632,7 @@ const Chatbox = () => {
                     <Menu as="div" className="relative">
                       <Menu.Button>
                         <HiOutlineDotsVertical
-                          className={`mt-[10px] md:ml-5 ml-2 md:mr-2 mr-1 cursor-pointer ${
+                          className={`mt-[10px] md:ml-5 ml-3 md:mr-2 mr-1  cursor-pointer ${
                             modeTheme === "dark" ? "text-white" : null
                           } `}
                         />
@@ -1760,7 +1760,7 @@ const Chatbox = () => {
                       endMessage={
                         getTotalMessageCount() > 20 ? (
                           <p
-                            className={`text-center  font-bolder mt-3 ${
+                            className={`text-center sm:text-[16px] text-[12px]  font-bolder mt-3 ${
                               modeTheme === "dark" ? "text-white" : null
                             }`}
                           >
@@ -1787,7 +1787,7 @@ const Chatbox = () => {
                                 {CheckFilterDate && (
                                   <div className="text-center flex justify-center my-4">
                                     <h2
-                                      className={`text-center text-[#f7ebeb] w-fit rounded-lg font-medium py-2 px-6 ${
+                                      className={`text-center text-[#f7ebeb] w-fit sm:text-[15px] text-[12px] rounded-lg font-medium py-2 px-6 ${
                                         modeTheme === "dark"
                                           ? "bg-[#7190a8]"
                                           : "bg-[#4682B4]"
@@ -1956,7 +1956,7 @@ const Chatbox = () => {
                 />
 
                 <MdEmojiEmotions
-                  className={`md:w-10 w-12 md:h-10 h-12 md:ml-[6px] ml-3 mr-3 mt-2 ${
+                  className={`md:w-10 w-12 md:h-10 h-12 sm:ml-[6px] ml-1 mr-3 mt-2 ${
                     modeTheme === "dark" ? "text-white" : null
                   }`}
                   onClick={() => setHandleOpenEmoji((prev) => !prev)}
