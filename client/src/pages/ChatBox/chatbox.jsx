@@ -455,6 +455,7 @@ const Chatbox = () => {
     });
     socket?.on("getMessage", (user1) => {
       // setActiveUser(user);
+      setPageLoadingonScroll(false);
       const date = user1[0].createdAt.split("T")[0]; // Extract date from createdAt
       const currentDate = date; // You need to define a function to get the current date
       setGetMessage((prevState) => {
@@ -508,6 +509,7 @@ const Chatbox = () => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
       );
+      p;
 
       if (CheckUserCon === undefined) {
         setTimeout(() => {
@@ -786,6 +788,7 @@ const Chatbox = () => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (message !== "") {
+      setPageLoadingonScroll(false);
       const uniqueId = generateUniqueId();
 
       socket?.emit("addMessage", {
@@ -1400,7 +1403,7 @@ const Chatbox = () => {
       senderId: emailLocal?.userId,
       reciverId: reciverEmailAddress?.reciverId,
       limit: 20,
-      skip: productPageNumber * 20,
+      skip: getTotalMessageCount(),
     };
     const responce = await axios.post(`/messages/getmessage`, data1);
     console.log("jenish here DATA messageLength", responce);
@@ -1431,7 +1434,6 @@ const Chatbox = () => {
       }
       setProductPageNumber((pre) => pre + 1);
     }
-    setPageLoadingonScroll(false);
   };
   const handleScroll = () => {
     // const target = event.target;
@@ -1439,8 +1441,10 @@ const Chatbox = () => {
       console.log(
         "jenish here<<<<<<<<<<<<><><><><><><><>",
         messageLength,
+        getTotalMessageCount(),
         Object.keys(getMessage).length
       );
+      setPageLoadingonScroll(true);
       setTimeout(() => {
         fetchDataFromMessageApi();
       }, 0);
@@ -1538,158 +1542,161 @@ const Chatbox = () => {
               }  ${modeTheme === "dark" ? "bg-dark" : null}`}
             >
               <div
-                className={`center_icon_div  ${
+                className={`${
                   modeTheme === "dark" ? "bg-[#526D82]" : "bg-[#bce2d4]"
                 }`}
               >
-                <div className="md:hidden block">
-                  <p
-                    className="mr-4"
-                    onClick={() => {
-                      setShowMainpart(false);
-                      setReciverEmailaddress({
-                        email: "",
-                        reciverId: "",
-                        avatar: "",
-                        userName: "",
-                        _id: "",
-                      });
-                    }}
-                  >
-                    <FaArrowLeftLong
-                      className={` ${
-                        modeTheme === "dark" ? "text-white" : null
-                      } `}
-                    />
-                  </p>
-                </div>
-                <img
-                  alt="gdg"
-                  src={reciverEmailAddress?.avatar}
-                  className="md:w-16 w-12 md:h-16 h-12 rounded-full  mt-[6px] object-cover md:mr-0 mr-1"
-                />
-                <div className="md:ml-5">
-                  <p
-                    className={`icon_text ${
-                      modeTheme === "dark" ? "text-white" : null
-                    }`}
-                  >
-                    {reciverEmailAddress?.email}
-                  </p>
-                  {isUserOnline && !isUserTyping && (
+                <div className={`center_icon_div  sm:w-[400px] sm:mx-auto`}>
+                  <div className="md:hidden block">
                     <p
-                      className={`text-[15px]  text-start ml-4 ${
-                        modeTheme === "dark"
-                          ? "text-[#DDE6ED]"
-                          : "text-green-500"
-                      }`}
+                      className="mr-4"
+                      onClick={() => {
+                        setShowMainpart(false);
+                        setReciverEmailaddress({
+                          email: "",
+                          reciverId: "",
+                          avatar: "",
+                          userName: "",
+                          _id: "",
+                        });
+                      }}
                     >
-                      online
-                    </p>
-                  )}
-                  {!isUserOnline &&
-                    !isUserTyping &&
-                    checkLastSeenParticularUser && (
-                      <div className="marquee-container">
-                        <p
-                          className={` text-[15px] text-center marquee-text  ${
-                            modeTheme === "dark"
-                              ? "text-[#DDE6ED]"
-                              : "text-[#7436c5]"
-                          } `}
-                        >
-                          {lastSeenTextParticularUser}
-                        </p>
-                      </div>
-                    )}
-                  {isUserOnline && isUserTyping && (
-                    <p
-                      className={`text-[15px]  ${
-                        modeTheme === "dark"
-                          ? "text-[#DDE6ED]"
-                          : "text-blue-500"
-                      } text-start ml-4`}
-                    >
-                      Typing...
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <FaVideo
-                    className={`ml-5 cursor-pointer ${
-                      modeTheme === "dark" ? "text-white" : null
-                    }`}
-                    onClick={handleVideoCallSentInvitation}
-                  />
-                </div>
-                <div>
-                  <Menu as="div" className="relative">
-                    <Menu.Button>
-                      <HiOutlineDotsVertical
-                        className={`mt-[10px] ml-5 cursor-pointer ${
+                      <FaArrowLeftLong
+                        className={` ml-2 ${
                           modeTheme === "dark" ? "text-white" : null
                         } `}
                       />
-                    </Menu.Button>
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <img
+                      alt="gdg"
+                      src={reciverEmailAddress?.avatar}
+                      className="md:w-16 w-12 md:h-16 h-12 rounded-full p-0  mt-[6px] object-cover md:mr-0 mr-1 sm:ml-0 -ml-5"
+                    />
+                    <div className="md:ml-5">
+                      <p
+                        className={` sm:text-[18px] text-[15px] sm:ml-4 ml-2  font-serif ${
+                          modeTheme === "dark" ? "text-white" : null
+                        }`}
+                      >
+                        {reciverEmailAddress?.email}
+                      </p>
+                      {isUserOnline && !isUserTyping && (
+                        <p
+                          className={`text-[15px]  text-start ml-4 ${
+                            modeTheme === "dark"
+                              ? "text-[#DDE6ED]"
+                              : "text-green-500"
+                          }`}
+                        >
+                          online
+                        </p>
+                      )}
+                      {!isUserOnline &&
+                        !isUserTyping &&
+                        checkLastSeenParticularUser && (
+                          <div className="marquee-container">
+                            <p
+                              className={` sm:text-[15px] text-[12px] text-center marquee-text  ${
+                                modeTheme === "dark"
+                                  ? "text-[#DDE6ED]"
+                                  : "text-[#7436c5]"
+                              } `}
+                            >
+                              {lastSeenTextParticularUser}
+                            </p>
+                          </div>
+                        )}
+                      {isUserOnline && isUserTyping && (
+                        <p
+                          className={`text-[15px]  ${
+                            modeTheme === "dark"
+                              ? "text-[#DDE6ED]"
+                              : "text-blue-500"
+                          } text-start ml-4`}
+                        >
+                          Typing...
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center sm:ml-10">
+                    <FaVideo
+                      className={`sm:ml-5 mt-1 ml-2 cursor-pointer ${
+                        modeTheme === "dark" ? "text-white" : null
+                      }`}
+                      onClick={handleVideoCallSentInvitation}
+                    />
 
-                    <Transition
-                      as={Fragment}
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <Menu.Items className="absolute  top-7 right-1 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              className={classNames(
-                                active ? "w-full bg-gray-100" : "",
-                                "w-full block px-2 py-2 text-sm text-gray-700"
-                              )}
-                              onClick={() => {
-                                const uniqueIds = [];
+                    <Menu as="div" className="relative">
+                      <Menu.Button>
+                        <HiOutlineDotsVertical
+                          className={`mt-[10px] md:ml-5 ml-2 md:mr-2 mr-1 cursor-pointer ${
+                            modeTheme === "dark" ? "text-white" : null
+                          } `}
+                        />
+                      </Menu.Button>
 
-                                for (const date in getMessage) {
-                                  if (getMessage.hasOwnProperty(date)) {
-                                    getMessage[date].forEach((item) => {
-                                      uniqueIds.push(item.uniqueId);
-                                    });
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute  top-7 right-1 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <Menu.Item>
+                            {({ active }) => (
+                              <button
+                                className={classNames(
+                                  active ? "w-full bg-gray-100" : "",
+                                  "w-full block px-2 py-2 text-sm text-gray-700"
+                                )}
+                                onClick={() => {
+                                  const uniqueIds = [];
+
+                                  for (const date in getMessage) {
+                                    if (getMessage.hasOwnProperty(date)) {
+                                      getMessage[date].forEach((item) => {
+                                        uniqueIds.push(item.uniqueId);
+                                      });
+                                    }
                                   }
-                                }
-                                const data = {
-                                  senderId: emailLocal?.userId,
-                                  reciverId: reciverEmailAddress?.reciverId,
-                                  uniqueIds,
-                                };
-                                dispatch(clearChatMessageData(data));
-                                setGetMessage({});
-                              }}
-                            >
-                              Clear Chat
-                            </button>
-                          )}
-                        </Menu.Item>
-                        <hr />
+                                  const data = {
+                                    senderId: emailLocal?.userId,
+                                    reciverId: reciverEmailAddress?.reciverId,
+                                    uniqueIds,
+                                  };
+                                  dispatch(clearChatMessageData(data));
+                                  setGetMessage({});
+                                }}
+                              >
+                                Clear Chat
+                              </button>
+                            )}
+                          </Menu.Item>
+                          <hr />
 
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              className={classNames(
-                                active ? "w-full bg-gray-100" : "",
-                                "w-full block px-4 py-2 text-sm text-gray-700"
-                              )}
-                              onClick={downloadTxtFile}
-                            >
-                              Export Chat
-                            </button>
-                          )}
-                        </Menu.Item>
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
+                          <Menu.Item>
+                            {({ active }) => (
+                              <button
+                                className={classNames(
+                                  active ? "w-full bg-gray-100" : "",
+                                  "w-full block px-4 py-2 text-sm text-gray-700"
+                                )}
+                                onClick={downloadTxtFile}
+                              >
+                                Export Chat
+                              </button>
+                            )}
+                          </Menu.Item>
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+                  </div>
                 </div>
               </div>
               <div
@@ -1726,17 +1733,37 @@ const Chatbox = () => {
                       </h1>
                     )} */}
                     <InfiniteScroll
-                      dataLength={Object.keys(getMessage).length}
+                      dataLength={getTotalMessageCount()}
                       next={handleScroll}
                       hasMore={hasMore}
                       loader={
-                        <p className="text-center mt-3 text-white font-thin">
-                          ⏳&nbsp;Loading...
-                        </p>
+                        <div role="status" className="mt-3">
+                          <svg
+                            aria-hidden="true"
+                            className="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-green-500"
+                            viewBox="0 0 100 101"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                              fill="currentColor"
+                            />
+                            <path
+                              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                              fill="currentFill"
+                            />
+                          </svg>
+                          <span className="sr-only">Loading...</span>
+                        </div>
                       }
                       endMessage={
                         getTotalMessageCount() > 20 ? (
-                          <p className="text-center text-white font-bolder mt-2">
+                          <p
+                            className={`text-center  font-bolder mt-3 ${
+                              modeTheme === "dark" ? "text-white" : null
+                            }`}
+                          >
                             You&apos;s Visited all Messages!🐰🥕
                           </p>
                         ) : null
@@ -1792,6 +1819,7 @@ const Chatbox = () => {
                                       latestDate={latestDate}
                                       activeUser={activeUser}
                                       modeTheme={modeTheme}
+                                      pageLoadingonScroll={pageLoadingonScroll}
                                     />
                                   );
                                 })}

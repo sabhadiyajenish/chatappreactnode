@@ -244,7 +244,7 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
 
 const getMessage = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
-  let messagesByDate;
+  // let messagesByDate;
   let lengthAllMessages;
   // if (nodeCache.has(`message${senderId}-${reciverId}`)) {
   //   const userData = await Coversation.find({
@@ -298,10 +298,10 @@ const getMessage = asyncHandler(async (req, res, next) => {
       obj[date].push(message);
       return acc;
     }, {});
-  nodeCache.set(
-    `message${senderId}-${reciverId}`,
-    JSON.stringify({ messagesByDate: obj })
-  );
+  // nodeCache.set(
+  //   `message${senderId}-${reciverId}`,
+  //   JSON.stringify({ messagesByDate: obj })
+  // );
   // }
 
   return res.status(200).json(
@@ -321,24 +321,24 @@ const getConversation = asyncHandler(async (req, res) => {
   const { senderId } = req.params;
   // nodeCache.get();
   let userIs;
-  if (nodeCache.has(`conversation${senderId}`)) {
-    userIs = JSON.parse(nodeCache.get(`conversation${senderId}`));
-  } else {
-    const userData = await Coversation.find({
-      members: { $in: [senderId] },
-    });
-    let getUserId = [];
-    userData?.map((dr, key) =>
-      dr.members.filter((dt, kk) => {
-        if (dt !== senderId) {
-          getUserId.push(dt);
-        }
-      })
-    );
+  // if (nodeCache.has(`conversation${senderId}`)) {
+  //   userIs = JSON.parse(nodeCache.get(`conversation${senderId}`));
+  // } else {
+  const userData = await Coversation.find({
+    members: { $in: [senderId] },
+  });
+  let getUserId = [];
+  userData?.map((dr, key) =>
+    dr.members.filter((dt, kk) => {
+      if (dt !== senderId) {
+        getUserId.push(dt);
+      }
+    })
+  );
 
-    userIs = await tagModel.find({ _id: getUserId });
-    nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
-  }
+  userIs = await tagModel.find({ _id: getUserId });
+  // nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
+  // }
 
   return res
     .status(200)

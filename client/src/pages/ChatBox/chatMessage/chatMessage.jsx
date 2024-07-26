@@ -41,6 +41,7 @@ const ChatMessage = ({
   lastMessageIndex,
   activeUser,
   modeTheme,
+  pageLoadingonScroll,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -181,7 +182,13 @@ const ChatMessage = ({
                       ? "bg-[#27374D] text-[#DDE6ED]"
                       : "bg-[#25d366] text-white"
                   } `}
-                  ref={messageDom}
+                  ref={
+                    date === latestDate &&
+                    indexKey === lastMessageIndex &&
+                    pageLoadingonScroll === false
+                      ? messageDom
+                      : null
+                  }
                 >
                   {isExpanded ? dt.message : dt.message.slice(0, 300)}
                   {dt.message.length > 300 && (
@@ -205,7 +212,13 @@ const ChatMessage = ({
                     width={200}
                     className=" cursor-pointer"
                     onClick={() => handleOpenImageModel(dt?.avatar)}
-                    ref={messageDom}
+                    ref={
+                      date === latestDate &&
+                      indexKey === lastMessageIndex &&
+                      pageLoadingonScroll === false
+                        ? messageDom
+                        : null
+                    }
                   />
                   <span
                     className={`text-[11px] ${
@@ -395,7 +408,13 @@ const ChatMessage = ({
           <div
             className="you_chat_div md:mr-20 mr-5 flex mb-2"
             key={indexKey}
-            ref={messageDom}
+            ref={
+              date === latestDate &&
+              indexKey === lastMessageIndex &&
+              pageLoadingonScroll === false
+                ? messageDom
+                : null
+            }
           >
             {/* <HiOutlineDotsVertical className="ml-1 -mr-1 mt-[10px] cursor-pointer " /> */}
             <Menu as="div" className="relative">
