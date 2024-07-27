@@ -10,35 +10,37 @@ const ChatHeader = ({
 }) => (
   <div
     style={{ borderBottom: "1px solid black" }}
-    className={`p-1 flex md:gap-0 gap-x-4 justify-center items-center flex-wrap ${
+    className={`py-2 sm:px-3 px-2 flex  justify-between items-center flex-wrap ${
       modeTheme === "dark" ? "bg-[#272626]" : "bg-[#d5e1df]"
     } `}
   >
-    <div className="relative">
-      <img
-        alt="gdg"
-        src={userOneData?.avatar || Glrs}
-        className="sm:w-16 w-10 sm:h-16 h-10 rounded-full object-cover border-2  border-red-300"
-      />
-      {seeLoginActiveInfo?.online && (
-        <span className="absolute bottom-0 right-1 bg-[#4CBB17] sm:w-4 w-3 sm:h-4 h-3 rounded-full"></span>
-      )}
-    </div>
-    <div className="md:ml-3 ml-1">
-      <h1
-        className={`p-2 font-bold lg:text-start sm:text-[16px] text-[12px] ${
-          modeTheme === "dark" ? "text-white" : null
-        }`}
-      >
-        Me
-      </h1>
-      <h4
-        className={`ml-2 sm:text-[16px] text-[12px] ${
-          modeTheme === "dark" ? "text-white" : null
-        }`}
-      >
-        {emailLocal?.email}
-      </h4>
+    <div className="flex items-center">
+      <div className="relative">
+        <img
+          alt="gdg"
+          src={userOneData?.avatar || Glrs}
+          className="sm:w-[55px] w-10 sm:h-[55px] h-10 rounded-full object-cover border-2  border-red-300"
+        />
+        {seeLoginActiveInfo?.online && (
+          <span className="absolute bottom-0 right-1 bg-[#4CBB17] sm:w-4 w-3 sm:h-4 h-3 rounded-full"></span>
+        )}
+      </div>
+      <div className="md:ml-3 ml-1">
+        <h1
+          className={`p-2 font-bold lg:text-start sm:text-[16px] text-[12px] ${
+            modeTheme === "dark" ? "text-white" : null
+          }`}
+        >
+          Me
+        </h1>
+        <h4
+          className={`ml-2 sm:text-[16px] text-[12px] ${
+            modeTheme === "dark" ? "text-white" : null
+          }`}
+        >
+          {emailLocal?.email}
+        </h4>
+      </div>
     </div>
     <label className="inline-flex items-center cursor-pointer md:ml-10">
       <input

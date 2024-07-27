@@ -111,8 +111,8 @@ const ChatItem = ({
                   ? modeTheme === "dark"
                     ? "text-white "
                     : " text-black "
-                  : " text-white text-[18px]"
-              } text-start  font-semibold sm:text-[15px] text-[14px]`}
+                  : " text-white"
+              } sm:text-[15px] text-[13px] text-start  font-semibold `}
             >
               {dt?.userName?.substring(0, 10)}
               {dt?.userName?.length <= 10 ? null : ".."}
