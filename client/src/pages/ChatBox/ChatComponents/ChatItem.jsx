@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Glrs from "../../../assets/image/grls.jpg";
 
 const ChatItem = ({
@@ -26,41 +26,7 @@ const ChatItem = ({
   const [seenMessageDate, setSeenMessageDate] = useState("");
   const [sentMessageDate, setSentMessageDate] = useState("");
 
-  const updateTimeDifference = () => {
-    const seenMessage = dt?.userLastMessages?.find(
-      (item) =>
-        item?.userId === emailLocal?.userId &&
-        item?.messageId !== null &&
-        item?.messageId?.seen === true
-    );
-    const unreadMessage = dt?.userLastMessages?.find(
-      (item) =>
-        item?.userId === emailLocal?.userId &&
-        item?.messageId !== null &&
-        item?.messageId?.seen !== true
-    );
-    if (seenMessage) {
-      const createdAt = new Date(seenMessage?.messageId?.createdAt);
-      setSeenMessageDate(formatTimeDifference(createdAt));
-    }
-    if (unreadMessage) {
-      const createdAt = new Date(unreadMessage?.messageId?.createdAt);
-      setSentMessageDate(formatTimeDifference(createdAt));
-    }
-  };
-
-  useEffect(() => {
-    updateTimeDifference(); // Initial update
-
-    // Set up an interval to update the time difference every minute
-    const intervalId = setInterval(() => {
-      updateTimeDifference();
-    }, 60000); // 60,000 ms = 1 minute
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [dt, emailLocal?.userId]);
-
+  // Function to calculate and format time difference
   const formatTimeDifference = (previousDate) => {
     const currentDateTime = new Date();
     const previousDateTime = new Date(previousDate);
@@ -69,11 +35,7 @@ const ChatItem = ({
       currentDateTime.getTime() - previousDateTime.getTime();
     const secondsDifference = Math.floor(timeDifference / 1000);
 
-    // Handle different time units: seconds, minutes, hours, days, weeks, etc.
     if (secondsDifference < 60) {
-      // return `${secondsDifference} sec${
-      //   secondsDifference !== 1 ? "s" : ""
-      // } ago`;
       return `just now`;
     } else if (secondsDifference < 3600) {
       const minutesDifference = Math.floor(secondsDifference / 60);
@@ -88,6 +50,69 @@ const ChatItem = ({
       return `${daysDifference} day${daysDifference !== 1 ? "s" : ""} ago`;
     }
   };
+
+  const updateTimeDifference = () => {
+    const seenMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen === true
+    );
+    const unreadMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen !== true
+    );
+    if (seenMessage) {
+      const createdAt = new Date(seenMessage?.messageId?.seenAt);
+      setSeenMessageDate(formatTimeDifference(createdAt));
+    }
+    if (unreadMessage) {
+      const createdAt = new Date(unreadMessage?.messageId?.createdAt);
+      setSentMessageDate(formatTimeDifference(createdAt));
+    }
+  };
+
+  useEffect(() => {
+    updateTimeDifference(); // Initial update
+
+    // Determine the interval based on the time unit
+    const now = new Date();
+    const unreadMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen !== true
+    );
+    const seenMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen === true
+    );
+
+    const messageDate = unreadMessage
+      ? new Date(unreadMessage?.messageId?.createdAt)
+      : seenMessage
+      ? new Date(seenMessage?.messageId?.seenAt)
+      : null;
+
+    const diff = messageDate ? now - messageDate : 0;
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+
+    const interval = hours >= 1 ? 3600000 : 60000; // Update every hour if hours >= 1, else every minute
+
+    // Set up an interval to update the time difference
+    const intervalId = setInterval(() => {
+      updateTimeDifference();
+    }, interval);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [dt, emailLocal?.userId]);
+
   return (
     <div
       key={index}
@@ -182,21 +207,22 @@ const ChatItem = ({
               {dt?.userName?.substring(0, 10)}
               {dt?.userName?.length <= 10 ? null : ".."}
             </p>
-            {countMessage?.map((itm, key1) =>
-              itm.senderId === dt._id ? (
-                <p
-                  className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem] sm:text-[15px] text-[14px]"
-                  key={key1}
-                >
-                  {itm?.firstMessage?.substring(0, 10)}
-                  {itm?.firstMessage?.length <= 10 ? null : ".."}
-                </p>
-              ) : null
-            )}
-            {sentMessageDate ? (
+            {countMessage?.some((itm) => itm.senderId === dt._id) ? (
+              countMessage?.map((itm, key1) =>
+                itm.senderId === dt._id ? (
+                  <p
+                    className="text-[#00C000] text-start lg:w-[8rem] md:w-[6rem] w-[5rem] sm:text-[15px] text-[14px]"
+                    key={key1}
+                  >
+                    {itm?.firstMessage?.substring(0, 10)}
+                    {itm?.firstMessage?.length <= 10 ? null : ".."}
+                  </p>
+                ) : null
+              )
+            ) : sentMessageDate ? (
               <p
                 className={`${
-                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#65448d]"
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"
                 } mt-1 text-center sm:text-[15px] text-[14px]`}
               >
                 Sent {sentMessageDate}
@@ -204,10 +230,10 @@ const ChatItem = ({
             ) : seenMessageDate ? (
               <p
                 className={`${
-                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#65448d]"
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"
                 } mt-1 text-center sm:text-[15px] text-[14px]`}
               >
-                seen {seenMessageDate}
+                Seen {seenMessageDate}
               </p>
             ) : checkOnorNot && checkLastSeen ? (
               <p

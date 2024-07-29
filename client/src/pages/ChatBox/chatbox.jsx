@@ -185,6 +185,7 @@ const Chatbox = () => {
       const themeName = localStorage.getItem("Theme");
       setModeTheme(themeName);
     }
+    dispatch(getUserNotification({ senderId: emailLocal?.userId || "" }));
   }, []);
 
   useEffect(() => {
@@ -217,7 +218,7 @@ const Chatbox = () => {
   }
 
   useEffect(() => {
-    if (Array.isArray(notificationDatas) && notificationDatas?.length !== 0) {
+    if (Array.isArray(notificationDatas)) {
       setCountMessage(notificationDatas);
       if (conversationData) {
         let mainArray = moveObjectToTop(conversationData, notificationDatas);
@@ -374,6 +375,41 @@ const Chatbox = () => {
       }
     }
   }, [deleteMessageForUpdated]);
+
+  // const updateSeenStatus = (receiver) => {
+  //   setUserConversationDatas((prevUsers) =>
+  //     prevUsers.map((user) => {
+  //       console.log(
+  //         "come inside this fields<<<<<<<<",
+  //         user?._id,
+  //         "jenish<<<",
+  //         receiver
+  //       );
+  //       if (user._id === receiver) {
+  //         const updatedMessages = user.userLastMessages.map((msg) => {
+  //           if (msg.userId === emailLocal.userId) {
+  //             return {
+  //               ...msg,
+  //               messageId: {
+  //                 ...msg.messageId,
+  //                 seen: true,
+  //                 seenAt: new Date().toISOString(), // Update seenAt to current time
+  //               },
+  //             };
+  //           }
+  //           return msg;
+  //         });
+  //         return {
+  //           ...user,
+  //           userLastMessages: updatedMessages,
+  //         };
+  //       }
+  //       console.log("}||||||||||||||||||||||<<<<<", user);
+  //       return user;
+  //     })
+  //   );
+  // };
+
   let pc;
 
   useEffect(() => {
@@ -435,6 +471,8 @@ const Chatbox = () => {
         }
         return newData;
       });
+
+      // updateSeenStatus(receiver);
     });
     socket?.on("getNewUserData", (userStatus) => {
       const CheckUserCon = userConversationData?.find(
@@ -712,7 +750,75 @@ const Chatbox = () => {
       handleOpen();
     }
   };
+  const updateOrAddMessage = (userId, newMessage) => {
+    // Assuming `data` is the state containing the user information
+    const updatedData = userConversationData.map((user) => {
+      if (user._id === userId) {
+        // User found, process their messages
+        let updatedUserLastMessages = [...user.userLastMessages];
+        const existingMessageIndex = updatedUserLastMessages.findIndex(
+          (msg) => msg.userId === emailLocal.userId
+        );
+        console.log(
+          "come in 1<<",
+          updatedUserLastMessages,
+          existingMessageIndex
+        );
+        if (existingMessageIndex > -1) {
+          // Existing message found, update it
+          const existingMessage = updatedUserLastMessages[existingMessageIndex];
+          // const messageIdExists = existingMessage.messageId.find(
+          //   msg => msg._id === newMessage.messageId._id
+          // );
+          console.log("come in 2<<", existingMessage);
 
+          if (existingMessage) {
+            // Update existing messageId
+            updatedUserLastMessages[existingMessageIndex] = {
+              ...existingMessage,
+              messageId: newMessage?.messageId,
+            };
+            console.log(
+              "come in 3<<",
+              updatedUserLastMessages[existingMessageIndex]
+            );
+          } else {
+            // Add new messageId
+            updatedUserLastMessages[existingMessageIndex] = {
+              ...existingMessage,
+              messageId: newMessage.messageId,
+            };
+            console.log(
+              "come in 4<<",
+              updatedUserLastMessages[existingMessageIndex]
+            );
+          }
+        } else {
+          // Add new userLastMessages entry if userId does not match
+          updatedUserLastMessages.push({
+            userId: emailLocal.userId,
+            messageId: [newMessage.messageId],
+            createdAt: newMessage.messageId.createdAt,
+            seen: newMessage.messageId.seen,
+          });
+          console.log("come in 5<<");
+        }
+
+        return {
+          ...user,
+          userLastMessages: updatedUserLastMessages,
+        };
+      } else {
+        console.log("come in <<<<6");
+      }
+      return user;
+    });
+
+    // Update state with updatedData
+    // Assuming you have a setState function to update the state
+    setUserConversationDatas(updatedData);
+    console.log("data is jenish<<<<<<<", updatedData);
+  };
   const handleSend = async (e) => {
     e.preventDefault();
     if (message !== "") {
@@ -748,6 +854,16 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
+
+      const newMessage = {
+        messageId: {
+          createdAt: new Date(),
+          seen: false,
+        },
+        userId: emailLocal?.userId,
+      };
+      updateOrAddMessage(reciverEmailAddress?.reciverId, newMessage);
+
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
