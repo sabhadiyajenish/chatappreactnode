@@ -23,6 +23,71 @@ const ChatItem = ({
   setShowMainpart,
   setProductPageNumber,
 }) => {
+  const [seenMessageDate, setSeenMessageDate] = useState("");
+  const [sentMessageDate, setSentMessageDate] = useState("");
+
+  const updateTimeDifference = () => {
+    const seenMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen === true
+    );
+    const unreadMessage = dt?.userLastMessages?.find(
+      (item) =>
+        item?.userId === emailLocal?.userId &&
+        item?.messageId !== null &&
+        item?.messageId?.seen !== true
+    );
+    if (seenMessage) {
+      const createdAt = new Date(seenMessage?.messageId?.createdAt);
+      setSeenMessageDate(formatTimeDifference(createdAt));
+    }
+    if (unreadMessage) {
+      const createdAt = new Date(unreadMessage?.messageId?.createdAt);
+      setSentMessageDate(formatTimeDifference(createdAt));
+    }
+  };
+
+  useEffect(() => {
+    updateTimeDifference(); // Initial update
+
+    // Set up an interval to update the time difference every minute
+    const intervalId = setInterval(() => {
+      updateTimeDifference();
+    }, 60000); // 60,000 ms = 1 minute
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [dt, emailLocal?.userId]);
+
+  const formatTimeDifference = (previousDate) => {
+    const currentDateTime = new Date();
+    const previousDateTime = new Date(previousDate);
+
+    const timeDifference =
+      currentDateTime.getTime() - previousDateTime.getTime();
+    const secondsDifference = Math.floor(timeDifference / 1000);
+
+    // Handle different time units: seconds, minutes, hours, days, weeks, etc.
+    if (secondsDifference < 60) {
+      // return `${secondsDifference} sec${
+      //   secondsDifference !== 1 ? "s" : ""
+      // } ago`;
+      return `just now`;
+    } else if (secondsDifference < 3600) {
+      const minutesDifference = Math.floor(secondsDifference / 60);
+      return `${minutesDifference} min${
+        minutesDifference !== 1 ? "s" : ""
+      } ago`;
+    } else if (secondsDifference < 86400) {
+      const hoursDifference = Math.floor(secondsDifference / 3600);
+      return `${hoursDifference} hour${hoursDifference !== 1 ? "s" : ""} ago`;
+    } else {
+      const daysDifference = Math.floor(secondsDifference / 86400);
+      return `${daysDifference} day${daysDifference !== 1 ? "s" : ""} ago`;
+    }
+  };
   return (
     <div
       key={index}
@@ -128,17 +193,33 @@ const ChatItem = ({
                 </p>
               ) : null
             )}
-            {checkOnorNot && checkLastSeen ? (
+            {sentMessageDate ? (
               <p
-                className={` ${
+                className={`${
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#65448d]"
+                } mt-1 text-center sm:text-[15px] text-[14px]`}
+              >
+                Sent {sentMessageDate}
+              </p>
+            ) : seenMessageDate ? (
+              <p
+                className={`${
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#65448d]"
+                } mt-1 text-center sm:text-[15px] text-[14px]`}
+              >
+                seen {seenMessageDate}
+              </p>
+            ) : checkOnorNot && checkLastSeen ? (
+              <p
+                className={`${
                   reciverEmailAddress?.email === dt.email
                     ? modeTheme === "dark"
                       ? "text-[#DDE6ED]"
                       : "text-[#65448d]"
                     : "text-[#dfd7e9]"
-                }  mt-1 text-center sm:text-[15px] text-[14px]`}
+                } mt-1 text-center sm:text-[15px] text-[14px]`}
               >
-                {checkOnorNot && checkLastSeen && lastSeenText}
+                {lastSeenText}
               </p>
             ) : null}
           </div>

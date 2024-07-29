@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
-import UserSchema from "..//models/user.model.js";
+import UserSchema from "../models/user.model.js";
 import ConId from "../models/conversation.model.js";
 
 const MessageSchema = mongoose.Schema({

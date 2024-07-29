@@ -38,6 +38,18 @@ const UserSchema = new mongoose.Schema(
     coverImage: {
       type: String,
     },
+    userLastMessages: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", // Assuming you want to reference the User schema
+        },
+        messageId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "messages", // Assuming you have a Message schema
+        },
+      },
+    ],
     watchHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -88,6 +88,60 @@ const addMessage = asyncHandler(async (req, res, next) => {
     const messageComeData = new Message(messageData);
 
     const messageDataValue = await messageComeData.save();
+
+    try {
+      // Find the document with the matching criteria
+      const userLastMessage = await tagModel.findOne({
+        _id: reciverId,
+        userLastMessages: {
+          $elemMatch: {
+            userId: senderId,
+          },
+        },
+      });
+
+      if (userLastMessage) {
+        // Document found, check if the specific message exists
+        const messageIndex = userLastMessage.userLastMessages.findIndex(
+          (message) => message.userId.equals(senderId)
+        );
+
+        if (messageIndex !== -1) {
+          // Message exists, update it
+          userLastMessage.userLastMessages[messageIndex].messageId =
+            messageData1._id;
+        } else {
+          // Message does not exist, add it
+          userLastMessage.userLastMessages.push({
+            _id: null,
+            userId: senderId,
+            messageId: messageData1._id,
+          });
+        }
+
+        // Save the updated user document
+        await userLastMessage.save();
+        console.log("Updated or added message successfully.");
+      } else {
+        // If the document is not found, create a new document
+        await tagModel.updateOne(
+          { _id: reciverId },
+          {
+            $push: {
+              userLastMessages: {
+                userId: senderId,
+                messageId: messageData1._id,
+              },
+            },
+          },
+          { upsert: true } // Create the document if it doesn't exist
+        );
+        console.log("Added new message to a newly created document.");
+      }
+    } catch (err) {
+      console.error("Error updating or adding message:", err);
+    }
+
     nodeCache.del(`message${senderId}-${reciverId}`);
     nodeCache.del(`message${reciverId}-${senderId}`);
 
@@ -142,6 +196,60 @@ const addMessage = asyncHandler(async (req, res, next) => {
 
   // console.log(">>>message>>>", messageComewithComIdData);
   const messageData1 = await messageComewithComIdData.save();
+
+  try {
+    // Find the document with the matching criteria
+    const userLastMessage = await tagModel.findOne({
+      _id: reciverId,
+      userLastMessages: {
+        $elemMatch: {
+          userId: senderId,
+        },
+      },
+    });
+
+    if (userLastMessage) {
+      // Document found, check if the specific message exists
+      const messageIndex = userLastMessage.userLastMessages.findIndex(
+        (message) => message.userId.equals(senderId)
+      );
+
+      if (messageIndex !== -1) {
+        // Message exists, update it
+        userLastMessage.userLastMessages[messageIndex].messageId =
+          messageData1._id;
+      } else {
+        // Message does not exist, add it
+        userLastMessage.userLastMessages.push({
+          _id: null,
+          userId: senderId,
+          messageId: messageData1._id,
+        });
+      }
+
+      // Save the updated user document
+      await userLastMessage.save();
+      console.log("Updated or added message successfully.");
+    } else {
+      // If the document is not found, create a new document
+      await tagModel.updateOne(
+        { _id: reciverId },
+        {
+          $push: {
+            userLastMessages: {
+              userId: senderId,
+              messageId: messageData1._id,
+            },
+          },
+        },
+        { upsert: true } // Create the document if it doesn't exist
+      );
+      console.log("Added new message to a newly created document.");
+    }
+  } catch (err) {
+    console.error("Error updating or adding message:", err);
+  }
+
   nodeCache.del(`message${senderId}-${reciverId}`);
   nodeCache.del(`message${reciverId}-${senderId}`);
 
@@ -336,7 +444,13 @@ const getConversation = asyncHandler(async (req, res) => {
     })
   );
 
-  userIs = await tagModel.find({ _id: getUserId });
+  userIs = await tagModel
+    .find({ _id: getUserId })
+    .populate({
+      path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
+      select: "createdAt seen seenAt", // Specify which fields to include from Message
+    })
+    .exec();
   // nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
   // }
 
@@ -381,6 +495,11 @@ const clearChatMessage = asyncHandler(async (req, res, next) => {
           const pub = await deleteImage(publicId);
           console.log("delete image<<<<<<<<<", pub);
         }
+        if (userId?.avatarVideo) {
+          const publicId = extractPublicIdFromUrl(userId?.avatarVideo);
+          const pub = await deleteImage(publicId, "video");
+          console.log("delete video<<<<<<<<<", pub);
+        }
         await Message.findByIdAndDelete({
           _id: userId?._id,
         });
@@ -389,6 +508,11 @@ const clearChatMessage = asyncHandler(async (req, res, next) => {
           const publicId = extractPublicIdFromUrl(userId?.avatar);
           const pub = await deleteImage(publicId);
           console.log("delete image<<<<<<<<<", pub);
+        }
+        if (userId?.avatarVideo) {
+          const publicId = extractPublicIdFromUrl(userId?.avatarVideo);
+          const pub = await deleteImage(publicId, "video");
+          console.log("delete video<<<<<<<<<", pub);
         }
         await Message.findByIdAndDelete({
           _id: userId?._id,
