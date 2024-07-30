@@ -29,6 +29,7 @@ import SimplePeer from "simple-peer";
 import {
   addUserMessage,
   clearChatMessageData,
+  clearMessageseensent,
   deleteMessageData,
   getAllUser,
   getConversation,
@@ -266,16 +267,50 @@ const Chatbox = () => {
   function generateUniqueId(length = 30) {
     return uuidv4().replace(/-/g, "").slice(0, length);
   }
+  const clearSeenSentMessage = (senderId) => {
+    setUserConversationDatas((prevUsers) =>
+      prevUsers.map((user) => {
+        console.log("come inside for check data<<<<<<<<<<<,", senderId, user);
+        if (user._id === senderId) {
+          const updatedMessages = user.userLastMessages.map((msg) => {
+            if (msg.userId === emailLocal.userId) {
+              return {
+                ...msg,
+                messageId: null,
+              };
+            }
+            return msg;
+          });
 
+          return {
+            ...user,
+            userLastMessages: updatedMessages,
+          };
+        }
+        return user;
+      })
+    );
+    const data = {
+      senderId: emailLocal.userId,
+      reciverId: senderId,
+    };
+    dispatch(clearMessageseensent(data));
+  };
   useEffect(() => {
     if (reciverEmailAddress?.reciverId !== datafunction[0]?.senderId) {
       //datsa
     } else {
+      console.log(
+        "inside check directly seen messages<<<<<<<<<<",
+        datafunction[0]
+      );
       socket?.emit("SetMessageSeenConfirm", {
         messageId: datafunction[0]?.uniqueId,
         reciverId: datafunction[0]?.senderId,
+        senderId: datafunction[0]?.reciverId,
         date: datafunction[0]?.createdAt,
       });
+      clearSeenSentMessage(datafunction[0]?.senderId);
       const dataForSeen = {
         messageId: datafunction[0]?.uniqueId,
       };
@@ -376,40 +411,51 @@ const Chatbox = () => {
     }
   }, [deleteMessageForUpdated]);
 
-  // const updateSeenStatus = (receiver) => {
-  //   setUserConversationDatas((prevUsers) =>
-  //     prevUsers.map((user) => {
-  //       console.log(
-  //         "come inside this fields<<<<<<<<",
-  //         user?._id,
-  //         "jenish<<<",
-  //         receiver
-  //       );
-  //       if (user._id === receiver) {
-  //         const updatedMessages = user.userLastMessages.map((msg) => {
-  //           if (msg.userId === emailLocal.userId) {
-  //             return {
-  //               ...msg,
-  //               messageId: {
-  //                 ...msg.messageId,
-  //                 seen: true,
-  //                 seenAt: new Date().toISOString(), // Update seenAt to current time
-  //               },
-  //             };
-  //           }
-  //           return msg;
-  //         });
-  //         return {
-  //           ...user,
-  //           userLastMessages: updatedMessages,
-  //         };
-  //       }
-  //       console.log("}||||||||||||||||||||||<<<<<", user);
-  //       return user;
-  //     })
-  //   );
-  // };
+  const updateSeenStatus = (senderId) => {
+    setUserConversationDatas((prevUsers) =>
+      prevUsers.map((user) => {
+        console.log(
+          "come inside this fields<<<<<<<<",
+          user?._id,
+          "jenish<<<",
+          senderId,
+          user._id === senderId
+        );
+        if (user._id === senderId) {
+          const updatedMessages = user.userLastMessages.map((msg) => {
+            if (msg.userId === emailLocal.userId) {
+              return {
+                ...msg,
+                messageId: {
+                  ...msg.messageId,
+                  seen: true,
+                  seenAt: new Date(), // Update seenAt to current time
+                },
+              };
+            }
+            return msg;
+          });
+          console.log("chekc if part if inside come ,<<<<,", {
+            ...user,
+            userLastMessages: updatedMessages,
+          });
 
+          return {
+            ...user,
+            userLastMessages: updatedMessages,
+          };
+        }
+        console.log("}||||||||||||||||||||||<<<<<", user);
+        return user;
+      })
+    );
+  };
+  useEffect(() => {
+    console.log(
+      "seen user conversdatiomn updates<<<<<<<<<<<<<",
+      userConversationData
+    );
+  }, [userConversationData]);
   let pc;
 
   useEffect(() => {
@@ -458,22 +504,25 @@ const Chatbox = () => {
     socket?.on("getMessageNotification", (userDatas) => {
       setreloadUserNotification(userDatas[0]);
     });
-    socket?.on("messageSeenConfirmation", ({ date, messageId, receiver }) => {
-      const currentDate = date.split("T")[0]; // Extract date from createdAt
-      setGetMessage((prevData) => {
-        const newData = { ...prevData };
-        if (newData[currentDate]) {
-          newData[currentDate] = newData[currentDate].map((msg) =>
-            msg.uniqueId === messageId && msg.seen !== true
-              ? { ...msg, seen: true, seenAt: new Date().toISOString() }
-              : msg
-          );
-        }
-        return newData;
-      });
+    socket?.on(
+      "messageSeenConfirmation",
+      ({ date, messageId, receiver, reciverId, senderId }) => {
+        const currentDate = date.split("T")[0]; // Extract date from createdAt
+        setGetMessage((prevData) => {
+          const newData = { ...prevData };
+          if (newData[currentDate]) {
+            newData[currentDate] = newData[currentDate].map((msg) =>
+              msg.uniqueId === messageId && msg.seen !== true
+                ? { ...msg, seen: true, seenAt: new Date().toISOString() }
+                : msg
+            );
+          }
+          return newData;
+        });
 
-      // updateSeenStatus(receiver);
-    });
+        updateSeenStatus(senderId);
+      }
+    );
     socket?.on("getNewUserData", (userStatus) => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
@@ -797,9 +846,7 @@ const Chatbox = () => {
           // Add new userLastMessages entry if userId does not match
           updatedUserLastMessages.push({
             userId: emailLocal.userId,
-            messageId: [newMessage.messageId],
-            createdAt: newMessage.messageId.createdAt,
-            seen: newMessage.messageId.seen,
+            messageId: newMessage.messageId,
           });
           console.log("come in 5<<");
         }
@@ -1558,6 +1605,7 @@ const Chatbox = () => {
                 setSearchUserByName={setSearchUserByName}
                 searchUserByName={searchUserByName}
                 setProductPageNumber={setProductPageNumber}
+                setUserConversationDatas={setUserConversationDatas}
               />
             )}
           </div>
@@ -2124,10 +2172,17 @@ const Chatbox = () => {
                               setCurrentUniueId?.length !== 0 &&
                               Array.isArray(setCurrentUniueId)
                             ) {
+                              console.log(
+                                "check email is valid or not<<<<<<",
+                                emailLocal
+                              );
                               socket?.emit("SetMessageSeenConfirm", {
                                 messageId: setCurrentUniueId[0]?.uniqueId,
                                 reciverId: dt?._id,
                                 date: setCurrentUniueId[0]?.date,
+                                senderId: emailLocal?.userId,
+
+                                // senderId: emailLocal,
                               });
                               const dataForSeen = {
                                 messageId: setCurrentUniueId[0]?.uniqueId,

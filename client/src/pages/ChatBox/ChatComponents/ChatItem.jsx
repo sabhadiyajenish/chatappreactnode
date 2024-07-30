@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Glrs from "../../../assets/image/grls.jpg";
+import { clearMessageseensent } from "../../../store/Message/authApi";
 
 const ChatItem = ({
   dt,
@@ -22,6 +23,7 @@ const ChatItem = ({
   modeTheme,
   setShowMainpart,
   setProductPageNumber,
+  setUserConversationDatas,
 }) => {
   const [seenMessageDate, setSeenMessageDate] = useState("");
   const [sentMessageDate, setSentMessageDate] = useState("");
@@ -66,8 +68,15 @@ const ChatItem = ({
     );
     if (seenMessage) {
       const createdAt = new Date(seenMessage?.messageId?.seenAt);
+      console.log(
+        "come inside check alll messages data for updated chekc<<<<,",
+        createdAt,
+        seenMessage,
+        dt
+      );
       setSeenMessageDate(formatTimeDifference(createdAt));
     }
+
     if (unreadMessage) {
       const createdAt = new Date(unreadMessage?.messageId?.createdAt);
       setSentMessageDate(formatTimeDifference(createdAt));
@@ -112,7 +121,46 @@ const ChatItem = ({
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, [dt, emailLocal?.userId]);
+  const seenMessage = dt?.userLastMessages?.find(
+    (item) =>
+      item?.userId === emailLocal?.userId &&
+      item?.messageId !== null &&
+      item?.messageId?.seen === true
+  );
+  const unreadMessage = dt?.userLastMessages?.find(
+    (item) =>
+      item?.userId === emailLocal?.userId &&
+      item?.messageId !== null &&
+      item?.messageId?.seen !== true
+  );
+  const clearSeenSentMessage = (senderId) => {
+    setUserConversationDatas((prevUsers) =>
+      prevUsers.map((user) => {
+        if (user._id === senderId) {
+          const updatedMessages = user.userLastMessages.map((msg) => {
+            if (msg.userId === emailLocal.userId) {
+              return {
+                ...msg,
+                messageId: null,
+              };
+            }
+            return msg;
+          });
 
+          return {
+            ...user,
+            userLastMessages: updatedMessages,
+          };
+        }
+        return user;
+      })
+    );
+    const data = {
+      senderId: emailLocal.userId,
+      reciverId: senderId,
+    };
+    dispatch(clearMessageseensent(data));
+  };
   return (
     <div
       key={index}
@@ -154,12 +202,14 @@ const ChatItem = ({
               messageId: setCurrentUniueId[0]?.uniqueId,
               reciverId: dt?._id,
               date: setCurrentUniueId[0]?.date,
+              senderId: emailLocal?.userId,
             });
             const dataForSeen = {
               messageId: setCurrentUniueId[0]?.uniqueId,
             };
 
             dispatch(updateSeenChatMessageData(dataForSeen));
+            clearSeenSentMessage(dt?._id);
           }
           setProductPageNumber(1);
           dispatch(
@@ -219,7 +269,7 @@ const ChatItem = ({
                   </p>
                 ) : null
               )
-            ) : sentMessageDate ? (
+            ) : unreadMessage ? (
               <p
                 className={`${
                   modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"
@@ -227,7 +277,7 @@ const ChatItem = ({
               >
                 Sent {sentMessageDate}
               </p>
-            ) : seenMessageDate ? (
+            ) : seenMessage ? (
               <p
                 className={`${
                   modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"

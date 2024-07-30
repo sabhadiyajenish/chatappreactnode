@@ -76,13 +76,27 @@ export const updateSeenChatMessageData = createAsyncThunk(
   async (data) => {
     try {
       const responce = await axios.post(`/messages/updateSeenStatus`, data);
-      console.log("data is user clearChatMessage...<<<<<", responce?.data);
+      console.log("data is user updateSeenStatus...<<<<<", responce?.data);
       return responce?.data;
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);
     }
   }
 );
+
+export const clearMessageseensent = createAsyncThunk(
+  "message/clearMessageseensent",
+  async (data) => {
+    try {
+      const responce = await axios.post(`/messages/clearMessageseensent`, data);
+      console.log("data is user clearMessageseensent...<<<<<", responce?.data);
+      return responce?.data;
+    } catch (error) {
+      console.log("Error in Store Async thunk in Error Api Catch Block", error);
+    }
+  }
+);
+
 export const LogoutUserFun = createAsyncThunk("auth/deleteData", async () => {
   try {
     const responce = await axios.get(USERS.LOGOUT_USER_API, {

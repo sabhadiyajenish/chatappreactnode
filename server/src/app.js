@@ -451,16 +451,21 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on("SetMessageSeenConfirm", ({ date, messageId, reciverId }) => {
-    const receiver = users.find((user) => user.userId === reciverId);
-    if (receiver) {
-      io.to(receiver?.socketId).emit("messageSeenConfirmation", {
-        date,
-        messageId,
-        receiver,
-      });
+  socket.on(
+    "SetMessageSeenConfirm",
+    ({ date, messageId, reciverId, senderId }) => {
+      const receiver = users.find((user) => user.userId === reciverId);
+      if (receiver) {
+        io.to(receiver?.socketId).emit("messageSeenConfirmation", {
+          date,
+          messageId,
+          receiver,
+          reciverId,
+          senderId,
+        });
+      }
     }
-  });
+  );
   socket.on("addUserData", ({ userName, email, password }) => {
     io.emit("getUserData", [
       {

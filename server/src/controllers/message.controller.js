@@ -425,6 +425,44 @@ const getMessage = asyncHandler(async (req, res, next) => {
   );
 });
 
+const Clearseensent = asyncHandler(async (req, res) => {
+  const { senderId, reciverId } = req.body;
+
+  const userLastMessage = await tagModel.findOne({
+    _id: reciverId,
+    userLastMessages: {
+      $elemMatch: {
+        userId: senderId,
+      },
+    },
+  });
+
+  if (userLastMessage) {
+    // Document found, check if the specific message exists
+    const messageIndex = userLastMessage.userLastMessages.findIndex((message) =>
+      message.userId.equals(senderId)
+    );
+
+    if (messageIndex !== -1) {
+      // Message exists, update it
+      userLastMessage.userLastMessages[messageIndex].messageId = null;
+    }
+    // Save the updated user document
+    await userLastMessage.save();
+    console.log("Updated or added message successfully.");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        userLastMessage,
+        "Clearseensent user conversation successfully"
+      )
+    );
+});
+
 const getConversation = asyncHandler(async (req, res) => {
   const { senderId } = req.params;
   // nodeCache.get();
@@ -751,4 +789,5 @@ export {
   AddVideoInClound,
   AddFilePdfDocsInClound,
   getMapDatas,
+  Clearseensent,
 };
