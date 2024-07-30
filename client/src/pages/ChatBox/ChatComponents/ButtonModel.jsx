@@ -36,6 +36,7 @@ const ButtonModel = ({
   userConversationData,
   setPdfDocsSelectedFile,
   handleOpen,
+  updateOrAddMessage,
 }) => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
@@ -78,6 +79,14 @@ const ButtonModel = ({
 
             socket?.emit("addUserNew", newUser);
           }
+          const newMessage = {
+            messageId: {
+              createdAt: new Date(),
+              seen: false,
+            },
+            userId: emailLocal?.userId,
+          };
+          updateOrAddMessage(reciverEmailAddress?.reciverId, newMessage);
           const data = {
             senderId: emailLocal?.userId,
             conversationId: "",

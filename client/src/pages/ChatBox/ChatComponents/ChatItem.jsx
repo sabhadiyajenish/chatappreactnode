@@ -68,12 +68,7 @@ const ChatItem = ({
     );
     if (seenMessage) {
       const createdAt = new Date(seenMessage?.messageId?.seenAt);
-      console.log(
-        "come inside check alll messages data for updated chekc<<<<,",
-        createdAt,
-        seenMessage,
-        dt
-      );
+
       setSeenMessageDate(formatTimeDifference(createdAt));
     }
 
@@ -168,7 +163,7 @@ const ChatItem = ({
         reciverEmailAddress?.email === dt.email
           ? modeTheme === "dark"
             ? "bg-[#526D82] text-[#DDE6ED]"
-            : "bg-[#bce2d4] text-black "
+            : "bg-[#4287b8] text-black "
           : modeTheme === "dark"
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
@@ -250,7 +245,7 @@ const ChatItem = ({
                 reciverEmailAddress?.email === dt.email
                   ? modeTheme === "dark"
                     ? "text-white "
-                    : " text-black "
+                    : " text-white "
                   : " text-white"
               } sm:text-[15px] text-[13px] text-start  font-semibold `}
             >
@@ -272,7 +267,7 @@ const ChatItem = ({
             ) : unreadMessage ? (
               <p
                 className={`${
-                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#E0FFFF]"
                 } mt-1 text-center sm:text-[15px] text-[14px]`}
               >
                 Sent {sentMessageDate}
@@ -280,7 +275,7 @@ const ChatItem = ({
             ) : seenMessage ? (
               <p
                 className={`${
-                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#ccdfb7]"
+                  modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#E0FFFF]"
                 } mt-1 text-center sm:text-[15px] text-[14px]`}
               >
                 Seen {seenMessageDate}

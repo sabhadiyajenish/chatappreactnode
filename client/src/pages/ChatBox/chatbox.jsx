@@ -527,7 +527,6 @@ const Chatbox = () => {
       const CheckUserCon = userConversationData?.find(
         (dr) => dr?._id === reciverEmailAddress?.reciverId
       );
-      p;
 
       if (CheckUserCon === undefined) {
         setTimeout(() => {
@@ -536,7 +535,7 @@ const Chatbox = () => {
             emailLocal?.userId
           );
           dispatch(getConversation(emailLocal?.userId || ""));
-        }, 1000);
+        }, 1500);
       }
     });
     socket?.on("getUserTypingStatus", (userStatus) => {
@@ -1233,7 +1232,14 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
-
+      const newMessage = {
+        messageId: {
+          createdAt: new Date(),
+          seen: false,
+        },
+        userId: emailLocal?.userId,
+      };
+      updateOrAddMessage(reciverEmailAddress?.reciverId, newMessage);
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
@@ -1326,7 +1332,14 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
-
+      const newMessage = {
+        messageId: {
+          createdAt: new Date(),
+          seen: false,
+        },
+        userId: emailLocal?.userId,
+      };
+      updateOrAddMessage(reciverEmailAddress?.reciverId, newMessage);
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
@@ -1409,7 +1422,14 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
-
+      const newMessage = {
+        messageId: {
+          createdAt: new Date(),
+          seen: false,
+        },
+        userId: emailLocal?.userId,
+      };
+      updateOrAddMessage(reciverEmailAddress?.reciverId, newMessage);
       const data = {
         senderId: emailLocal?.userId,
         conversationId: "",
@@ -2461,6 +2481,7 @@ const Chatbox = () => {
           userConversationData={userConversationData}
           setPdfDocsSelectedFile={setPdfDocsSelectedFile}
           handleOpen={handleOpen}
+          updateOrAddMessage={updateOrAddMessage}
         />
       )}
     </>
