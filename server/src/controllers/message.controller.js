@@ -488,6 +488,9 @@ const getConversation = asyncHandler(async (req, res) => {
       path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
       select: "createdAt seen seenAt", // Specify which fields to include from Message
     })
+    .select(
+      "-password -refreshToken -watchHistory -updatedAt -isEmailVerified -loginType"
+    )
     .exec();
   // nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
   // }
@@ -499,12 +502,17 @@ const getConversation = asyncHandler(async (req, res) => {
 
 const getAllUser = asyncHandler(async (req, res, next) => {
   let userIs;
-  if (nodeCache.has("allUserList")) {
-    userIs = JSON.parse(nodeCache.get("allUserList"));
-  } else {
-    userIs = await tagModel.find();
-    nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
-  }
+  // if (nodeCache.has("allUserList")) {
+  //   userIs = JSON.parse(nodeCache.get("allUserList"));
+  // } else {
+  userIs = await tagModel
+    .find({})
+    .select(
+      "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
+    )
+    .exec();
+  nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
+  // }
   return res
     .status(200)
     .json(new ApiResponse(200, userIs, "get All User successfully"));
@@ -776,6 +784,36 @@ const getMapDatas = asyncHandler(async (req, res, next) => {
       .json(new ApiResponse(400, error, "Error fetching data"));
   }
 });
+
+// const getUserLastMessage = asyncHandler(async (req, res) => {
+//   const { senderId } = req.params;
+//   // nodeCache.get();
+//   let userIs;
+
+//   const userData = await Coversation.find({
+//     members: { $in: [senderId] },
+//   });
+//   let getUserId = [];
+//   userData?.map((dr, key) =>
+//     dr.members.filter((dt, kk) => {
+//       if (dt !== senderId) {
+//         getUserId.push(dt);
+//       }
+//     })
+//   );
+
+//   userIs = await tagModel
+//     .find({ _id: getUserId })
+//     .populate({
+//       path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
+//       select: "createdAt seen seenAt", // Specify which fields to include from Message
+//     })
+//     .exec();
+
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, userIs, "get user conversation successfully"));
+// });
 
 export {
   addMessage,

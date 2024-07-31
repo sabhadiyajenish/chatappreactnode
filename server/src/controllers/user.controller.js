@@ -241,7 +241,11 @@ const getUserData = asyncHandler(async (req, res) => {
 });
 
 const getAllUserData = asyncHandler(async (req, res) => {
-  const user = await User.find({});
+  const user = await User.find({})
+    .select(
+      "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
+    )
+    .exec();
 
   return res
     .status(200)

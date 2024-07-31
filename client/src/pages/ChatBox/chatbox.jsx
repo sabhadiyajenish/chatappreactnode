@@ -653,9 +653,13 @@ const Chatbox = () => {
     // socket.emit("joinRoom", roomId); // Join the room for video call
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
       console.log("strea local is here<<<<<<<<<<<", stream);
+
       // Displaying video
+
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }

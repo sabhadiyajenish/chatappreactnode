@@ -90,12 +90,11 @@ const VideoCallSentModel = ({
                 </div>
               </Box>
               {acceptCallStatus && (
-                <div className=" w-fit h-fit border border-red-400">
+                <div className=" w-fit h-fit border border-red-400 bg-neutral-900">
                   <video
                     ref={localVideoRef}
                     autoPlay
                     playsInline
-                    muted
                     style={{ width: "240px", height: "180px" }}
                   ></video>
                   <video

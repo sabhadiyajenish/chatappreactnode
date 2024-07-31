@@ -251,7 +251,7 @@ const ChatList = ({
                               <img
                                 alt="gdg"
                                 src={dt?.avatar ? dt?.avatar : Glrs}
-                                className="sm:w-16 sm:h-16 w-12 h-12 rounded-full object-cover"
+                                className=" w-12 h-12 rounded-full object-cover"
                               />
                               {activeUser.map((dr, key1) => {
                                 return dr.userId === dt._id ? (
@@ -266,7 +266,7 @@ const ChatList = ({
                             </div>
                             <div>
                               <p
-                                className={`sm:text-[16px] text-[13px] ${
+                                className={` text-[13px] ${
                                   modeTheme === "dark" ? "text-white" : null
                                 }`}
                               >
@@ -274,7 +274,7 @@ const ChatList = ({
                                 {dt?.email?.length <= 25 ? null : ".."}
                               </p>
                               <p
-                                className={`sm:text-[16px] text-[13px] text-start ${
+                                className={` text-[13px] text-start ${
                                   modeTheme === "dark"
                                     ? "text-[#b7d7e8]"
                                     : "text-gray-600"

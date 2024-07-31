@@ -268,7 +268,7 @@ const ChatItem = ({
               <p
                 className={`${
                   modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#E0FFFF]"
-                } mt-1 text-center sm:text-[15px] text-[14px]`}
+                } mt-1 text-start sm:text-[15px] text-[14px]`}
               >
                 Sent {sentMessageDate}
               </p>
@@ -276,7 +276,7 @@ const ChatItem = ({
               <p
                 className={`${
                   modeTheme === "dark" ? "text-[#DDE6ED]" : "text-[#E0FFFF]"
-                } mt-1 text-center sm:text-[15px] text-[14px]`}
+                } mt-1 text-start sm:text-[15px] text-[14px]`}
               >
                 Seen {seenMessageDate}
               </p>
@@ -288,7 +288,7 @@ const ChatItem = ({
                       ? "text-[#DDE6ED]"
                       : "text-[#65448d]"
                     : "text-[#dfd7e9]"
-                } mt-1 text-center sm:text-[15px] text-[14px]`}
+                } mt-1  text-start sm:text-[15px] text-[14px]`}
               >
                 {lastSeenText}
               </p>
