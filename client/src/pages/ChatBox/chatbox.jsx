@@ -186,7 +186,6 @@ const Chatbox = () => {
       const themeName = localStorage.getItem("Theme");
       setModeTheme(themeName);
     }
-    dispatch(getUserNotification({ senderId: emailLocal?.userId || "" }));
   }, []);
 
   useEffect(() => {
@@ -263,7 +262,7 @@ const Chatbox = () => {
         getUserNotification({ senderId: JSON.parse(user)?.userId || "" })
       );
     }
-  }, [reloadUserConversation]);
+  }, []);
   function generateUniqueId(length = 30) {
     return uuidv4().replace(/-/g, "").slice(0, length);
   }
@@ -405,7 +404,6 @@ const Chatbox = () => {
         dispatch(deleteMessageData(data));
         setDeleteMessageForUpdated(false);
       } else {
-        console.log(`getMessage[${date}] is not an array or does not exist.`);
         setDeleteMessageForUpdated(false);
       }
     }
@@ -414,13 +412,6 @@ const Chatbox = () => {
   const updateSeenStatus = (senderId) => {
     setUserConversationDatas((prevUsers) =>
       prevUsers.map((user) => {
-        console.log(
-          "come inside this fields<<<<<<<<",
-          user?._id,
-          "jenish<<<",
-          senderId,
-          user._id === senderId
-        );
         if (user._id === senderId) {
           const updatedMessages = user.userLastMessages.map((msg) => {
             if (msg.userId === emailLocal.userId) {
@@ -435,27 +426,16 @@ const Chatbox = () => {
             }
             return msg;
           });
-          console.log("chekc if part if inside come ,<<<<,", {
-            ...user,
-            userLastMessages: updatedMessages,
-          });
 
           return {
             ...user,
             userLastMessages: updatedMessages,
           };
         }
-        console.log("}||||||||||||||||||||||<<<<<", user);
         return user;
       })
     );
   };
-  useEffect(() => {
-    console.log(
-      "seen user conversdatiomn updates<<<<<<<<<<<<<",
-      userConversationData
-    );
-  }, [userConversationData]);
   let pc;
 
   useEffect(() => {
@@ -1578,7 +1558,7 @@ const Chatbox = () => {
   return (
     <>
       <div className="main_chat_div">
-        <div className="grid md:grid-cols-4 grid-cols-2  w-full">
+        <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2  w-full">
           <div
             className={`w-full h-[96vh] md:col-span-1  col-span-2 ${
               showMainPart ? "md:block hidden" : "block"
@@ -1884,7 +1864,7 @@ const Chatbox = () => {
                     >
                       {Object.keys(getMessage)
                         .sort((a, b) => new Date(b) - new Date(a))
-                        .map((date, key) => {
+                        .map((date, key1) => {
                           const CheckFilterDate = getMessage[date].some((obj) =>
                             obj.senderId === emailLocal?.userId
                               ? !obj.userDelete === true
@@ -1893,7 +1873,7 @@ const Chatbox = () => {
 
                           return (
                             <>
-                              <div key={key}>
+                              <div key={key1}>
                                 {CheckFilterDate && (
                                   <div className="text-center flex justify-center my-4">
                                     <h2
@@ -2103,7 +2083,7 @@ const Chatbox = () => {
             </div>
           )}
           <div
-            className={`all_chat_div col-span-1 overflow-y-scroll md:block hidden  pb-3 ${
+            className={`all_chat_div col-span-1 overflow-y-scroll lg:block hidden  pb-3 ${
               modeTheme === "dark" ? "bg-dark" : "bg-slate-200"
             }`}
           >
@@ -2144,7 +2124,7 @@ const Chatbox = () => {
             </div>
             {loadingUsers ? (
               [1, 2, 3, 4, 5, 6, 7]?.map((dt, key) => (
-                <ConversationLoadingPage key={dt} modeTheme={modeTheme} />
+                <ConversationLoadingPage index={dt} modeTheme={modeTheme} />
               ))
             ) : allUserListData?.length === 0 ? (
               <h1

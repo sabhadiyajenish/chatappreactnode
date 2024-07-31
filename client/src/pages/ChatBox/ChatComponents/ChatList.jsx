@@ -57,16 +57,16 @@ const ChatList = ({
         className={` 
        py-4 h-fit overflow-y-scroll center_div_chatApp`}
       >
-        <div className="md:block flex justify-between items-center   ">
+        <div className="lg:block flex justify-between items-center   ">
           <h1
-            className={`text-center sm:text-[16px] text-[12px] font-medium pb-3 md:ml-0 ml-2 ${
+            className={`text-center sm:text-[16px] text-[12px] font-medium pb-3 lg:ml-0 ml-2 ${
               modeTheme === "dark" ? "text-white" : null
             }`}
           >
             Your Chat
           </h1>
           <MdAddCircle
-            className={`sm:w-10 sm:h-10 w-8 h-8 mt-[-8px] mr-1 md:hidden block cursor-pointer ${
+            className={`sm:w-10 sm:h-10 w-8 h-8 mt-[-8px] mr-1 lg:hidden block cursor-pointer ${
               modeTheme === "dark" ? "text-white" : "text-gray-600"
             }`}
             onClick={() => setOpenSearchModel(true)}

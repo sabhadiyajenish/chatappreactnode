@@ -42,7 +42,7 @@ const ChatHeader = ({
         </h4>
       </div>
     </div>
-    <label className="inline-flex items-center cursor-pointer md:ml-10">
+    <label className="inline-flex items-center cursor-pointer md:ml-[70px] xl:ml-0 md:mt-4 xl:mt-0">
       <input
         type="checkbox"
         value={modeTheme}

@@ -167,7 +167,7 @@ const ChatItem = ({
           : modeTheme === "dark"
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
-      }  md:justify-between md:pl-5 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-[6px] md:mx-3 mx-[6px] rounded-md cursor-pointer `}
+      }  md:justify-between xl:pl-5 md:pl-4 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-[6px] md:mx-3 mx-[6px] rounded-md cursor-pointer `}
       onClick={async () => {
         if (reciverEmailAddress?.email !== dt?.email) {
           setReciverEmailaddress({
@@ -226,7 +226,7 @@ const ChatItem = ({
             <img
               alt="gdg"
               src={dt?.avatar || Glrs}
-              className="lg:w-16 md:w-12 w-12 lg:h-16 md:h-12 h-12  rounded-full object-cover"
+              className="xl:w-16 md:w-12  w-12 xl:h-16 md:h-12 h-12  rounded-full object-cover"
             />
             {activeUser.map((dr, key1) =>
               dr?.userId === dt?._id ? (
@@ -239,7 +239,7 @@ const ChatItem = ({
               )
             )}
           </div>
-          <div className="lg:ml-8 md:ml-3 ml-2">
+          <div className="xl:ml-8 lg:ml-6 md:ml-3 ml-2">
             <p
               className={`${
                 reciverEmailAddress?.email === dt.email
