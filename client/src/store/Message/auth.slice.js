@@ -19,8 +19,8 @@ const Message = createSlice({
       })
       .addCase(getUserMessage.fulfilled, (state, action) => {
         const { payload } = action;
-        state.oneUserMessage = payload?.data?.messagesByDate;
-        state.messageLength = payload?.data?.lengthAllMessages;
+        state.oneUserMessage = payload?.messagesByDate;
+        state.messageLength = payload?.lengthAllMessages;
         state.loading = false;
       })
       .addCase(getUserMessage.rejected, (state) => {
@@ -31,7 +31,7 @@ const Message = createSlice({
       })
       .addCase(getAllUser.fulfilled, (state, action) => {
         const { payload } = action;
-        state.userLists = payload?.data;
+        state.userLists = payload;
         state.loadingUsers = false;
       })
       .addCase(getAllUser.rejected, (state) => {
@@ -42,7 +42,7 @@ const Message = createSlice({
       })
       .addCase(getConversation.fulfilled, (state, action) => {
         const { payload } = action;
-        state.conversationData = payload?.data;
+        state.conversationData = payload;
         state.loadingConversation = false;
       })
       .addCase(getConversation.rejected, (state) => {

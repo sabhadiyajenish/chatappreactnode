@@ -5,21 +5,24 @@ import { getUserData } from "../../store/Auth/authApi";
 import NotificationComponent from "../../component/Notification";
 import axios from "../../utils/commonAxios.jsx";
 import { Login as SetLoginAuth } from "../../store/Auth/auth.slice";
+import { ENCRYPTION_KEY } from "../../utils/constant.jsx";
+import { decryptData } from "../../utils/decrypt";
 
 const Home = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const callUserDataApi = async () => {
-    const responce = await axios.get("/user/get-userdata");
-
+    const responce1 = await axios.get("/user/get-userdata");
+    const res = await decryptData(responce1?.data?.data, ENCRYPTION_KEY);
+    const responce = JSON.parse(res);
     const userInfo = {
-      email: responce?.data?.data?.email,
-      userId: responce?.data?.data?._id,
+      email: responce?.email,
+      userId: responce?._id,
     };
 
     localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
-    dispatch(SetLoginAuth(responce?.data?.data));
+    dispatch(SetLoginAuth(responce));
     navigate("/");
   };
   useEffect(() => {

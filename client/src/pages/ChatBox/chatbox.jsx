@@ -43,7 +43,7 @@ import {
 } from "../../store/Notification/notificationApi.js";
 import { getOneUser } from "../../store/Users/userApi";
 import axios from "../../utils/commonAxios.jsx";
-import { SOCKET_URL } from "../../utils/constant";
+import { ENCRYPTION_KEY, SOCKET_URL } from "../../utils/constant";
 import ButtonModel, {
   formatBytes,
   truncateFileName,
@@ -55,6 +55,7 @@ import EmojiModel from "./emoji/emojiModel";
 import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx";
 import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
+import { decryptData } from "../../utils/decrypt.jsx";
 const style = {
   position: "absolute",
   top: "50%",
@@ -131,6 +132,7 @@ const Chatbox = () => {
   const [seeLoginActiveInfo, setLoginActiveInfo] = useState({
     online: false,
   });
+  const [typingStatusChange, setTypingStatusChange] = useState(false);
   const [openButtonModel, setOpenButtonModel] = useState(false);
   const [selectedPdfDocsFile, setPdfDocsSelectedFile] = useState(null);
   const [productPageNumber, setProductPageNumber] = useState(1);
@@ -1432,17 +1434,24 @@ const Chatbox = () => {
   };
 
   useEffect(() => {
-    socket?.emit("addUserTypingStatus", {
-      status: true,
-      senderId: emailLocal?.userId,
-      reciverId: reciverEmailAddress?.reciverId,
-    });
+    if (typingStatusChange !== true) {
+      socket?.emit("addUserTypingStatus", {
+        status: true,
+        senderId: emailLocal?.userId,
+        reciverId: reciverEmailAddress?.reciverId,
+      });
+      setTypingStatusChange(true);
+      console.log("typing status log...............start");
+    }
     let typingTimeout = setTimeout(() => {
       socket?.emit("addUserTypingStatus", {
         status: false,
         senderId: emailLocal?.userId,
         reciverId: reciverEmailAddress?.reciverId,
       });
+      console.log("typing status log>>>>>>>>>>close");
+
+      setTypingStatusChange(false);
     }, 1500); // Reset typing status after 1 second of inactivity
     return () => clearTimeout(typingTimeout); // Clear previous timeout if any
   }, [message]);
@@ -1498,27 +1507,18 @@ const Chatbox = () => {
       limit: 20,
       skip: getTotalMessageCount(),
     };
-    const responce = await axios.post(`/messages/getmessage`, data1);
-    console.log("jenish here DATA messageLength", responce);
+    const responce1 = await axios.post(`/messages/getmessage`, data1);
 
-    if (responce?.data?.success) {
-      // setGetMessage((prevObj) => ({
-      //   ...prevObj, // Add the new objects
-      //   ...responce?.data?.data?.messagesByDate, // Copy the previous state
-      // }));
-
+    const res = await decryptData(responce1?.data?.data, ENCRYPTION_KEY);
+    const responce = JSON.parse(res);
+    if (responce1?.data?.success) {
       {
-        Object.keys(responce?.data?.data?.messagesByDate).map((date, key) => {
-          console.log(
-            "date<<<<<<<<<<<<<<<",
-            date,
-            responce?.data?.data?.messagesByDate[date]
-          );
+        Object.keys(responce?.messagesByDate).map((date, key) => {
           setGetMessage((prevState) => {
             return {
               ...prevState,
               [date]: [
-                ...responce?.data?.data?.messagesByDate[date],
+                ...responce?.messagesByDate[date],
                 ...(prevState[date] || []),
               ],
             };
@@ -1542,21 +1542,6 @@ const Chatbox = () => {
         fetchDataFromMessageApi();
       }, 0);
     }
-
-    // if (target.scrollTop === 0 && !loading) {
-    // if (productPageNumber <= Math.ceil(messageLength / 20))
-    //   if (productPageNumber !== 1) {
-    //     setPageLoadingonScroll(true);
-    //     console.log("jenish here<<<<<<<<<<<<><><><><><><><>", messageLength);
-    // setTimeout(() => {
-    //   fetchDataFromMessageApi();
-
-    // setProductPageNumber((pre) => pre + 1);
-    // }, 1500);
-    //   } else {
-    //     setProductPageNumber(2);
-    //   }
-    // }
   };
 
   return (

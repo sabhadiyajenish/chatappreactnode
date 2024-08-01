@@ -6,7 +6,8 @@ import NavBar from "./pages/NavBarX";
 import { getUserData } from "./store/Auth/authApi";
 import { Login } from "./store/Auth/auth.slice";
 import axios, { Abort } from "./utils/commonAxios";
-import { LOCAL_PATH } from "./utils/constant";
+import { ENCRYPTION_KEY, LOCAL_PATH } from "./utils/constant";
+import { decryptData } from "./utils/decrypt";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -26,11 +27,12 @@ const App = () => {
         //   cancelToken: Abort.token,
         // }
       )
-      .then((response) => {
-        dispatch(Login(response?.data));
+      .then(async (response) => {
+        const res = await decryptData(response?.data?.data, ENCRYPTION_KEY);
+        dispatch(Login(JSON.parse(res)));
       })
-      .catch(() => {
-        console.log("Something is wrong in UsergetData apis catch block");
+      .catch((err) => {
+        console.log("Something is wrong in UsergetData apis catch block", err);
       })
       .finally(() => {
         setLoading(false);

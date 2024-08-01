@@ -14,7 +14,7 @@ const Notification = createSlice({
       })
       .addCase(getUserNotification.fulfilled, (state, action) => {
         const { payload } = action;
-        state.notificationDatas = payload?.data;
+        state.notificationDatas = payload;
         state.loading = false;
       })
       .addCase(getUserNotification.rejected, (state) => {

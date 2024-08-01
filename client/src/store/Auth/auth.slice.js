@@ -11,10 +11,10 @@ const Auth = createSlice({
   reducers: {
     //this is used for without calling apis directy send data into redux
     Login: (state, action) => {
-      // console.log("actions....", action);
+      // console.log("actions....", action?.payload);
       state.userLoggedIn = true;
       state.authTokenGet = localStorage.getItem("token") || "";
-      state.authUser = action?.payload?.data || action?.payload?.user;
+      state.authUser = action?.payload || action?.payload?.user;
     },
   },
   extraReducers(builder) {

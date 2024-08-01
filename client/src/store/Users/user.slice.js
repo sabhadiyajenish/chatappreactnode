@@ -16,7 +16,7 @@ const users = createSlice({
       })
       .addCase(getOneUser.fulfilled, (state, action) => {
         const { payload } = action;
-        state.userOneData = payload?.data;
+        state.userOneData = payload;
       })
       .addCase(getOneUser.rejected, (state) => {
         state.loading = false;

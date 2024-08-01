@@ -207,16 +207,21 @@ const ChatItem = ({
             clearSeenSentMessage(dt?._id);
           }
           setProductPageNumber(1);
-          dispatch(
-            deleteNotificationData({
-              reciverId: emailLocal?.userId,
-              senderId: dt?._id,
-            })
+          const getCountMessage = countMessage?.filter(
+            (datas) => datas?.senderId === dt?._id
           );
-          const setCount = countMessage?.filter(
-            (datas) => datas?.senderId !== dt?._id
-          );
-          setCountMessage(setCount);
+          if (countMessage?.length !== 0 && getCountMessage) {
+            dispatch(
+              deleteNotificationData({
+                reciverId: emailLocal?.userId,
+                senderId: dt?._id,
+              })
+            );
+            const setCount = countMessage?.filter(
+              (datas) => datas?.senderId !== dt?._id
+            );
+            setCountMessage(setCount);
+          }
         }
       }}
     >

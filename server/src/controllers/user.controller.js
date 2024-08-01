@@ -6,6 +6,7 @@ import { fileUploadCloud } from "../utils/cloudinary.js";
 import { UserLoginType, cookieOptions } from "../utils/constant.js";
 import jwt from "jsonwebtoken";
 import { nodeCache } from "../app.js";
+import { encrypt } from "../utils/EncryptDecrypt/encryptDescrypt.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -235,21 +236,30 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const getUserData = asyncHandler(async (req, res) => {
+  const data = JSON.stringify(req?.user);
+  const encryptedData = encrypt(data);
   return res
     .status(200)
-    .json(new ApiResponse(200, req?.user, "UserData Fetched successFully"));
+    .json(new ApiResponse(200, encryptedData, "UserData Fetched successFully"));
 });
 
 const getAllUserData = asyncHandler(async (req, res) => {
-  const user = await User.find({})
-    .select(
-      "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
-    )
-    .exec();
-
+  let userIs;
+  if (nodeCache.has("allUserList")) {
+    userIs = JSON.parse(nodeCache.get("allUserList"));
+  } else {
+    userIs = await User.find({})
+      .select(
+        "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
+      )
+      .exec();
+    nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
+  }
+  const data = JSON.stringify(userIs);
+  const encryptedData = encrypt(data);
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "UserData Fetched successFully"));
+    .json(new ApiResponse(200, encryptedData, "UserData Fetched successFully"));
 });
 
 const handleSocialLogin = asyncHandler(async (req, res) => {

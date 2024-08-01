@@ -13,6 +13,7 @@ import {
 } from "../utils/cloudinary.js";
 import NodeCache from "node-cache";
 import { nodeCache } from "../app.js";
+import { encrypt } from "../utils/EncryptDecrypt/encryptDescrypt.js";
 
 function extractPublicIdFromUrl(url) {
   // Example URL: https://res.cloudinary.com/your_cloud_name/image/upload/public_id.jpg
@@ -23,6 +24,19 @@ function extractPublicIdFromUrl(url) {
   }
   return null; // Return null if no match found
 }
+const invalidateCache = (receiverId, senderId) => {
+  // You might want to invalidate all relevant cache entries
+  // For simplicity, we'll just delete by cache key pattern
+  nodeCache.keys().forEach((key) => {
+    if (
+      key.startsWith(`messages:${receiverId}:${senderId}`) ||
+      key.startsWith(`messages:${senderId}:${receiverId}`)
+    ) {
+      nodeCache.del(key);
+    }
+  });
+};
+
 const addMessage = asyncHandler(async (req, res, next) => {
   const {
     senderId,
@@ -39,6 +53,9 @@ const addMessage = asyncHandler(async (req, res, next) => {
     filePath = "",
     size = "",
   } = req.body;
+  nodeCache.del(`conversation-${senderId}`);
+  nodeCache.del(`conversation-${reciverId}`);
+
   const userData = await Coversation.find({
     members: { $all: [senderId, reciverId] },
   });
@@ -141,9 +158,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
     } catch (err) {
       console.error("Error updating or adding message:", err);
     }
-
-    nodeCache.del(`message${senderId}-${reciverId}`);
-    nodeCache.del(`message${reciverId}-${senderId}`);
+    invalidateCache(reciverId, senderId);
 
     return res
       .status(200)
@@ -250,8 +265,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
     console.error("Error updating or adding message:", err);
   }
 
-  nodeCache.del(`message${senderId}-${reciverId}`);
-  nodeCache.del(`message${reciverId}-${senderId}`);
+  invalidateCache(reciverId, senderId);
 
   return res
     .status(200)
@@ -260,8 +274,7 @@ const addMessage = asyncHandler(async (req, res, next) => {
 
 const deleteMessage = asyncHandler(async (req, res, next) => {
   const { messageId, title = "", senderId, reciverId } = req.body;
-  nodeCache.del(`message${senderId}-${reciverId}`);
-  nodeCache.del(`message${reciverId}-${senderId}`);
+  invalidateCache(reciverId, senderId);
   const userMessage = await Message.findOne({ uniqueId: messageId });
   const Sender = new mongoose.Types.ObjectId(senderId);
   if (!userMessage) {
@@ -354,75 +367,66 @@ const getMessage = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
   // let messagesByDate;
   let lengthAllMessages;
-  // if (nodeCache.has(`message${senderId}-${reciverId}`)) {
-  //   const userData = await Coversation.find({
-  //     members: { $all: [senderId, reciverId] },
-  //   });
-  //   lengthAllMessages = await Message.find({
-  //     conversationId: userData[0]?._id,
-  //     $or: [{ userDelete: false }, { reciverDelete: false }],
-  //   }).count();
-  //   messagesByDate = JSON.parse(
-  //     nodeCache.get(`message${senderId}-${reciverId}`)
-  //   );
-  // } else {
-  const userData = await Coversation.find({
-    members: { $all: [senderId, reciverId] },
-  });
-  if (!userData) {
-    return res
-      .status(200)
-      .json(new ApiResponse(500, "something is wrong in conversation id"));
+  let obj = {};
+  if (nodeCache.has(`messages:${reciverId}:${senderId}:${limit}:${skip}`)) {
+    const dt = JSON.parse(
+      nodeCache.get(`messages:${reciverId}:${senderId}:${limit}:${skip}`)
+    );
+    obj = dt.messagesByDate;
+    lengthAllMessages = dt.lengthAllMessages;
+  } else {
+    const userData = await Coversation.find({
+      members: { $all: [senderId, reciverId] },
+    });
+    if (!userData) {
+      return res
+        .status(200)
+        .json(new ApiResponse(500, "something is wrong in conversation id"));
+    }
+    let allMessages = await Message.find({
+      conversationId: userData[0]?._id,
+      $or: [{ userDelete: false }, { reciverDelete: false }],
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sort in descending order by createdAt
+
+    const allLength = await Message.find({
+      conversationId: userData[0]?._id,
+      $or: [{ userDelete: false }, { reciverDelete: false }],
+    });
+    lengthAllMessages = allLength.length;
+    const formatDate = (date) => date.toISOString().split("T")[0];
+
+    // Organize messages by date
+
+    allMessages?.map((dt) => {
+      const date = formatDate(new Date(dt.createdAt));
+      obj[date] = [];
+    });
+    allMessages
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .reduce((acc, message) => {
+        const date = formatDate(new Date(message.createdAt));
+        if (!obj[date]) {
+          obj[date] = [];
+        }
+        obj[date].push(message);
+        return acc;
+      }, {});
+    nodeCache.set(
+      `messages:${reciverId}:${senderId}:${limit}:${skip}`,
+      JSON.stringify({ messagesByDate: obj, lengthAllMessages })
+    );
   }
-  let allMessages = await Message.find({
-    conversationId: userData[0]?._id,
-    $or: [{ userDelete: false }, { reciverDelete: false }],
-  })
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 }); // Sort in descending order by createdAt
-
-  const allLength = await Message.find({
-    conversationId: userData[0]?._id,
-    $or: [{ userDelete: false }, { reciverDelete: false }],
+  const data = JSON.stringify({
+    messagesByDate: obj,
+    lengthAllMessages,
   });
-  lengthAllMessages = allLength.length;
-  const formatDate = (date) => date.toISOString().split("T")[0];
-
-  // Organize messages by date
-  const obj = {};
-
-  allMessages?.map((dt) => {
-    const date = formatDate(new Date(dt.createdAt));
-    obj[date] = [];
-  });
-  allMessages
-    .sort((a, b) => a.createdAt - b.createdAt)
-    .reduce((acc, message) => {
-      const date = formatDate(new Date(message.createdAt));
-      if (!obj[date]) {
-        obj[date] = [];
-      }
-      obj[date].push(message);
-      return acc;
-    }, {});
-  // nodeCache.set(
-  //   `message${senderId}-${reciverId}`,
-  //   JSON.stringify({ messagesByDate: obj })
-  // );
-  // }
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      // allMessages.reverse(),
-      {
-        messagesByDate: obj,
-        lengthAllMessages,
-      },
-      "get all message successfully"
-    )
-  );
+  const encryptedData = encrypt(data);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, encryptedData, "get all message successfully"));
 });
 
 const Clearseensent = asyncHandler(async (req, res) => {
@@ -467,52 +471,55 @@ const getConversation = asyncHandler(async (req, res) => {
   const { senderId } = req.params;
   // nodeCache.get();
   let userIs;
-  // if (nodeCache.has(`conversation${senderId}`)) {
-  //   userIs = JSON.parse(nodeCache.get(`conversation${senderId}`));
-  // } else {
-  const userData = await Coversation.find({
-    members: { $in: [senderId] },
-  });
-  let getUserId = [];
-  userData?.map((dr, key) =>
-    dr.members.filter((dt, kk) => {
-      if (dt !== senderId) {
-        getUserId.push(dt);
-      }
-    })
-  );
+  if (nodeCache.has(`conversation-${senderId}`)) {
+    userIs = JSON.parse(nodeCache.get(`conversation-${senderId}`));
+  } else {
+    const userData = await Coversation.find({
+      members: { $in: [senderId] },
+    });
+    let getUserId = [];
+    userData?.map((dr, key) =>
+      dr.members.filter((dt, kk) => {
+        if (dt !== senderId) {
+          getUserId.push(dt);
+        }
+      })
+    );
 
-  userIs = await tagModel
-    .find({ _id: getUserId })
-    .populate({
-      path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
-      select: "createdAt seen seenAt", // Specify which fields to include from Message
-    })
-    .select(
-      "-password -refreshToken -watchHistory -updatedAt -isEmailVerified -loginType"
-    )
-    .exec();
-  // nodeCache.set(`conversation${senderId}`, JSON.stringify(userIs), 120);
-  // }
-
+    userIs = await tagModel
+      .find({ _id: getUserId })
+      .populate({
+        path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
+        select: "createdAt seen seenAt", // Specify which fields to include from Message
+      })
+      .select(
+        "-password -refreshToken -watchHistory -updatedAt -isEmailVerified -loginType"
+      )
+      .exec();
+    nodeCache.set(`conversation-${senderId}`, JSON.stringify(userIs));
+  }
+  const data = JSON.stringify(userIs);
+  const encryptedData = encrypt(data);
   return res
     .status(200)
-    .json(new ApiResponse(200, userIs, "get user conversation successfully"));
+    .json(
+      new ApiResponse(200, encryptedData, "get user conversation successfully")
+    );
 });
 
 const getAllUser = asyncHandler(async (req, res, next) => {
   let userIs;
-  // if (nodeCache.has("allUserList")) {
-  //   userIs = JSON.parse(nodeCache.get("allUserList"));
-  // } else {
-  userIs = await tagModel
-    .find({})
-    .select(
-      "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
-    )
-    .exec();
-  nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
-  // }
+  if (nodeCache.has("allUserList")) {
+    userIs = JSON.parse(nodeCache.get("allUserList"));
+  } else {
+    userIs = await tagModel
+      .find({})
+      .select(
+        "-password -refreshToken -loginType -userLastMessages -watchHistory -updatedAt -isEmailVerified"
+      )
+      .exec();
+    nodeCache.set(`allUserList`, JSON.stringify(userIs), 120);
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, userIs, "get All User successfully"));
@@ -520,8 +527,8 @@ const getAllUser = asyncHandler(async (req, res, next) => {
 
 const clearChatMessage = asyncHandler(async (req, res, next) => {
   const { uniqueIds = [], senderId, reciverId } = req.body;
-  nodeCache.del(`message${senderId}-${reciverId}`);
-  nodeCache.del(`message${reciverId}-${senderId}`);
+  invalidateCache(reciverId, senderId);
+
   const userMessage = await Message.find({ uniqueId: uniqueIds });
   const Sender = new mongoose.Types.ObjectId(senderId);
 

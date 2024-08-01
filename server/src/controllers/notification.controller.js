@@ -4,6 +4,8 @@ import tagModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { encrypt } from "../utils/EncryptDecrypt/encryptDescrypt.js";
+import { nodeCache } from "../app.js";
 
 const addNotification = asyncHandler(async (req, res, next) => {
   const { senderId, reciverId, firstMessage, lastMessage, date, uniqueId } =
@@ -21,6 +23,9 @@ const addNotification = asyncHandler(async (req, res, next) => {
     checkHaveRecord.uniqueId = uniqueId;
     checkHaveRecord.date = new Date();
     await checkHaveRecord.save();
+    nodeCache.del(`userNotification_${senderId}`);
+    nodeCache.del(`userNotification_${reciverId}`);
+
     return res
       .status(200)
       .json(
@@ -40,6 +45,9 @@ const addNotification = asyncHandler(async (req, res, next) => {
       uniqueId,
     });
     const messageData = await messageComeData.save();
+    nodeCache.del(`userNotification_${senderId}`);
+    nodeCache.del(`userNotification_${reciverId}`);
+
     return res
       .status(200)
       .json(
@@ -50,22 +58,28 @@ const addNotification = asyncHandler(async (req, res, next) => {
 
 const getNotification = asyncHandler(async (req, res, next) => {
   const { senderId } = req.body;
-  const Sender = new mongoose.Types.ObjectId(senderId);
+  let checkHaveRecord;
+  if (nodeCache.has(`userNotification_${senderId}`)) {
+    checkHaveRecord = JSON.parse(nodeCache.get(`userNotification_${senderId}`));
+  } else {
+    // const Sender = new mongoose.Types.ObjectId(senderId);
 
-  const checkHaveRecord = await Notification.find({
-    $or: [{ senderId: senderId }, { reciverId: senderId }],
-  }).sort({ date: 1 });
+    checkHaveRecord = await Notification.find({
+      $or: [{ senderId: senderId }, { reciverId: senderId }],
+    }).sort({ date: 1 });
+    nodeCache.set(
+      `userNotification_${senderId}`,
+      JSON.stringify(checkHaveRecord)
+    );
+  }
   // .populate({ path: "senderId", select: "email userName" })
   // .populate({ path: "reciverId", select: "email userName" });
-
+  const data = JSON.stringify(checkHaveRecord);
+  const encryptedData = encrypt(data);
   return res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        checkHaveRecord,
-        "notification data get successfully"
-      )
+      new ApiResponse(200, encryptedData, "notification data get successfully")
     );
 });
 const deleteNotification = asyncHandler(async (req, res, next) => {
@@ -102,6 +116,8 @@ const deleteNotification = asyncHandler(async (req, res, next) => {
           )
         );
     }
+    nodeCache.del(`userNotification_${senderId}`);
+    nodeCache.del(`userNotification_${reciverId}`);
 
     return res
       .status(200)

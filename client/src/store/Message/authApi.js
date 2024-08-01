@@ -1,9 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utils/commonAxios.jsx";
-import { USERS } from "../../utils/constant.jsx";
+import { ENCRYPTION_KEY, USERS } from "../../utils/constant.jsx";
 import axiosSimple from "axios";
+import { decryptData } from "../../utils/decrypt.jsx";
 // import { useNavigate } from "react-router-dom";
-
 export const addUserMessage = createAsyncThunk(
   "message/addUserMessage",
   async (data) => {
@@ -22,7 +22,8 @@ export const getUserMessage = createAsyncThunk(
     try {
       const responce = await axios.post(`/messages/getmessage`, data);
       // console.log("data user one messagwe is<<<<<>>> is", responce?.data);
-      return responce?.data;
+      const res = await decryptData(responce?.data?.data, ENCRYPTION_KEY);
+      return JSON.parse(res);
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);
     }
@@ -32,7 +33,8 @@ export const getAllUser = createAsyncThunk("message/getAllUser", async () => {
   try {
     const responce = await axios.get("/user/get-Alluserdata");
     // console.log("data is", responce?.data);
-    return responce?.data;
+    const res = await decryptData(responce?.data?.data, ENCRYPTION_KEY);
+    return JSON.parse(res);
   } catch (error) {
     console.log("Error in Store Async thunk in Error Api Catch Block", error);
   }
@@ -42,7 +44,8 @@ export const getConversation = createAsyncThunk(
   async (data) => {
     try {
       const responce = await axios.get(`/messages/${data}`);
-      return responce?.data;
+      const res = await decryptData(responce?.data?.data, ENCRYPTION_KEY);
+      return JSON.parse(res);
     } catch (error) {
       console.log("Error in Store Async thunk in Error Api Catch Block", error);
     }
