@@ -275,6 +275,8 @@ const addMessage = asyncHandler(async (req, res, next) => {
 const deleteMessage = asyncHandler(async (req, res, next) => {
   const { messageId, title = "", senderId, reciverId } = req.body;
   invalidateCache(reciverId, senderId);
+  nodeCache.del(`conversation-${senderId}`);
+  nodeCache.del(`conversation-${reciverId}`);
   const userMessage = await Message.findOne({ uniqueId: messageId });
   const Sender = new mongoose.Types.ObjectId(senderId);
   if (!userMessage) {
@@ -481,12 +483,12 @@ const getConversation = asyncHandler(async (req, res) => {
     userData?.map((dr, key) =>
       dr.members.filter((dt, kk) => {
         if (dt !== senderId) {
-          getUserId.push(dt);
+          getUserId.push(new mongoose.Types.ObjectId(dt));
         }
       })
     );
 
-    userIs = await tagModel
+    const userDatas = await tagModel
       .find({ _id: getUserId })
       .populate({
         path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
@@ -496,6 +498,9 @@ const getConversation = asyncHandler(async (req, res) => {
         "-password -refreshToken -watchHistory -updatedAt -isEmailVerified -loginType"
       )
       .exec();
+
+    userIs = await getUserLastMessage(senderId, getUserId, userDatas);
+
     nodeCache.set(`conversation-${senderId}`, JSON.stringify(userIs));
   }
   const data = JSON.stringify(userIs);
@@ -528,7 +533,8 @@ const getAllUser = asyncHandler(async (req, res, next) => {
 const clearChatMessage = asyncHandler(async (req, res, next) => {
   const { uniqueIds = [], senderId, reciverId } = req.body;
   invalidateCache(reciverId, senderId);
-
+  nodeCache.del(`conversation-${senderId}`);
+  nodeCache.del(`conversation-${reciverId}`);
   const userMessage = await Message.find({ uniqueId: uniqueIds });
   const Sender = new mongoose.Types.ObjectId(senderId);
 
@@ -792,35 +798,43 @@ const getMapDatas = asyncHandler(async (req, res, next) => {
   }
 });
 
-// const getUserLastMessage = asyncHandler(async (req, res) => {
-//   const { senderId } = req.params;
-//   // nodeCache.get();
-//   let userIs;
+const getUserLastMessage = async (senderId, getUserIds, userList) => {
+  const userIs = await Message.aggregate([
+    {
+      $match: {
+        senderId: new mongoose.Types.ObjectId(senderId),
+        reciverId: { $in: getUserIds },
+        $or: [{ userDelete: false }, { reciverDelete: false }],
+      },
+    },
+    {
+      $sort: { createdAt: -1 },
+    },
+    {
+      $group: {
+        _id: "$reciverId",
+        lastMessage: { $first: "$$ROOT" },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: "$lastMessage" },
+    },
+    {
+      $sort: { createdAt: 1 },
+    },
+  ]);
 
-//   const userData = await Coversation.find({
-//     members: { $in: [senderId] },
-//   });
-//   let getUserId = [];
-//   userData?.map((dr, key) =>
-//     dr.members.filter((dt, kk) => {
-//       if (dt !== senderId) {
-//         getUserId.push(dt);
-//       }
-//     })
-//   );
-
-//   userIs = await tagModel
-//     .find({ _id: getUserId })
-//     .populate({
-//       path: "userLastMessages.messageId", // Populate messageId field in userLastMessages
-//       select: "createdAt seen seenAt", // Specify which fields to include from Message
-//     })
-//     .exec();
-
-//   return res
-//     .status(200)
-//     .json(new ApiResponse(200, userIs, "get user conversation successfully"));
-// });
+  for (let notificationObj of userIs) {
+    const index = userList.findIndex((obj) => {
+      return obj._id.equals(notificationObj.reciverId);
+    });
+    if (index !== -1) {
+      const [obj] = userList.splice(index, 1);
+      userList.unshift(obj);
+    }
+  }
+  return userList;
+};
 
 export {
   addMessage,
@@ -835,4 +849,5 @@ export {
   AddFilePdfDocsInClound,
   getMapDatas,
   Clearseensent,
+  getUserLastMessage,
 };

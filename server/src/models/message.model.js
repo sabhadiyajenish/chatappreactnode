@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
 import UserSchema from "../models/user.model.js";
 import ConId from "../models/conversation.model.js";
-
+import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 const MessageSchema = mongoose.Schema({
   conversationId: {
     type: ObjectId,
@@ -65,5 +65,5 @@ const MessageSchema = mongoose.Schema({
     default: Date.now,
   },
 });
-
+MessageSchema.plugin(aggregatePaginate);
 export default mongoose.model("messages", MessageSchema);

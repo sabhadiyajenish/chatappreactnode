@@ -14,7 +14,7 @@ const Auth = createSlice({
       // console.log("actions....", action?.payload);
       state.userLoggedIn = true;
       state.authTokenGet = localStorage.getItem("token") || "";
-      state.authUser = action?.payload || action?.payload?.user;
+      state.authUser = action?.payload;
     },
   },
   extraReducers(builder) {

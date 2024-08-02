@@ -51,7 +51,7 @@ const Login = () => {
           userId: res?.data?.data?.user?._id,
         };
         localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
-        dispatch(SetLoginAuth(res?.data?.data));
+        dispatch(SetLoginAuth(res?.data?.data?.user));
         dispatch(getOneUser());
         navigate("/");
         toast.success(`${res?.data?.message || ""}.`, {

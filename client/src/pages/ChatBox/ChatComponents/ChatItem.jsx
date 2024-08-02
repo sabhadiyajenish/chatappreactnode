@@ -254,8 +254,8 @@ const ChatItem = ({
                   : " text-white"
               } sm:text-[15px] text-[13px] text-start  font-semibold `}
             >
-              {dt?.userName?.substring(0, 10)}
-              {dt?.userName?.length <= 10 ? null : ".."}
+              {dt?.fullName?.substring(0, 15)}
+              {dt?.fullName?.length <= 15 ? null : ".."}
             </p>
             {countMessage?.some((itm) => itm.senderId === dt._id) ? (
               countMessage?.map((itm, key1) =>

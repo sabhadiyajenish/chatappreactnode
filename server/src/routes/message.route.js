@@ -14,6 +14,7 @@ import {
   AddFilePdfDocsInClound,
   getMapDatas,
   Clearseensent,
+  getUserLastMessage,
 } from "../controllers/message.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -30,6 +31,7 @@ router.route("/deleteMessage").post(authMiddleWare, deleteMessage);
 router.route("/clearChatMessage").post(authMiddleWare, clearChatMessage);
 router.route("/updateSeenStatus").post(authMiddleWare, updateSeenStatus);
 router.route("/clearMessageseensent").post(authMiddleWare, Clearseensent);
+router.route("/getUserLastMessage/:senderId").post(getUserLastMessage);
 
 router.route("/uploadImageInCloud").post(
   authMiddleWare,

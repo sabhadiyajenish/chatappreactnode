@@ -12,6 +12,7 @@ const store = configureStore({
     notificationData: Notification,
     SocketData: SoketEvents,
   },
+  devTools: true,
 });
 
 export default store;

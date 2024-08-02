@@ -23,7 +23,7 @@ export const LogoutUserFun = createAsyncThunk("auth/deleteData", async () => {
     const responce = await axios.get(USERS.LOGOUT_USER_API, {
       withCredentials: true,
     });
-    return responce;
+    return responce?.data;
   } catch (error) {
     console.log(
       "Error in Logout Store Async thunk in Error Api Catch Block",

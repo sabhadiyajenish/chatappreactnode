@@ -55,7 +55,7 @@ const ChatList = ({
     <>
       <div
         className={` 
-       py-4 h-fit overflow-y-scroll center_div_chatApp`}
+       py-4 h-[90vh] overflow-y-scroll center_div_chatApp`}
       >
         <div className="lg:block flex justify-between items-center   ">
           <h1

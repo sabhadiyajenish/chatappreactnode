@@ -207,18 +207,36 @@ const Chatbox = () => {
     mainArray = [...mainArray];
 
     for (let notificationObj of notificationArray) {
-      const index = mainArray.findIndex(
+      const index = mainArray?.findIndex(
         (obj) => obj._id === notificationObj.senderId
       );
+
       if (index !== -1) {
         const obj = mainArray.splice(index, 1)[0];
         mainArray.unshift(obj);
       }
     }
-
     return mainArray;
   }
 
+  function moveOneMessageToTop(mainArray, notificationArray) {
+    if (notificationArray) {
+      mainArray = [...mainArray];
+
+      const index = mainArray.findIndex(
+        (obj) => obj._id === notificationArray.reciverId
+      );
+      console.log("||||||||||||||||<<<<<<<<", index, notificationArray);
+      if (index !== -1) {
+        const obj = mainArray.splice(index, 1)[0];
+        mainArray.unshift(obj);
+      }
+    } else {
+      console.log("||||||||||||||||<<<<<<<<", 12345678);
+    }
+
+    return mainArray;
+  }
   useEffect(() => {
     if (Array.isArray(notificationDatas)) {
       setCountMessage(notificationDatas);
@@ -459,6 +477,7 @@ const Chatbox = () => {
           [currentDate]: [...(prevState[currentDate] || []), user1[0]],
         };
       });
+
       SetDataFunction(user1);
     });
 
@@ -886,7 +905,6 @@ const Chatbox = () => {
 
         socket?.emit("addUserNew", newUser);
       }
-
       const newMessage = {
         messageId: {
           createdAt: new Date(),
@@ -903,6 +921,7 @@ const Chatbox = () => {
         uniqueId: uniqueId,
         message: message,
       };
+
       dispatch(addUserMessage(data));
       setMessage("");
     }
@@ -1434,26 +1453,29 @@ const Chatbox = () => {
   };
 
   useEffect(() => {
-    if (typingStatusChange !== true) {
-      socket?.emit("addUserTypingStatus", {
-        status: true,
-        senderId: emailLocal?.userId,
-        reciverId: reciverEmailAddress?.reciverId,
-      });
-      setTypingStatusChange(true);
-      console.log("typing status log...............start");
-    }
-    let typingTimeout = setTimeout(() => {
-      socket?.emit("addUserTypingStatus", {
-        status: false,
-        senderId: emailLocal?.userId,
-        reciverId: reciverEmailAddress?.reciverId,
-      });
-      console.log("typing status log>>>>>>>>>>close");
+    if (reciverEmailAddress?.reciverId) {
+      if (typingStatusChange !== true) {
+        socket?.emit("addUserTypingStatus", {
+          status: true,
+          senderId: emailLocal?.userId,
+          reciverId: reciverEmailAddress?.reciverId,
+        });
+        setTypingStatusChange(true);
+        console.log("typing status log...............start");
+      }
+      let typingTimeout = setTimeout(() => {
+        socket?.emit("addUserTypingStatus", {
+          status: false,
+          senderId: emailLocal?.userId,
+          reciverId: reciverEmailAddress?.reciverId,
+        });
+        console.log("typing status log>>>>>>>>>>close");
 
-      setTypingStatusChange(false);
-    }, 1500); // Reset typing status after 1 second of inactivity
-    return () => clearTimeout(typingTimeout); // Clear previous timeout if any
+        setTypingStatusChange(false);
+      }, 1500); // Reset typing status after 1 second of inactivity
+
+      return () => clearTimeout(typingTimeout); // Clear previous timeout if any
+    }
   }, [message]);
 
   const handleTyping = (e) => {
@@ -1549,7 +1571,7 @@ const Chatbox = () => {
       <div className="main_chat_div">
         <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2  w-full">
           <div
-            className={`w-full h-[96vh] md:col-span-1  col-span-2 ${
+            className={`w-full h-[96vh] overflow-y-hidden md:col-span-1  col-span-2 ${
               showMainPart ? "md:block hidden" : "block"
             }   border border-dark   ${
               modeTheme === "dark" ? "bg-dark" : null
@@ -1616,7 +1638,7 @@ const Chatbox = () => {
             </>
           ) : (
             <div
-              className={`all_chat_div col-span-2 md:block  ${
+              className={`all_chat_div overflow-y-auto col-span-2 md:block  ${
                 showMainPart ? "block" : "hidden"
               }  ${modeTheme === "dark" ? "bg-dark" : null}`}
             >
@@ -1693,7 +1715,7 @@ const Chatbox = () => {
                             modeTheme === "dark"
                               ? "text-[#DDE6ED]"
                               : "text-blue-500"
-                          } text-start ml-4`}
+                          } text-start sm:ml-4 ml-2`}
                         >
                           Typing...
                         </p>
@@ -2224,7 +2246,7 @@ const Chatbox = () => {
                             src={dt?.avatar ? dt?.avatar : Glrs}
                             className=" w-16 h-16 rounded-full object-cover"
                           />
-                          {activeUser.map((dr, key1) => {
+                          {activeUser?.map((dr, key1) => {
                             return dr.userId === dt._id ? (
                               <span
                                 className=" absolute bottom-0 right-1 bg-[#4CBB17] w-4 h-4 rounded-full"
