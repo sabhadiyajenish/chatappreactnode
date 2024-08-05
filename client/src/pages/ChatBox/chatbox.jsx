@@ -2557,7 +2557,7 @@ const Chatbox = () => {
           width={300}
           height={200}
           autoPlay
-          muted
+          // muted
           style={{ backgroundColor: "black", marginLeft: "50px" }}
         />
       </div>
