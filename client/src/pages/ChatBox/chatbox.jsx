@@ -480,8 +480,10 @@ const Chatbox = () => {
     });
     console.log("instace of p", p);
     const handleSignal = (data) => {
+      console.log("data ia that<<<<", data);
+
       if (p && !p.destroyed) {
-        console.log("data ia<<<", p);
+        console.log("data ia<<<", data);
 
         p.signal(data);
       }
@@ -490,7 +492,9 @@ const Chatbox = () => {
     socket?.on("offer", handleSignal);
     socket?.on("answer", handleSignal);
     socket?.on("ice-candidate", handleSignal);
-    p?.on("icecandidate", (event) => {
+    p.on("icecandidate", (event) => {
+      console.log("icecandidate ia that<<<<", event);
+
       if (event.candidate) {
         socket?.emit("ice-candidate", event.candidate);
       }
@@ -2544,21 +2548,14 @@ const Chatbox = () => {
           updateOrAddMessage={updateOrAddMessage}
         />
       )}
-      <div className="flex ">
-        <video
-          ref={localVideoRef}
-          width={300}
-          height={200}
-          autoPlay
-          style={{ backgroundColor: "black" }}
-        />
+      <div className="flex bg-black">
+        <video ref={localVideoRef} width={300} height={200} autoPlay />
         <video
           ref={remoteVideoRef}
           width={300}
           height={200}
           autoPlay
           // muted
-          style={{ backgroundColor: "black", marginLeft: "50px" }}
         />
       </div>
     </>
