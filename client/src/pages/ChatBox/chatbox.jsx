@@ -521,7 +521,7 @@ const Chatbox = () => {
     });
 
     navigator.mediaDevices
-      .getUserMedia({ audio: true })
+      .getUserMedia({ audio: true, video: true })
       .then((mediaStream) => {
         setStream(mediaStream);
         if (localVideoRef.current) {
