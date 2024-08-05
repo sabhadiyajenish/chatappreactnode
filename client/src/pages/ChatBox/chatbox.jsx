@@ -147,7 +147,6 @@ const Chatbox = () => {
   const [isCalling, setIsCalling] = useState(false); // Flag for initiating a call
   const [isCallAccepted, setIsCallAccepted] = useState(false); // Flag for call acceptance
   const [peer, setPeer] = useState(null); // SimplePeer instance for WebRTC connection
-  const [stream, setStream] = useState(null);
   const localVideoRef = useRef(null); // Ref for local video element
   const remoteVideoRef = useRef(null);
   const messageDom = useRef(null);
@@ -457,62 +456,6 @@ const Chatbox = () => {
       })
     );
   };
-
-  useEffect(() => {
-    const p = new SimplePeer({
-      initiator: true, // Change based on your needs
-      trickle: false,
-      stream,
-    });
-
-    setPeer(p);
-
-    p.on("signal", (data) => {
-      console.log("Signal data:", data);
-      socket.emit("offer", data); // Send signaling data to the server
-    });
-
-    p.on("stream", (remoteStream) => {
-      if (remoteVideoRef.current) {
-        console.log("Remote stream received:", remoteStream);
-        remoteVideoRef.current.srcObject = remoteStream; // Display remote stream
-      }
-    });
-    console.log("instace of p", p);
-    const handleSignal = (data) => {
-      console.log("data ia that<<<<", data);
-
-      if (p && !p.destroyed) {
-        console.log("data ia<<<", data);
-
-        p.signal(data);
-      }
-    };
-
-    socket?.on("offer", handleSignal);
-    socket?.on("answer", handleSignal);
-    socket?.on("ice-candidate", handleSignal);
-    p.on("icecandidate", (event) => {
-      console.log("icecandidate ia that<<<<", event);
-
-      if (event.candidate) {
-        socket?.emit("ice-candidate", event.candidate);
-      }
-    });
-    p.on("close", () => {
-      console.log("Peer connection closed");
-      setPeer(null); // Clean up peer reference
-    });
-    return () => {
-      if (p) {
-        p.destroy(); // Ensure peer is destroyed
-      }
-      // if (socket) {
-      //   socket.disconnect(); // Disconnect socket
-      // }
-    };
-  }, [stream, socket]);
-
   let pc;
 
   useEffect(() => {
@@ -523,21 +466,6 @@ const Chatbox = () => {
         setLastSeenUser(lastSeenData);
       }
     });
-
-    navigator.mediaDevices
-      .getUserMedia({ audio: true, video: true })
-      .then((mediaStream) => {
-        setStream(mediaStream);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = mediaStream;
-        }
-      })
-      .catch((err) => console.error("MediaStream error:", err));
-
-    // Create a new peer connection
-
-    // Handle ICE candidates
-
     socket?.on("getMessage", (user1) => {
       // setActiveUser(user);
       setPageLoadingonScroll(false);
@@ -637,7 +565,10 @@ const Chatbox = () => {
 
     socket?.on("streamUser", async ({ signalData, receiverId }) => {
       console.log(`Received signal from ${receiverId}`, signalData);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
       // if (localVideoRef.current) {
       //   localVideoRef.current.srcObject = stream;
       // }
@@ -697,7 +628,6 @@ const Chatbox = () => {
 
     setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
   }, [socket]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -749,6 +679,7 @@ const Chatbox = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+        video: true,
       });
       console.log("strea local is here<<<<<<<<<<<", stream);
 
@@ -2548,7 +2479,7 @@ const Chatbox = () => {
           updateOrAddMessage={updateOrAddMessage}
         />
       )}
-      <div className="flex bg-black">
+      <div className="flex">
         <video ref={localVideoRef} width={300} height={200} autoPlay />
         <video
           ref={remoteVideoRef}
