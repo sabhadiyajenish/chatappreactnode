@@ -1,7 +1,13 @@
 import EmojiPicker from "emoji-picker-react";
 import React from "react";
 
-const EmojiModel = ({ emojiRef, addHandleEmoji, open, emojiAddInMessage }) => {
+const EmojiModel = ({
+  emojiRef,
+  addHandleEmoji,
+  open,
+  emojiAddInMessage,
+  modeTheme,
+}) => {
   return (
     <div
       id="default-modal"
@@ -13,7 +19,7 @@ const EmojiModel = ({ emojiRef, addHandleEmoji, open, emojiAddInMessage }) => {
         className="relative p-0 w-full lg:max-w-[40rem] md:max-w-[30rem] max-w-[20rem]"
         ref={emojiRef}
       >
-        <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+        <div className="relative bg-white rounded-lg shadow dark:bg-gray-700 ">
           <EmojiPicker
             open={open}
             onEmojiClick={(e) => {
@@ -21,6 +27,10 @@ const EmojiModel = ({ emojiRef, addHandleEmoji, open, emojiAddInMessage }) => {
               emojiAddInMessage((prev) => prev + e.emoji);
             }}
             style={{ width: "100%" }}
+            theme={modeTheme === "dark" ? "dark" : "light"}
+            autoFocusSearch={false}
+            // reactionsDefaultOpen={true}
+            // allowExpandReactions={false}
           />
         </div>
       </div>

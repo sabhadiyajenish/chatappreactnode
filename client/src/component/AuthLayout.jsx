@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-const AuthLayout = ({ children, authentication = true }) => {
-  const [Loadings, setLoadings] = useState(true);
+const withAuth = (WrappedComponent, authentication = true) => {
+  return (props) => {
+    const [loading, setLoading] = useState(true);
+    const { userLoggedIn } = useSelector((state) => state.counter);
+    const navigate = useNavigate();
 
-  const { authUser, userLoggedIn, authTokenGet, loading } = useSelector(
-    (state) => {
-      //get redux Auth data here
-      return state.counter;
+    useEffect(() => {
+      const checkAuth = () => {
+        if (authentication && !userLoggedIn) {
+          navigate("/login");
+        } else if (!authentication && userLoggedIn) {
+          navigate("/");
+        } else {
+          setLoading(false);
+        }
+      };
+
+      checkAuth();
+    }, [authentication, userLoggedIn, navigate]);
+
+    if (loading) {
+      return <div>Loading...</div>; // Or any loading component you prefer
     }
-  );
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  useEffect(() => {
-    if (authentication && userLoggedIn !== authentication) {
-      navigate("/login");
-      setLoadings(false);
-    } else if (!authentication && userLoggedIn !== authentication) {
-      navigate("/");
-      setLoadings(false);
-    }
-    setLoadings(false);
-  }, [authentication, userLoggedIn, navigate]);
-
-  return <>{children} </>;
+    return <WrappedComponent {...props} />;
+  };
 };
 
-export default AuthLayout;
+export default withAuth;

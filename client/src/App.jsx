@@ -55,7 +55,12 @@ const App = () => {
         className="flex w-full h-full text-center"
         style={{ width: "100%", height: "100vh", textAlign: "center" }}
       >
-        <h1>Please wait for a second......</h1>
+        <h1 className="text-start text-blue-700">
+          Please wait for a seconds because server host in Render-Cloud with
+          free domain so if you not use Your server so within 1 minit server go
+          to sleep mode so currently in sleeping state now server take time to
+          Start......
+        </h1>
       </div>
     </>
   );

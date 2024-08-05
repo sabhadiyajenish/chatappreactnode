@@ -491,7 +491,6 @@ const Chatbox = () => {
         : userDatas[0]?.avatarVideo
         ? "Video"
         : "Image";
-      console.log("jenish<<<<<", userDatas[0], validMessage);
       dispatch(
         addUserNotification({
           senderId: userDatas[0]?.senderId,
@@ -809,25 +808,17 @@ const Chatbox = () => {
   };
   const updateOrAddMessage = (userId, newMessage) => {
     // Assuming `data` is the state containing the user information
-    const updatedData = userConversationData.map((user) => {
+    const updatedData = userConversationData?.map((user) => {
       if (user._id === userId) {
         // User found, process their messages
         let updatedUserLastMessages = [...user.userLastMessages];
-        const existingMessageIndex = updatedUserLastMessages.findIndex(
+        const existingMessageIndex = updatedUserLastMessages?.findIndex(
           (msg) => msg.userId === emailLocal.userId
         );
-        console.log(
-          "come in 1<<",
-          updatedUserLastMessages,
-          existingMessageIndex
-        );
+
         if (existingMessageIndex > -1) {
           // Existing message found, update it
           const existingMessage = updatedUserLastMessages[existingMessageIndex];
-          // const messageIdExists = existingMessage.messageId.find(
-          //   msg => msg._id === newMessage.messageId._id
-          // );
-          console.log("come in 2<<", existingMessage);
 
           if (existingMessage) {
             // Update existing messageId
@@ -835,20 +826,12 @@ const Chatbox = () => {
               ...existingMessage,
               messageId: newMessage?.messageId,
             };
-            console.log(
-              "come in 3<<",
-              updatedUserLastMessages[existingMessageIndex]
-            );
           } else {
             // Add new messageId
             updatedUserLastMessages[existingMessageIndex] = {
               ...existingMessage,
               messageId: newMessage.messageId,
             };
-            console.log(
-              "come in 4<<",
-              updatedUserLastMessages[existingMessageIndex]
-            );
           }
         } else {
           // Add new userLastMessages entry if userId does not match
@@ -856,7 +839,6 @@ const Chatbox = () => {
             userId: emailLocal.userId,
             messageId: newMessage.messageId,
           });
-          console.log("come in 5<<");
         }
 
         return {
@@ -864,7 +846,6 @@ const Chatbox = () => {
           userLastMessages: updatedUserLastMessages,
         };
       } else {
-        console.log("come in <<<<6");
       }
       return user;
     });
@@ -872,7 +853,6 @@ const Chatbox = () => {
     // Update state with updatedData
     // Assuming you have a setState function to update the state
     setUserConversationDatas(updatedData);
-    console.log("data is jenish<<<<<<<", updatedData);
   };
   const handleSend = async (e) => {
     e.preventDefault();
@@ -961,11 +941,13 @@ const Chatbox = () => {
     let latestDate = null;
 
     // Find the latest date
-    Object.keys(getMessage).forEach((date) => {
-      if (!latestDate || new Date(date) > new Date(latestDate)) {
-        latestDate = date;
-      }
-    });
+    if (getMessage) {
+      Object.keys(getMessage)?.forEach((date) => {
+        if (!latestDate || new Date(date) > new Date(latestDate)) {
+          latestDate = date;
+        }
+      });
+    }
 
     // If there's a latest date, find the last message index for that date
     if (latestDate) {
@@ -1465,7 +1447,6 @@ const Chatbox = () => {
           reciverId: reciverEmailAddress?.reciverId,
         });
         setTypingStatusChange(true);
-        console.log("typing status log...............start");
       }
       let typingTimeout = setTimeout(() => {
         socket?.emit("addUserTypingStatus", {
@@ -1473,7 +1454,6 @@ const Chatbox = () => {
           senderId: emailLocal?.userId,
           reciverId: reciverEmailAddress?.reciverId,
         });
-        console.log("typing status log>>>>>>>>>>close");
 
         setTypingStatusChange(false);
       }, 1500); // Reset typing status after 1 second of inactivity
@@ -1557,12 +1537,12 @@ const Chatbox = () => {
   const handleScroll = () => {
     // const target = event.target;
     if (productPageNumber < Math.ceil(messageLength / 20)) {
-      console.log(
-        "jenish here<<<<<<<<<<<<><><><><><><><>",
-        messageLength,
-        getTotalMessageCount(),
-        Object.keys(getMessage).length
-      );
+      // console.log(
+      //   "jenish here<<<<<<<<<<<<><><><><><><><>",
+      //   messageLength,
+      //   getTotalMessageCount(),
+      //   Object.keys(getMessage).length
+      // );
       setPageLoadingonScroll(true);
       setTimeout(() => {
         fetchDataFromMessageApi();
@@ -2092,6 +2072,7 @@ const Chatbox = () => {
                     addHandleEmoji={setHandleOpenEmoji}
                     open={handleOpenEmoji}
                     emojiAddInMessage={setMessage}
+                    modeTheme={modeTheme}
                   />
                 )}
               </div>
@@ -2479,7 +2460,7 @@ const Chatbox = () => {
           updateOrAddMessage={updateOrAddMessage}
         />
       )}
-      <div className="flex">
+      {/* <div className="flex">
         <video ref={localVideoRef} width={300} height={200} autoPlay />
         <video
           ref={remoteVideoRef}
@@ -2488,7 +2469,7 @@ const Chatbox = () => {
           autoPlay
           // muted
         />
-      </div>
+      </div> */}
     </>
   );
 };

@@ -313,13 +313,13 @@ const ChatMessage = ({
                   leaveFrom="transform opacity-100 scale-100"
                   leaveTo="transform opacity-0 scale-95"
                 >
-                  <Menu.Items className="absolute  top-0 right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <Menu.Items className="absolute  top-[-60px] right-2 z-50 mt-2 w-32 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <Menu.Item>
                       {({ active }) => (
                         <button
                           className={classNames(
                             active ? "w-full bg-gray-100" : "",
-                            "w-full block px-2 py-2 text-sm text-gray-700"
+                            "w-full block md:px-4 px-2 text-center md:py-2 py-1 text-sm text-gray-700"
                           )}
                           onClick={() => {
                             const uniqueData = getMessage[date]?.filter(
@@ -353,7 +353,7 @@ const ChatMessage = ({
                           <button
                             className={classNames(
                               active ? "w-full bg-gray-100" : "",
-                              "w-full block px-4 py-2 text-sm text-gray-700"
+                              "w-full block md:px-4 px-2 text-center md:py-2 py-1 text-sm text-gray-700"
                             )}
                             onClick={() => {
                               socket?.emit("deleteMessageFromBoth", {
@@ -375,7 +375,7 @@ const ChatMessage = ({
                           <button
                             className={classNames(
                               active ? "w-full bg-gray-100" : "",
-                              "w-full block px-2 py-2 text-sm text-gray-700"
+                              "w-full block md:px-4 px-2 text-center md:py-2 py-1 text-sm text-gray-700"
                             )}
                             onClick={() => handleDownload(dt?.avatar)}
                           >
@@ -438,13 +438,13 @@ const ChatMessage = ({
                 leaveFrom="transform opacity-100 scale-100"
                 leaveTo="transform opacity-0 scale-95"
               >
-                <Menu.Items className="absolute top-0 z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <Menu.Items className="absolute top-[-60px] z-50 mt-2 ml-3 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <Menu.Item>
                     {({ active }) => (
                       <button
                         className={classNames(
                           active ? "w-full bg-gray-100" : "",
-                          "w-full block px-2 py-2 text-sm text-gray-700"
+                          "w-full block md:px-4 px-2 text-center md:py-2 py-1 text-sm text-gray-700"
                         )}
                         onClick={() => {
                           const uniqueData = getMessage[date]?.filter(
@@ -477,7 +477,7 @@ const ChatMessage = ({
                         <button
                           className={classNames(
                             active ? "w-full bg-gray-100" : "",
-                            "w-full block px-2 py-2 text-sm text-gray-700"
+                            "w-full block md:px-4 px-2 text-center md:py-2 py-1 text-sm text-gray-700"
                           )}
                           onClick={() => handleDownload(dt?.avatar)}
                         >

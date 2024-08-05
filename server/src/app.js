@@ -129,6 +129,7 @@ import { Query } from "mongoose";
 import GraphqlQuery from "../graphql/query.js";
 import ResolverGraphql from "../graphql/resolver/resolver.js";
 import SocketEvents from "./socket/socketEvent.js";
+import { ApiError } from "./utils/ApiError.js";
 
 SocketEvents(io);
 
@@ -142,6 +143,17 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/notification", messageNotificationRoutes);
 
+app.use((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json(err.toJSON());
+  }
+  // Handle other types of errors or forward to default error handler
+  return res.status(500).json({
+    statusCode: 500,
+    message: "Internal Server Error",
+    success: false,
+  });
+});
 // socket connection code
 
 // const io = new Server(2525, {

@@ -1,70 +1,30 @@
-import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/home/home";
 import Login from "./pages/login/login";
 import Service from "./pages/service/service";
 import Contact from "./pages/contact/contact";
 import User from "./pages/user/user";
-import App from "./App.jsx";
 import Register from "./pages/register/register.jsx";
-import AuthLayout from "./component/AuthLayout.jsx";
+import withAuth from "./component/AuthLayout.jsx";
+import { createBrowserRouter } from "react-router-dom";
+import App from "./App.jsx";
+const AuthHome = withAuth(Home, true);
+const AuthService = withAuth(Service, true);
+const AuthUser = withAuth(User, true);
+const AuthLogin = withAuth(Login, false);
+const AuthRegister = withAuth(Register, false);
 
 export const Router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      {
-        path: "/",
-        element: (
-          <AuthLayout authentication>
-            <Home />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "/login",
-        element: (
-          <AuthLayout authentication={false}>
-            <Login />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "/register",
-        element: (
-          <AuthLayout authentication={false}>
-            <Register />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "/service",
-        element: (
-          <AuthLayout authentication>
-            <Service />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "/about",
-        element: <div>Hello about page!</div>,
-      },
-      {
-        path: "/contact",
-        element: <Contact />,
-      },
-      {
-        path: "/user",
-        element: (
-          <AuthLayout authentication>
-            <User />
-          </AuthLayout>
-        ),
-      },
-      {
-        path: "*",
-        element: <div>No page found plz go home page!</div>,
-      },
+      { path: "/", element: <AuthHome /> },
+      { path: "/login", element: <AuthLogin /> },
+      { path: "/register", element: <AuthRegister /> },
+      { path: "/service", element: <AuthService /> },
+      { path: "/contact", element: <Contact /> },
+      { path: "/user", element: <AuthUser /> },
+      { path: "*", element: <div>No page found plz go home page!</div> },
     ],
   },
 ]);
