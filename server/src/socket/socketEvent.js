@@ -350,6 +350,24 @@ const SocketEvents = (io) => {
       ]);
     });
 
+    socket.on("offer", (data) => {
+      console.log("offers", data);
+
+      socket.broadcast.emit("offer", data);
+    });
+
+    socket.on("answer", (data) => {
+      console.log("answer", data);
+
+      socket.broadcast.emit("answer", data);
+    });
+
+    socket.on("ice-candidate", (data) => {
+      console.log("ice-candeldate", data);
+
+      socket.broadcast.emit("ice-candidate", data);
+    });
+
     socket.on("disconnect", () => {
       const user = users.find((user) => user.socketId === socket.id);
       if (user) {
