@@ -156,6 +156,59 @@ const ChatItem = ({
     };
     dispatch(clearMessageseensent(data));
   };
+  const handleGotoChatPage = async (dt) => {
+    if (reciverEmailAddress?.email !== dt?.email) {
+      setReciverEmailaddress({
+        email: dt?.email,
+        reciverId: dt?._id,
+        avatar: dt?.avatar,
+        userName: dt?.userName,
+        _id: dt?._id,
+      });
+      setReciverChatData(dt?._id);
+      setShowMainpart(true);
+      const data1 = {
+        senderId: emailLocal?.userId,
+        reciverId: dt._id,
+      };
+      dispatch(getUserMessage(data1));
+
+      const setCurrentUniueId = countMessage?.filter(
+        (datas) => datas?.senderId === dt?._id
+      );
+
+      if (setCurrentUniueId?.length !== 0 && Array.isArray(setCurrentUniueId)) {
+        socket?.emit("SetMessageSeenConfirm", {
+          messageId: setCurrentUniueId[0]?.uniqueId,
+          reciverId: dt?._id,
+          date: setCurrentUniueId[0]?.date,
+          senderId: emailLocal?.userId,
+        });
+        const dataForSeen = {
+          messageId: setCurrentUniueId[0]?.uniqueId,
+        };
+
+        dispatch(updateSeenChatMessageData(dataForSeen));
+        clearSeenSentMessage(dt?._id);
+      }
+      setProductPageNumber(1);
+      const getCountMessage = countMessage?.filter(
+        (datas) => datas?.senderId === dt?._id
+      );
+      if (countMessage?.length !== 0 && getCountMessage) {
+        dispatch(
+          deleteNotificationData({
+            reciverId: emailLocal?.userId,
+            senderId: dt?._id,
+          })
+        );
+        const setCount = countMessage?.filter(
+          (datas) => datas?.senderId !== dt?._id
+        );
+        setCountMessage(setCount);
+      }
+    }
+  };
   return (
     <div
       key={index}
@@ -168,62 +221,7 @@ const ChatItem = ({
           ? "bg-[#27374D]"
           : "bg-[#034f84]"
       }  md:justify-between xl:pl-5 md:pl-4 pl-2 justify-center flex-wrap items-center gap-x-2 min-h-16  py-2 md:my-2 my-[6px] md:mx-3 mx-[6px] rounded-md cursor-pointer `}
-      onClick={async () => {
-        if (reciverEmailAddress?.email !== dt?.email) {
-          setReciverEmailaddress({
-            email: dt?.email,
-            reciverId: dt?._id,
-            avatar: dt?.avatar,
-            userName: dt?.userName,
-            _id: dt?._id,
-          });
-          setReciverChatData(dt?._id);
-          setShowMainpart(true);
-          const data1 = {
-            senderId: emailLocal?.userId,
-            reciverId: dt._id,
-          };
-          dispatch(getUserMessage(data1));
-
-          const setCurrentUniueId = countMessage?.filter(
-            (datas) => datas?.senderId === dt?._id
-          );
-
-          if (
-            setCurrentUniueId?.length !== 0 &&
-            Array.isArray(setCurrentUniueId)
-          ) {
-            socket?.emit("SetMessageSeenConfirm", {
-              messageId: setCurrentUniueId[0]?.uniqueId,
-              reciverId: dt?._id,
-              date: setCurrentUniueId[0]?.date,
-              senderId: emailLocal?.userId,
-            });
-            const dataForSeen = {
-              messageId: setCurrentUniueId[0]?.uniqueId,
-            };
-
-            dispatch(updateSeenChatMessageData(dataForSeen));
-            clearSeenSentMessage(dt?._id);
-          }
-          setProductPageNumber(1);
-          const getCountMessage = countMessage?.filter(
-            (datas) => datas?.senderId === dt?._id
-          );
-          if (countMessage?.length !== 0 && getCountMessage) {
-            dispatch(
-              deleteNotificationData({
-                reciverId: emailLocal?.userId,
-                senderId: dt?._id,
-              })
-            );
-            const setCount = countMessage?.filter(
-              (datas) => datas?.senderId !== dt?._id
-            );
-            setCountMessage(setCount);
-          }
-        }
-      }}
+      onClick={() => handleGotoChatPage(dt)}
     >
       <div className="flex justify-between items-center  w-full ">
         <div className="flex items-center">

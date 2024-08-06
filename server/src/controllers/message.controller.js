@@ -802,9 +802,18 @@ const getUserLastMessage = async (senderId, getUserIds, userList) => {
   const userIs = await Message.aggregate([
     {
       $match: {
-        senderId: new mongoose.Types.ObjectId(senderId),
-        reciverId: { $in: getUserIds },
-        $or: [{ userDelete: false }, { reciverDelete: false }],
+        $or: [
+          {
+            senderId: new mongoose.Types.ObjectId(senderId),
+            reciverId: { $in: getUserIds },
+            $or: [{ userDelete: false }, { reciverDelete: false }],
+          },
+          {
+            senderId: { $in: getUserIds },
+            reciverId: new mongoose.Types.ObjectId(senderId),
+            $or: [{ userDelete: false }, { reciverDelete: false }],
+          },
+        ],
       },
     },
     {

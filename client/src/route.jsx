@@ -7,7 +7,7 @@ import Register from "./pages/register/register.jsx";
 import withAuth from "./component/AuthLayout.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
-const AuthHome = withAuth(Home, true);
+const AuthHome = withAuth(Home, false);
 const AuthService = withAuth(Service, true);
 const AuthUser = withAuth(User, true);
 const AuthLogin = withAuth(Login, false);

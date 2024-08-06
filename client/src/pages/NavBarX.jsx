@@ -146,20 +146,21 @@ export default function NavBar() {
                           </NavLink>
                         )}
                       </Menu.Item>
-
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={LogoutUser}
-                            className={classNames(
-                              active ? "w-full bg-gray-100" : "",
-                              "w-full block px-4 py-2 text-sm text-gray-700"
-                            )}
-                          >
-                            Sign out
-                          </button>
-                        )}
-                      </Menu.Item>
+                      {authUser && (
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              onClick={LogoutUser}
+                              className={classNames(
+                                active ? "w-full bg-gray-100" : "",
+                                "w-full block px-4 py-2 text-sm text-gray-700"
+                              )}
+                            >
+                              Sign out
+                            </button>
+                          )}
+                        </Menu.Item>
+                      )}
                     </Menu.Items>
                   </Transition>
                 </Menu>

@@ -27,6 +27,10 @@ const Home = () => {
   };
   useEffect(() => {
     if (searchParams.get("accessToken") && searchParams.get("refreshToken")) {
+      console.log(
+        "come in home page with login<<<<<<<<<<<<<<<<<<<",
+        searchParams
+      );
       localStorage.setItem("accessToken", searchParams.get("accessToken"));
       localStorage.setItem("refreshToken", searchParams.get("refreshToken"));
 

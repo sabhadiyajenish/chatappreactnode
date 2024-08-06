@@ -1553,7 +1553,7 @@ const Chatbox = () => {
   return (
     <>
       <div className="main_chat_div">
-        <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2  w-full">
+        <div className=" grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2  w-full">
           <div
             className={`w-full h-[96vh] overflow-y-hidden md:col-span-1  col-span-2 ${
               showMainPart ? "md:block hidden" : "block"
