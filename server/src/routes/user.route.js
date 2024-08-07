@@ -14,6 +14,18 @@ import { signUpSchemaValidation } from "../utils/schemaValidation.js";
 import { authMiddleWare } from "../middlewares/auth.middleware.js";
 import passport from "passport";
 import "../passport/index.js";
+import { rateLimit } from "express-rate-limit";
+import { ApiError } from "../utils/ApiError.js";
+
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 40000, // 15 minutes
+  limit: 2, // Limit each IP to 5 login requests per windowMs
+  message: new ApiError(
+    400,
+    "Too many requests for Login from this IP, please try again later."
+  ),
+  statusCode: "500",
+});
 
 const routes = express.Router();
 
@@ -32,7 +44,7 @@ routes.route("/register").post(
   Register
 );
 
-routes.route("/login").post(LoginUser);
+routes.route("/login").post(loginLimiter, LoginUser);
 
 routes.route("/refresh-token").post(refreshAccessToken);
 
