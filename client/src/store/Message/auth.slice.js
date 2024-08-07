@@ -11,7 +11,11 @@ const Message = createSlice({
     loadingUsers: false,
     loadingConversation: false,
   },
-  reducers: {},
+  reducers: {
+    changeMessagesLength: (state, action) => {
+      state.messageLength = action?.payload;
+    },
+  },
   extraReducers(builder) {
     builder
       .addCase(getUserMessage.pending, (state) => {
@@ -51,5 +55,6 @@ const Message = createSlice({
   },
 });
 const { actions, reducer } = Message;
-// export const { "" } = actions;
+export const { changeMessagesLength } = actions;
+
 export default reducer;

@@ -44,6 +44,7 @@ const ChatList = ({
   setSearchUserByName,
   setUserConversationDatas,
   setProductPageNumber,
+  setGetMessage,
 }) => {
   const [openSearchModel, setOpenSearchModel] = useState(false);
 
@@ -109,6 +110,7 @@ const ChatList = ({
               setShowMainpart={setShowMainpart}
               setProductPageNumber={setProductPageNumber}
               setUserConversationDatas={setUserConversationDatas}
+              setGetMessage={setGetMessage}
             />
           );
         })}

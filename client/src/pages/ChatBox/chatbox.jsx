@@ -56,6 +56,7 @@ import ConversationLoadingPage from "./loadingPages/conversationLoadingPage.jsx"
 import VideoCallCutAfterModel from "./videoCall/videoCallCutAfterModel.jsx";
 import VideoCallSentModel from "./videoCall/videoCallSentModel.jsx";
 import { decryptData } from "../../utils/decrypt.jsx";
+import cache from "../../utils/cache.js";
 const style = {
   position: "absolute",
   top: "50%",
@@ -192,7 +193,15 @@ const Chatbox = () => {
 
   useEffect(() => {
     dispatch(getOneUser());
-    dispatch(getAllUser());
+    const cachedData = cache.get("getAllUsers");
+
+    if (cachedData) {
+      // Use cached data
+      setAllUserListData(cachedData);
+      return;
+    } else {
+      dispatch(getAllUser());
+    }
   }, []);
   useEffect(() => {
     const socket = io(SOCKET_URL); // Initialize socket connection
@@ -277,7 +286,9 @@ const Chatbox = () => {
     const user = localStorage.getItem("userInfo");
     if (user !== undefined) {
       setEmailLocal(JSON.parse(localStorage.getItem("userInfo")));
+
       dispatch(getConversation(JSON.parse(user)?.userId || ""));
+
       dispatch(
         getUserNotification({ senderId: JSON.parse(user)?.userId || "" })
       );
@@ -477,6 +488,8 @@ const Chatbox = () => {
           [currentDate]: [...(prevState[currentDate] || []), user1[0]],
         };
       });
+      cache.delete(`getUserMessage-${user1[0]?.senderId}`);
+      cache.delete(`getUserMessage-${user1[0]?.reciverId}`);
 
       SetDataFunction(user1);
     });
@@ -1585,6 +1598,7 @@ const Chatbox = () => {
                 emailLocal={emailLocal}
                 dispatch={dispatch}
                 getUserMessage={getUserMessage}
+                setGetMessage={setGetMessage}
                 countMessage={countMessage}
                 socket={socket}
                 updateSeenChatMessageData={updateSeenChatMessageData}

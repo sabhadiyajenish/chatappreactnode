@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import Glrs from "../../../assets/image/grls.jpg";
 import { clearMessageseensent } from "../../../store/Message/authApi";
-
+import cache from "../../../utils/cache";
+import { changeMessagesLength } from "../../../store/Message/auth.slice";
 const ChatItem = ({
   dt,
   index,
@@ -24,6 +25,7 @@ const ChatItem = ({
   setShowMainpart,
   setProductPageNumber,
   setUserConversationDatas,
+  setGetMessage,
 }) => {
   const [seenMessageDate, setSeenMessageDate] = useState("");
   const [sentMessageDate, setSentMessageDate] = useState("");
@@ -171,7 +173,16 @@ const ChatItem = ({
         senderId: emailLocal?.userId,
         reciverId: dt._id,
       };
-      dispatch(getUserMessage(data1));
+      const cachedData = cache.get(`getUserMessage-${dt._id}`);
+
+      if (cachedData) {
+        // Use cached data
+
+        setGetMessage(cachedData?.messagesByDate);
+        dispatch(changeMessagesLength(cachedData?.lengthAllMessages));
+      } else {
+        dispatch(getUserMessage(data1));
+      }
 
       const setCurrentUniueId = countMessage?.filter(
         (datas) => datas?.senderId === dt?._id
