@@ -14,7 +14,7 @@ import {
   truncateFileName,
   truncateFileNameViaMessage,
 } from "../ChatComponents/ButtonModel";
-
+import ReactPlayer from "react-player";
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   let hours = date.getHours();
@@ -230,10 +230,17 @@ const ChatMessage = ({
                 </div>
               ) : dt.avatarVideo ? (
                 <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
-                  <video controls width="270" className="text-black">
+                  {/* <video controls width="270" className="text-black">
                     <source src={dt.avatarVideo} type="video/mp4" />
                     Your browser does not support the video tag.
-                  </video>
+                  </video> */}
+                  <ReactPlayer
+                    className="react-player"
+                    url={dt.avatarVideo}
+                    controls={true}
+                    width="270px"
+                    height="100%"
+                  />
                   <span
                     className={`text-[11px] ${
                       modeTheme === "dark" ? " text-white" : "text-blue-300"
@@ -533,10 +540,13 @@ const ChatMessage = ({
               </div>
             ) : dt.avatarVideo ? (
               <div className="you_chat_text mr-3 p-0 bg-white text-start chat_time relative mt-2">
-                <video controls width="270" className="text-black">
-                  <source src={dt.avatarVideo} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                <ReactPlayer
+                  className="react-player"
+                  url={dt.avatarVideo}
+                  controls={true}
+                  width="270px"
+                  height="100%"
+                />
                 <span
                   className={`text-[11px] ${
                     modeTheme === "dark" ? " text-white" : "text-blue-300"
