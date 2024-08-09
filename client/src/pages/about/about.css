@@ -1,21 +1,8 @@
-.canvas-container {
-  overflow: hidden; /* Prevent scrolling */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  width: 1080px; /* Instagram story width */
-  height: 1920px; /* Instagram story height */
-  border: 1px solid #ddd; /* Optional border for visual clarity */
-  background-color: #f8f9fa; /* Optional background color */
-  margin: 0 auto; /* Center the container horizontally */
-}
-
 body,
 html {
   margin: 0; /* Remove default margin */
   padding: 0; /* Remove default padding */
-  overflow-y: hidden; /* Hide vertical scrollbar */
+  /* overflow-y: hidden; Hide vertical scrollbar */
 }
 
 .dropzone {

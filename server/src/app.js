@@ -1,4 +1,4 @@
-import express from "express";
+import express, { json } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
@@ -150,7 +150,7 @@ app.use((err, req, res, next) => {
   // Handle other types of errors or forward to default error handler
   return res.status(500).json({
     statusCode: 500,
-    message: "Internal Server Error",
+    message: `Internal Server Error${err}`,
     success: false,
   });
 });

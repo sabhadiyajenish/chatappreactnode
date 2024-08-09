@@ -264,7 +264,6 @@ const getAllUserData = asyncHandler(async (req, res) => {
 
 const handleSocialLogin = asyncHandler(async (req, res) => {
   console.log("come in >>>>>>>>>>>>>>>>>>>>>>>");
-  debugger;
   const user = await User.findById(req.user?._id);
   if (!user) {
     throw new ApiError(404, "User does not exist");
@@ -272,6 +271,10 @@ const handleSocialLogin = asyncHandler(async (req, res) => {
 
   const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(
     user?._id
+  );
+  console.log(
+    "<<<<<<<<<<<",
+    `${process.env.CLIENT_SSO_REDIRECT_URL}?accessToken=${accessToken}&refreshToken=${refreshToken}`
   );
 
   return res

@@ -11,7 +11,7 @@ const About = () => {
   useEffect(() => {
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
       width: 1080, // Instagram story width
-      height: 1920, // Instagram story height
+      height: 800, // Instagram story height
       selection: true, // Allow selecting objects
     });
     setCanvas(fabricCanvas);
@@ -37,7 +37,7 @@ const About = () => {
 
             scaleX: canvas.width / imgElement.width,
             scaleY: canvas.height / imgElement.height,
-            selectable: true, // Prevent resizing and moving
+            selectable: false, // Prevent resizing and moving
           });
 
           canvas.clear(); // Clear previous content
@@ -124,7 +124,9 @@ const About = () => {
       <button onClick={handleAddText}>Add Text</button>
       <button onClick={handleDeleteSelected}>Delete Selected</button>{" "}
       {/* Button to delete selected objects */}
-      <canvas ref={canvasRef} className="canvas" />
+      <div className="flex justify-center">
+        <canvas ref={canvasRef} className="canvas" />
+      </div>
       <button onClick={handleExport} className="bg-slate-400">
         Export Image
       </button>
