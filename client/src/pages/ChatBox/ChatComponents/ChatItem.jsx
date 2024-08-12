@@ -236,7 +236,7 @@ const ChatItem = ({
     >
       <div className="flex justify-between items-center  w-full ">
         <div className="flex items-center">
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} onClick={() => {}}>
             <img
               alt="gdg"
               src={dt?.avatar || Glrs}

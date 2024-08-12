@@ -169,7 +169,7 @@ export default function NavBar() {
           </div>
 
           <Disclosure.Panel className="sm:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2">
+            <div className="space-y-1 px-2 pb-3 pt-2 overflow-x-scroll">
               {navigation.map((item) => (
                 <NavLink
                   active={true}

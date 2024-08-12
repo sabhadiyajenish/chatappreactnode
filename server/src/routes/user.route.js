@@ -22,7 +22,7 @@ const loginLimiter = rateLimit({
   limit: 2, // Limit each IP to 5 login requests per windowMs
   message: new ApiError(
     400,
-    "Too many requests for Login from this IP, please try again later."
+    "Too many requests for Login from this Website, please try again later."
   ),
   statusCode: "500",
 });

@@ -1,5 +1,5 @@
 import { useGoogleLogin } from "@react-oauth/google";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -24,6 +24,7 @@ import { getOneUser } from "../../store/Users/userApi.js";
 import toast from "react-hot-toast";
 
 const Login = () => {
+  const [loadingLogin, setLoadingLogin] = useState(false);
   const {
     register,
     handleSubmit,
@@ -41,6 +42,7 @@ const Login = () => {
 
   const LoginUser = async (logData) => {
     try {
+      setLoadingLogin(true);
       const res = await axios.post(USERS.LOGIN_USER_API, logData);
       console.log("res", res);
       if (res && res?.data?.success) {
@@ -53,12 +55,15 @@ const Login = () => {
         localStorage.setItem("userInfo", JSON.stringify(userInfo || {}));
         dispatch(SetLoginAuth(res?.data?.data?.user));
         dispatch(getOneUser());
+        setLoadingLogin(false);
         navigate("/");
         toast.success(`${res?.data?.message || ""}.`, {
           duration: 3000,
           position: "top-center",
         });
       } else {
+        setLoadingLogin(false);
+
         console.log("jenish res", res);
         navigate("/login");
       }
@@ -67,13 +72,14 @@ const Login = () => {
         duration: 3000,
         position: "top-center",
       });
+      setLoadingLogin(false);
 
       console.log(error);
     }
   };
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-fit">
       <section className="w-full flex flex-col md:flex-row items-center">
         <div className="bg-blue-600 hidden md:block w-full md:w-1/2 xl:w-2/3 h-screen">
           <img
@@ -141,6 +147,7 @@ const Login = () => {
               </div>
               <Button
                 type="submit"
+                disabled={loadingLogin}
                 className="w-full block bg-blue-500 hover:bg-blue-400 focus:bg-blue-400 text-white font-semibold rounded-lg
                                                   px-4 py-3 mt-6"
               >

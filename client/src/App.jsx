@@ -35,6 +35,7 @@ const App = () => {
         console.log("Something is wrong in UsergetData apis catch block", err);
       })
       .finally(() => {
+        // console.clear();
         setLoading(false);
       });
     // return () => {
@@ -55,7 +56,7 @@ const App = () => {
         className="flex w-full h-full text-center"
         style={{ width: "100%", height: "100vh", textAlign: "center" }}
       >
-        <h1 className="text-start text-blue-700">
+        <h1 className="text-start text-blue-700 text-[25px]">
           Please wait for a seconds because server host in Render-Cloud with
           free domain so if you not use Your server so within 1 minit server go
           to sleep mode so currently in sleeping state now server take time to
