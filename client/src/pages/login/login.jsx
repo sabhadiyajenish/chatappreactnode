@@ -80,7 +80,7 @@ const Login = () => {
 
   return (
     <div className="w-full h-fit">
-      <section className="w-full flex flex-col md:flex-row items-center">
+      <section className="w-full flex flex-col md:flex-row items-center  ">
         <div className="bg-blue-600 hidden md:block w-full md:w-1/2 xl:w-2/3 h-screen">
           <img
             src="https://images.unsplash.com/photo-1444313431167-e7921088a9d3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1441&q=100"
@@ -89,11 +89,11 @@ const Login = () => {
           />
         </div>
         <div
-          className="bg-white w-full sm:max-w-md md:max-w-md lg:max-w-full md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12
+          className="dark:bg-gray-900 w-full sm:max-w-md md:max-w-md lg:max-w-full md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12
                                     flex items-center justify-center"
         >
           <div className="w-full h-100">
-            <h1 className="text-xl md:text-2xl font-bold leading-tight mt-12">
+            <h1 className="text-xl md:text-2xl font-bold leading-tight mt-12 dark:text-white">
               Log in to your account
             </h1>
 
@@ -140,7 +140,7 @@ const Login = () => {
               <div className="text-right mt-2">
                 <Link
                   to="/login"
-                  className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:text-blue-700"
+                  className="text-sm font-semibold text-gray-700 dark:text-white hover:text-blue-700 focus:text-blue-700"
                 >
                   Forgot Password?
                 </Link>
@@ -148,7 +148,7 @@ const Login = () => {
               <Button
                 type="submit"
                 disabled={loadingLogin}
-                className="w-full block bg-blue-500 hover:bg-blue-400 focus:bg-blue-400 text-white font-semibold rounded-lg
+                className="w-full block bg-blue-500 dark:bg-black hover:bg-blue-400 focus:bg-blue-400 text-white  font-semibold rounded-lg
                                                   px-4 py-3 mt-6"
               >
                 {" "}
@@ -192,7 +192,7 @@ const Login = () => {
                 <span className="ml-4">Log in with Github</span>
               </div>
             </button>
-            <p className="mt-8">
+            <p className="mt-8 dark:text-white">
               Need an account?{" "}
               <NavLink
                 to="/register"
