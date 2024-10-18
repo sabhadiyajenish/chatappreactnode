@@ -7,6 +7,7 @@ import { UserLoginType, cookieOptions } from "../utils/constant.js";
 import jwt from "jsonwebtoken";
 import { nodeCache } from "../app.js";
 import { encrypt } from "../utils/EncryptDecrypt/encryptDescrypt.js";
+import axios from "axios";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -187,7 +188,22 @@ const LogoutUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "something wrong while logouting User");
   }
 });
-
+const UserGetWebapp = asyncHandler(async (req, res) => {
+  try {
+    try {
+      const response = await axios.get("https://www.wikipedia.org");
+      return res
+        .status(200)
+        .json(new ApiResponse(200, response.data, "Register Successfully.."));
+    } catch (error) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, error, "failed Successfully.."));
+    }
+  } catch (error) {
+    throw new ApiError(400, "something wrong while logouting User", error);
+  }
+});
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookie?.refreshToken || req.body?.refreshToken;
@@ -295,4 +311,5 @@ export {
   getUserData,
   handleSocialLogin,
   getAllUserData,
+  UserGetWebapp,
 };

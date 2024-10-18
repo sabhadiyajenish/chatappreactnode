@@ -355,6 +355,17 @@ const SocketEvents = (io) => {
 
       socket.broadcast.emit("offer", data);
     });
+    socket.emit("me1", socket.id);
+    socket.on("call-user1", (data) => {
+      io.to(data.userToCall).emit("receive-call1", {
+        signal: data.signal,
+        from: data.from,
+      });
+    });
+
+    socket.on("answer-call1", (data) => {
+      io.to(data.to).emit("call-accepted1", data.signal);
+    });
 
     socket.on("answer", (data) => {
       console.log("answer", data);

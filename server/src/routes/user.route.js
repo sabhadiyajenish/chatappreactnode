@@ -7,6 +7,7 @@ import {
   refreshAccessToken,
   handleSocialLogin,
   getAllUserData,
+  UserGetWebapp,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -50,6 +51,7 @@ routes.route("/refresh-token").post(refreshAccessToken);
 
 //Secure Routes to use Auth Middleware
 routes.route("/logout").get(authMiddleWare, LogoutUser);
+routes.route("/getwebsitescript").get(UserGetWebapp);
 
 routes.route("/get-userdata").get(authMiddleWare, getUserData);
 routes.route("/get-Alluserdata").get(authMiddleWare, getAllUserData);

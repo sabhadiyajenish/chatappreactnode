@@ -23,8 +23,8 @@ export default function NavBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(() => {
-    const savedMode = localStorage.getItem("darkMode");
-    return savedMode === "true" ? true : false; // Convert string to boolean
+    const savedMode = localStorage.getItem("Theme");
+    return savedMode === "dark" ? true : false; // Convert string to boolean
   });
   const { authUser } = useSelector((state) => {
     return state.counter;
@@ -33,10 +33,10 @@ export default function NavBar() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("darkMode", "true"); // Save dark mode preference
+      localStorage.setItem("Theme", "dark"); // Save dark mode preference
     } else {
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("darkMode", "false"); // Save light mode preference
+      localStorage.setItem("Theme", "light"); // Save light mode preference
     }
   }, [darkMode]);
 
