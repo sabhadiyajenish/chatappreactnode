@@ -6,17 +6,18 @@ import "./about.css";
 const About = () => {
   const [canvas, setCanvas] = useState(null);
   const [isItemSelected, setIsItemSelected] = useState(false);
-  const [selectedObject, setSelectedObject] = useState(null); // Use for both text and images
+  const [selectedObject, setSelectedObject] = useState(null);
   const [fontSize, setFontSize] = useState(30);
   const [textColor, setTextColor] = useState("blue");
   const [bgColor, setBgColor] = useState("");
   const [selectedAnimation, setSelectedAnimation] = useState("none");
   const [textAlign, setTextAlign] = useState("left");
-  const [animationDelay, setAnimationDelay] = useState(0); // New state for delay
-  const [editingAnimation, setEditingAnimation] = useState(null); // New state for editing
+  const [animationDelay, setAnimationDelay] = useState(0);
+  const [editingAnimation, setEditingAnimation] = useState(null);
   const canvasRef = useRef(null);
-  const animationsQueue = useRef([]); // Stores animations for each text
+  const animationsQueue = useRef([]);
   const [selectedObjectAnimations, setSelectedObjectAnimations] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false); // To track if animation is playing
 
   useEffect(() => {
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
@@ -32,20 +33,18 @@ const About = () => {
       setSelectedObject(activeObject);
 
       if (activeObject) {
-        // Load existing animations for the selected object
         const animationsForObject = animationsQueue.current.filter(
           (item) => item.object === activeObject
         );
         setSelectedObjectAnimations(animationsForObject);
 
-        // Load animation delay if already set
         const queuedAnimation = animationsQueue.current.find(
           (item) => item.object === activeObject
         );
         if (queuedAnimation) {
-          setAnimationDelay(queuedAnimation.delay || 0); // Load the delay from the queue
+          setAnimationDelay(queuedAnimation.delay || 0);
         } else {
-          setAnimationDelay(0); // Reset delay if no animation is queued
+          setAnimationDelay(0);
         }
 
         if (activeObject.type === "textbox") {
@@ -64,8 +63,8 @@ const About = () => {
     fabricCanvas.on("selection:cleared", () => {
       setSelectedObject(null);
       setIsItemSelected(false);
-      setAnimationDelay(0); // Reset the delay when no object is selected
-      setSelectedObjectAnimations([]); // Clear the animation list when no object is selected
+      setAnimationDelay(0);
+      setSelectedObjectAnimations([]);
     });
 
     return () => {
@@ -92,7 +91,6 @@ const About = () => {
   };
 
   const applyTextAnimation = (object, animation, resolve) => {
-    // Reset text properties before animation
     resetTextProperties(object);
     switch (animation) {
       case "fadeIn":
@@ -481,16 +479,71 @@ const About = () => {
     canvas.renderAll();
   };
 
-  // Play all animations in the queue sequentially with delay
+  // Play all animations in the queue sequentially with hiding and showing objects
   const playAllAnimations = async () => {
+    setIsPlaying(true);
     const animations = animationsQueue.current;
-    for (let animation of animations) {
+
+    // Initially hide all text objects except for images
+    canvas.getObjects().forEach((obj) => {
+      if (obj.type === "textbox") {
+        obj.set({ opacity: 0 }); // Hide text objects initially
+      } else if (obj.type === "image") {
+        obj.set({ opacity: 1 }); // Keep images visible
+      }
+    });
+    canvas.renderAll(); // Render after hiding text objects
+
+    let totalTimeElapsed = 0; // Cumulative delay time to track
+
+    for (let i = 0; i < animations.length; i++) {
+      const animation = animations[i];
+
+      // Wait for the delay for this animation
       await new Promise((resolve) => {
         setTimeout(() => {
-          applyTextAnimation(animation.object, animation.animation, resolve);
-        }, animation.delay); // Delay before starting the animation
+          // Instead of hiding all objects, show the previous animated objects
+          canvas.getObjects().forEach((obj) => {
+            if (
+              obj.type === "textbox" &&
+              animations.slice(0, i).some((a) => a.object === obj)
+            ) {
+              obj.set({ opacity: 1 }); // Keep previously animated objects visible
+            }
+          });
+
+          // Show and animate the current text object
+          if (animation.object.type === "textbox") {
+            animation.object.set({ opacity: 1 }); // Show current object
+            applyTextAnimation(animation.object, animation.animation, resolve);
+          } else {
+            resolve(); // If not a text object, resolve immediately
+          }
+
+          // Render the canvas after showing and starting the animation
+          canvas.renderAll();
+        }, totalTimeElapsed + animation.delay); // Trigger based on cumulative delay
       });
+
+      totalTimeElapsed += animation.delay; // Add the delay for the next animation
     }
+
+    // After all animations, keep all text objects visible
+    canvas.getObjects().forEach((obj) => {
+      if (obj.type === "textbox") {
+        obj.set({ opacity: 1 });
+      }
+    });
+    canvas.renderAll();
+    setIsPlaying(false);
+  };
+
+  // Stop all animations and reset objects to their original state
+  const stopAnimations = () => {
+    setIsPlaying(false);
+    // Restore all objects visibility
+    canvas.getObjects().forEach((obj) => obj.set({ opacity: 1 }));
+    canvas.renderAll();
   };
 
   const handleTextAlignChange = (align) => {
@@ -509,7 +562,7 @@ const About = () => {
         (item) => item.object === selectedObject
       );
       if (queuedAnimation) {
-        queuedAnimation.delay = delay; // Update delay for the selected object
+        queuedAnimation.delay = delay;
         console.log(
           `Updated delay to ${delay}ms for the selected object in the queue.`
         );
@@ -517,14 +570,12 @@ const About = () => {
     }
   };
 
-  // Edit an animation
   const handleEditAnimation = (anim) => {
     setSelectedAnimation(anim.animation);
     setAnimationDelay(anim.delay);
-    setEditingAnimation(anim); // Set the animation currently being edited
+    setEditingAnimation(anim);
   };
 
-  // Save the edited animation
   const saveEditedAnimation = () => {
     if (editingAnimation) {
       const updatedQueue = animationsQueue.current.map((anim) => {
@@ -552,11 +603,10 @@ const About = () => {
       });
 
       setSelectedObjectAnimations(updatedAnimations);
-      setEditingAnimation(null); // Clear editing state
+      setEditingAnimation(null);
     }
   };
 
-  // Remove an animation from the queue
   const removeAnimationFromQueue = (animationToRemove) => {
     animationsQueue.current = animationsQueue.current.filter(
       (item) => item !== animationToRemove
@@ -566,18 +616,13 @@ const About = () => {
     );
   };
 
-  // Delete the selected object from canvas and all associated data
   const deleteSelectedObject = () => {
     if (selectedObject) {
-      // Remove the object from the canvas
       canvas.remove(selectedObject);
-
-      // Remove the object from the animations queue
       animationsQueue.current = animationsQueue.current.filter(
         (item) => item.object !== selectedObject
       );
 
-      // Reset the state
       setSelectedObject(null);
       setIsItemSelected(false);
       setSelectedObjectAnimations([]);
@@ -588,7 +633,6 @@ const About = () => {
     }
   };
 
-  // Image Upload with Dropzone
   const onDrop = useCallback(
     (acceptedFiles) => {
       acceptedFiles.forEach((file) => {
@@ -617,7 +661,6 @@ const About = () => {
 
   return (
     <div className="flex">
-      {/* Dropzone */}
       <div className="w-1/6 h-screen bg-gray-100 p-4">
         <div {...getRootProps()} className="dropzone">
           <input {...getInputProps()} />
@@ -701,7 +744,6 @@ const About = () => {
                     console.log(`Animation ${selectedAnimation} completed`);
                   });
 
-                  // Add to queue for later playback
                   animationsQueue.current.push({
                     object: selectedObject,
                     animation: selectedAnimation,
@@ -753,7 +795,6 @@ const About = () => {
           ))}
         </div>
 
-        {/* Delete Selected Object */}
         {isItemSelected && (
           <div className="mt-6">
             <button
@@ -804,7 +845,6 @@ const About = () => {
           </div>
         )}
 
-        {/* Play All Animations */}
         <div className="mt-6">
           <button
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
@@ -813,14 +853,10 @@ const About = () => {
             Play All Animations
           </button>
           <button
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded mt-4"
-            onClick={() => {
-              animationsQueue.current = [];
-              setSelectedObjectAnimations([]);
-              console.log("Animation queue cleared");
-            }}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mt-4"
+            onClick={stopAnimations} // Stop all animations and reset
           >
-            Clear Animation Queue
+            Stop Playing
           </button>
         </div>
       </div>
