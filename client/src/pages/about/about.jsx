@@ -1,17 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as fabric from "fabric";
+import { useDropzone } from "react-dropzone";
 import "./about.css";
 
 const About = () => {
   const [canvas, setCanvas] = useState(null);
   const [isItemSelected, setIsItemSelected] = useState(false);
-  const [selectedTextObject, setSelectedTextObject] = useState(null);
+  const [selectedObject, setSelectedObject] = useState(null); // Use for both text and images
   const [fontSize, setFontSize] = useState(30);
   const [textColor, setTextColor] = useState("blue");
-  const [bgColor, setBgColor] = useState("white");
+  const [bgColor, setBgColor] = useState("");
   const [selectedAnimation, setSelectedAnimation] = useState("none");
   const [textAlign, setTextAlign] = useState("left");
   const [animationDelay, setAnimationDelay] = useState(0); // New state for delay
+  const [editingAnimation, setEditingAnimation] = useState(null); // New state for editing
   const canvasRef = useRef(null);
   const animationsQueue = useRef([]); // Stores animations for each text
   const [selectedObjectAnimations, setSelectedObjectAnimations] = useState([]);
@@ -27,10 +29,9 @@ const About = () => {
     const onSelectionChange = () => {
       const activeObject = fabricCanvas.getActiveObject();
       setIsItemSelected(!!activeObject);
+      setSelectedObject(activeObject);
 
-      if (activeObject && activeObject.type === "textbox") {
-        setSelectedTextObject(activeObject);
-
+      if (activeObject) {
         // Load existing animations for the selected object
         const animationsForObject = animationsQueue.current.filter(
           (item) => item.object === activeObject
@@ -47,19 +48,22 @@ const About = () => {
           setAnimationDelay(0); // Reset delay if no animation is queued
         }
 
-        setFontSize(activeObject.fontSize || 30);
-        setTextColor(activeObject.fill || "blue");
-        setBgColor(activeObject.backgroundColor || "white");
-        setTextAlign(activeObject.textAlign || "left");
+        if (activeObject.type === "textbox") {
+          setFontSize(activeObject.fontSize || 30);
+          setTextColor(activeObject.fill || "blue");
+          setBgColor(activeObject.backgroundColor || "white");
+          setTextAlign(activeObject.textAlign || "left");
+        }
       } else {
-        setSelectedTextObject(null);
+        setSelectedObject(null);
       }
     };
 
     fabricCanvas.on("selection:created", onSelectionChange);
     fabricCanvas.on("selection:updated", onSelectionChange);
     fabricCanvas.on("selection:cleared", () => {
-      setSelectedTextObject(null);
+      setSelectedObject(null);
+      setIsItemSelected(false);
       setAnimationDelay(0); // Reset the delay when no object is selected
       setSelectedObjectAnimations([]); // Clear the animation list when no object is selected
     });
@@ -466,7 +470,6 @@ const About = () => {
     }
   };
 
-  // Reset text properties before applying animations
   const resetTextProperties = (object) => {
     object.set({
       fill: textColor,
@@ -491,8 +494,8 @@ const About = () => {
   };
 
   const handleTextAlignChange = (align) => {
-    if (selectedTextObject) {
-      selectedTextObject.set({ textAlign: align });
+    if (selectedObject && selectedObject.type === "textbox") {
+      selectedObject.set({ textAlign: align });
       canvas.renderAll();
     }
     setTextAlign(align);
@@ -501,16 +504,55 @@ const About = () => {
   const updateAnimationDelay = (delay) => {
     setAnimationDelay(delay);
 
-    if (selectedTextObject) {
+    if (selectedObject) {
       const queuedAnimation = animationsQueue.current.find(
-        (item) => item.object === selectedTextObject
+        (item) => item.object === selectedObject
       );
       if (queuedAnimation) {
-        queuedAnimation.delay = delay; // Update delay for the selected text
+        queuedAnimation.delay = delay; // Update delay for the selected object
         console.log(
-          `Updated delay to ${delay}ms for the selected text in the queue.`
+          `Updated delay to ${delay}ms for the selected object in the queue.`
         );
       }
+    }
+  };
+
+  // Edit an animation
+  const handleEditAnimation = (anim) => {
+    setSelectedAnimation(anim.animation);
+    setAnimationDelay(anim.delay);
+    setEditingAnimation(anim); // Set the animation currently being edited
+  };
+
+  // Save the edited animation
+  const saveEditedAnimation = () => {
+    if (editingAnimation) {
+      const updatedQueue = animationsQueue.current.map((anim) => {
+        if (anim === editingAnimation) {
+          return {
+            ...anim,
+            animation: selectedAnimation,
+            delay: animationDelay,
+          };
+        }
+        return anim;
+      });
+
+      animationsQueue.current = updatedQueue;
+
+      const updatedAnimations = selectedObjectAnimations.map((anim) => {
+        if (anim === editingAnimation) {
+          return {
+            ...anim,
+            animation: selectedAnimation,
+            delay: animationDelay,
+          };
+        }
+        return anim;
+      });
+
+      setSelectedObjectAnimations(updatedAnimations);
+      setEditingAnimation(null); // Clear editing state
     }
   };
 
@@ -524,11 +566,74 @@ const About = () => {
     );
   };
 
+  // Delete the selected object from canvas and all associated data
+  const deleteSelectedObject = () => {
+    if (selectedObject) {
+      // Remove the object from the canvas
+      canvas.remove(selectedObject);
+
+      // Remove the object from the animations queue
+      animationsQueue.current = animationsQueue.current.filter(
+        (item) => item.object !== selectedObject
+      );
+
+      // Reset the state
+      setSelectedObject(null);
+      setIsItemSelected(false);
+      setSelectedObjectAnimations([]);
+      setAnimationDelay(0);
+      canvas.renderAll();
+
+      console.log("Selected object and all associated data removed.");
+    }
+  };
+
+  // Image Upload with Dropzone
+  const onDrop = useCallback(
+    (acceptedFiles) => {
+      acceptedFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const image = new Image();
+          image.src = e.target.result;
+          image.onload = () => {
+            const fabricImage = new fabric.Image(image, {
+              left: 100,
+              top: 100,
+              scaleX: 0.5,
+              scaleY: 0.5,
+            });
+            canvas.add(fabricImage);
+            canvas.renderAll();
+          };
+        };
+        reader.readAsDataURL(file);
+      });
+    },
+    [canvas]
+  );
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
   return (
     <div className="flex">
+      {/* Dropzone */}
       <div className="w-1/6 h-screen bg-gray-100 p-4">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold">Text Animations</h2>
+        <div {...getRootProps()} className="dropzone">
+          <input {...getInputProps()} />
+          <p className="text-center">
+            Drag 'n' drop some Image here, or click to select Image
+          </p>
+        </div>
+
+        {/* Add Text Button */}
+        <div className="mt-6">
+          <button
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded mr-2"
+            onClick={handleAddText}
+          >
+            Add Text
+          </button>
         </div>
 
         {/* Animation options */}
@@ -569,62 +674,57 @@ const About = () => {
             <option value="fadeToColor">Fade to Color</option>
           </select>
 
-          {/* Delay input */}
           <h2 className="text-lg font-semibold mt-4">
             Set Animation Delay (ms)
           </h2>
           <input
             type="number"
             value={animationDelay}
-            onChange={(e) => updateAnimationDelay(Number(e.target.value))} // Update delay dynamically
+            onChange={(e) => updateAnimationDelay(Number(e.target.value))}
             className="mt-2 w-full p-2 border border-gray-300 rounded"
             placeholder="Enter delay in milliseconds"
           />
-          {/* Add text */}
 
-          {/* Button to add animation */}
-          <button
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={() => {
-              if (selectedTextObject && selectedAnimation !== "none") {
-                applyTextAnimation(
-                  selectedTextObject,
-                  selectedAnimation,
-                  () => {
+          {editingAnimation ? (
+            <button
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={saveEditedAnimation}
+            >
+              Save Changes
+            </button>
+          ) : (
+            <button
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={() => {
+                if (selectedObject && selectedAnimation !== "none") {
+                  applyTextAnimation(selectedObject, selectedAnimation, () => {
                     console.log(`Animation ${selectedAnimation} completed`);
-                  }
-                );
+                  });
 
-                // Add to queue for later playback
-                animationsQueue.current.push({
-                  object: selectedTextObject,
-                  animation: selectedAnimation,
-                  delay: animationDelay,
-                });
-
-                setSelectedObjectAnimations([
-                  ...selectedObjectAnimations,
-                  {
-                    object: selectedTextObject,
+                  // Add to queue for later playback
+                  animationsQueue.current.push({
+                    object: selectedObject,
                     animation: selectedAnimation,
                     delay: animationDelay,
-                  },
-                ]);
-              }
-            }}
-          >
-            Apply Animation
-          </button>
+                  });
+
+                  setSelectedObjectAnimations([
+                    ...selectedObjectAnimations,
+                    {
+                      object: selectedObject,
+                      animation: selectedAnimation,
+                      delay: animationDelay,
+                    },
+                  ]);
+                }
+              }}
+            >
+              Apply Animation
+            </button>
+          )}
         </div>
-        <div className="mt-6">
-          <button
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded mr-2"
-            onClick={handleAddText}
-          >
-            Add Text
-          </button>
-        </div>
-        {/* Animation list for the selected text */}
+
+        {/* Current animations */}
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Current Animations</h2>
           {selectedObjectAnimations.map((anim, index) => (
@@ -635,48 +735,74 @@ const About = () => {
               <span>
                 {anim.animation} (Delay: {anim.delay}ms)
               </span>
-              <button
-                className="text-red-500 hover:text-red-700"
-                onClick={() => removeAnimationFromQueue(anim)}
-              >
-                Delete
-              </button>
+              <div className="flex">
+                <button
+                  className="text-blue-500 hover:text-blue-700 mr-2"
+                  onClick={() => handleEditAnimation(anim)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => removeAnimationFromQueue(anim)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Text alignment */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Text Alignment</h2>
-          <div className="mt-2 flex justify-around">
+        {/* Delete Selected Object */}
+        {isItemSelected && (
+          <div className="mt-6">
             <button
-              className={`px-4 py-2 rounded ${
-                textAlign === "left" ? "bg-blue-500 text-white" : "bg-gray-300"
-              }`}
-              onClick={() => handleTextAlignChange("left")}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              onClick={deleteSelectedObject}
             >
-              Left
-            </button>
-            <button
-              className={`px-4 py-2 rounded ${
-                textAlign === "center"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-300"
-              }`}
-              onClick={() => handleTextAlignChange("center")}
-            >
-              Center
-            </button>
-            <button
-              className={`px-4 py-2 rounded ${
-                textAlign === "right" ? "bg-blue-500 text-white" : "bg-gray-300"
-              }`}
-              onClick={() => handleTextAlignChange("right")}
-            >
-              Right
+              Delete Selected Object
             </button>
           </div>
-        </div>
+        )}
+
+        {/* Text alignment */}
+        {selectedObject && selectedObject.type === "textbox" && (
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold">Text Alignment</h2>
+            <div className="mt-2 flex justify-around">
+              <button
+                className={`px-4 py-2 rounded ${
+                  textAlign === "left"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+                onClick={() => handleTextAlignChange("left")}
+              >
+                Left
+              </button>
+              <button
+                className={`px-4 py-2 rounded ${
+                  textAlign === "center"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+                onClick={() => handleTextAlignChange("center")}
+              >
+                Center
+              </button>
+              <button
+                className={`px-4 py-2 rounded ${
+                  textAlign === "right"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300"
+                }`}
+                onClick={() => handleTextAlignChange("right")}
+              >
+                Right
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Play All Animations */}
         <div className="mt-6">
@@ -700,7 +826,9 @@ const About = () => {
       </div>
 
       <div className="flex-1 p-4">
-        <h1 className="text-3xl font-bold mb-4">Text Animation on Canvas</h1>
+        <h1 className="text-3xl font-bold mb-4">
+          Text and Image Animation on Canvas
+        </h1>
         <div className="flex justify-center mb-4">
           <canvas
             ref={canvasRef}
