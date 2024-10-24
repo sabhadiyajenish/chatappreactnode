@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as fabric from "fabric";
 import { useDropzone } from "react-dropzone";
 import "./about.css";
-
+import { MdDelete } from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
 const About = () => {
   const [canvas, setCanvas] = useState(null);
   const [isItemSelected, setIsItemSelected] = useState(false);
@@ -662,7 +663,7 @@ const About = () => {
 
   return (
     <div className="flex">
-      <div className="w-1/6 h-screen bg-gray-100 p-4">
+      <div className="w-1/6 h-screen bg-gray-100 p-4 overflow-y-scroll">
         <div {...getRootProps()} className="dropzone">
           <input {...getInputProps()} />
           <p className="text-center">
@@ -794,7 +795,7 @@ const About = () => {
           />
         </div>
       </div>
-      <div className="w-1/6 h-screen bg-gray-100 p-4">
+      <div className="w-1/6 h-screen overflow-y-scroll  bg-gray-100 p-3">
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Font Size</h2>
           <input
@@ -812,68 +813,68 @@ const About = () => {
         </div>
 
         {/* Font Weight */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Font Weight</h2>
-          <select
-            className="mt-2 w-full p-2 border border-gray-300 rounded"
-            value={fontWeight}
-            onChange={(e) => {
-              setFontWeight(e.target.value);
-              if (selectedObject && selectedObject.type === "textbox") {
-                selectedObject.set({ fontWeight: e.target.value });
-                canvas.renderAll();
-              }
-            }}
-          >
-            <option value="normal">Normal</option>
-            <option value="bold">Bold</option>
-            <option value="lighter">Lighter</option>
-          </select>
-        </div>
 
         {/* Font Family */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Font Family</h2>
-          <select
-            className="mt-2 w-full p-2 border border-gray-300 rounded"
-            value={fontFamily}
-            onChange={(e) => {
-              setFontFamily(e.target.value);
-              if (selectedObject && selectedObject.type === "textbox") {
-                selectedObject.set({ fontFamily: e.target.value });
-                canvas.renderAll();
-              }
-            }}
-          >
-            <option value="Arial">Arial</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Courier New">Courier New</option>
-            <option value="Georgia">Georgia</option>
-          </select>
+        <div className="w-full flex gap-x-2">
+          <div className="mt-6 w-1/2">
+            <h2 className="text-lg font-semibold">Weight</h2>
+            <select
+              className="mt-2 w-full p-2 border border-gray-300 rounded"
+              value={fontWeight}
+              onChange={(e) => {
+                setFontWeight(e.target.value);
+                if (selectedObject && selectedObject.type === "textbox") {
+                  selectedObject.set({ fontWeight: e.target.value });
+                  canvas.renderAll();
+                }
+              }}
+            >
+              <option value="normal">Normal</option>
+              <option value="bold">Bold</option>
+              <option value="lighter">Lighter</option>
+            </select>
+          </div>
+          <div className="mt-6 w-1/2">
+            <h2 className="text-lg font-semibold">Family</h2>
+            <select
+              className="mt-2 w-full p-2 border border-gray-300 rounded"
+              value={fontFamily}
+              onChange={(e) => {
+                setFontFamily(e.target.value);
+                if (selectedObject && selectedObject.type === "textbox") {
+                  selectedObject.set({ fontFamily: e.target.value });
+                  canvas.renderAll();
+                }
+              }}
+            >
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+            </select>
+          </div>
         </div>
-
-        {/* Text Color */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Text Color</h2>
-          <input
-            type="color"
-            value={textColor}
-            onChange={(e) => handleTextColorChange(e.target.value)}
-            className="mt-2 w-full p-2 border border-gray-300 rounded"
-          />
+        <div className="w-full flex gap-x-2">
+          <div className="mt-6 w-1/2">
+            <h2 className="text-lg font-semibold">Text Color</h2>
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => handleTextColorChange(e.target.value)}
+              className="mt-2 w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          {/* Background Color */}
+          <div className="mt-6 w-1/2">
+            <h2 className="text-lg font-semibold">Bg Color</h2>
+            <input
+              type="color"
+              value={bgColor}
+              onChange={(e) => handleBgColorChange(e.target.value)}
+              className="mt-2 w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
         </div>
-
-        {/* Background Color */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Background Color</h2>
-          <input
-            type="color"
-            value={bgColor}
-            onChange={(e) => handleBgColorChange(e.target.value)}
-            className="mt-2 w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-
         {/* Current animations */}
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Current Animations</h2>
@@ -886,18 +887,12 @@ const About = () => {
                 {anim.animation} (Delay: {anim.delay}ms)
               </span>
               <div className="flex">
-                <button
-                  className="text-blue-500 hover:text-blue-700 mr-2"
-                  onClick={() => handleEditAnimation(anim)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="text-red-500 hover:text-red-700"
+                <FaEdit className=" w-5 h-6 text-[blue] cursor-pointer onClick={() => handleEditAnimation(anim)} " />
+
+                <MdDelete
+                  className=" w-6 h-6 text-[red] cursor-pointer "
                   onClick={() => removeAnimationFromQueue(anim)}
-                >
-                  Delete
-                </button>
+                />
               </div>
             </div>
           ))}
@@ -906,12 +901,10 @@ const About = () => {
         {/* Delete Selected Object */}
         {isItemSelected && (
           <div className="mt-6">
-            <button
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+            <MdDelete
+              className=" w-10 h-10 text-[red] cursor-pointer "
               onClick={deleteSelectedObject}
-            >
-              Delete Selected Object
-            </button>
+            />
           </div>
         )}
       </div>
