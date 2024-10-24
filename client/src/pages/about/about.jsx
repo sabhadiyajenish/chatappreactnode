@@ -10,6 +10,8 @@ const About = () => {
   const [fontSize, setFontSize] = useState(30);
   const [textColor, setTextColor] = useState("blue");
   const [bgColor, setBgColor] = useState("");
+  const [fontWeight, setFontWeight] = useState("normal");
+  const [fontFamily, setFontFamily] = useState("Arial");
   const [selectedAnimation, setSelectedAnimation] = useState("none");
   const [textAlign, setTextAlign] = useState("left");
   const [animationDelay, setAnimationDelay] = useState(0);
@@ -17,7 +19,7 @@ const About = () => {
   const canvasRef = useRef(null);
   const animationsQueue = useRef([]);
   const [selectedObjectAnimations, setSelectedObjectAnimations] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(false); // To track if animation is playing
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
@@ -32,29 +34,20 @@ const About = () => {
       setIsItemSelected(!!activeObject);
       setSelectedObject(activeObject);
 
-      if (activeObject) {
+      if (activeObject && activeObject.type === "textbox") {
+        setFontSize(activeObject.fontSize || 30);
+        setTextColor(activeObject.fill || "blue");
+        setBgColor(activeObject.backgroundColor || "white");
+        setFontWeight(activeObject.fontWeight || "normal");
+        setFontFamily(activeObject.fontFamily || "Arial");
+        setTextAlign(activeObject.textAlign || "left");
+
         const animationsForObject = animationsQueue.current.filter(
           (item) => item.object === activeObject
         );
         setSelectedObjectAnimations(animationsForObject);
-
-        const queuedAnimation = animationsQueue.current.find(
-          (item) => item.object === activeObject
-        );
-        if (queuedAnimation) {
-          setAnimationDelay(queuedAnimation.delay || 0);
-        } else {
-          setAnimationDelay(0);
-        }
-
-        if (activeObject.type === "textbox") {
-          setFontSize(activeObject.fontSize || 30);
-          setTextColor(activeObject.fill || "blue");
-          setBgColor(activeObject.backgroundColor || "white");
-          setTextAlign(activeObject.textAlign || "left");
-        }
       } else {
-        setSelectedObject(null);
+        setSelectedObjectAnimations([]);
       }
     };
 
@@ -63,7 +56,6 @@ const About = () => {
     fabricCanvas.on("selection:cleared", () => {
       setSelectedObject(null);
       setIsItemSelected(false);
-      setAnimationDelay(0);
       setSelectedObjectAnimations([]);
     });
 
@@ -71,6 +63,24 @@ const About = () => {
       fabricCanvas.dispose();
     };
   }, []);
+
+  const handleTextColorChange = (color) => {
+    setTextColor(color);
+    if (selectedObject && selectedObject.type === "textbox") {
+      selectedObject.set({ fill: color });
+      selectedObject.customFill = color; // Store color in a custom property
+      canvas.renderAll();
+    }
+  };
+
+  const handleBgColorChange = (color) => {
+    setBgColor(color);
+    if (selectedObject && selectedObject.type === "textbox") {
+      selectedObject.set({ backgroundColor: color });
+      selectedObject.customBgColor = color; // Store background color in a custom property
+      canvas.renderAll();
+    }
+  };
 
   const handleAddText = () => {
     if (!canvas) return;
@@ -81,9 +91,14 @@ const About = () => {
       fontSize: fontSize,
       fill: textColor,
       backgroundColor: bgColor,
+      fontWeight: fontWeight,
+      fontFamily: fontFamily,
       textAlign: textAlign,
       editable: true,
     });
+
+    text.customFill = textColor; // Store the custom fill color
+    text.customBgColor = bgColor; // Store the custom background color
 
     canvas.add(text);
     canvas.setActiveObject(text);
@@ -470,7 +485,8 @@ const About = () => {
 
   const resetTextProperties = (object) => {
     object.set({
-      fill: textColor,
+      fill: object.customFill || textColor, // Use the custom fill color
+      backgroundColor: object.customBgColor || bgColor, // Use the custom background color
       scaleX: 1,
       scaleY: 1,
       angle: 0,
@@ -479,56 +495,49 @@ const About = () => {
     canvas.renderAll();
   };
 
-  // Play all animations in the queue sequentially with hiding and showing objects
   const playAllAnimations = async () => {
     setIsPlaying(true);
     const animations = animationsQueue.current;
 
-    // Initially hide all text objects except for images
     canvas.getObjects().forEach((obj) => {
       if (obj.type === "textbox") {
-        obj.set({ opacity: 0 }); // Hide text objects initially
+        obj.set({ opacity: 0 });
       } else if (obj.type === "image") {
-        obj.set({ opacity: 1 }); // Keep images visible
+        obj.set({ opacity: 1 });
       }
     });
-    canvas.renderAll(); // Render after hiding text objects
+    canvas.renderAll();
 
-    let totalTimeElapsed = 0; // Cumulative delay time to track
+    let totalTimeElapsed = 0;
 
     for (let i = 0; i < animations.length; i++) {
       const animation = animations[i];
 
-      // Wait for the delay for this animation
       await new Promise((resolve) => {
         setTimeout(() => {
-          // Instead of hiding all objects, show the previous animated objects
           canvas.getObjects().forEach((obj) => {
             if (
               obj.type === "textbox" &&
               animations.slice(0, i).some((a) => a.object === obj)
             ) {
-              obj.set({ opacity: 1 }); // Keep previously animated objects visible
+              obj.set({ opacity: 1 });
             }
           });
 
-          // Show and animate the current text object
           if (animation.object.type === "textbox") {
-            animation.object.set({ opacity: 1 }); // Show current object
+            animation.object.set({ opacity: 1 });
             applyTextAnimation(animation.object, animation.animation, resolve);
           } else {
-            resolve(); // If not a text object, resolve immediately
+            resolve();
           }
 
-          // Render the canvas after showing and starting the animation
           canvas.renderAll();
-        }, totalTimeElapsed + animation.delay); // Trigger based on cumulative delay
+        }, totalTimeElapsed + animation.delay);
       });
 
-      totalTimeElapsed += animation.delay; // Add the delay for the next animation
+      totalTimeElapsed += animation.delay;
     }
 
-    // After all animations, keep all text objects visible
     canvas.getObjects().forEach((obj) => {
       if (obj.type === "textbox") {
         obj.set({ opacity: 1 });
@@ -538,10 +547,8 @@ const About = () => {
     setIsPlaying(false);
   };
 
-  // Stop all animations and reset objects to their original state
   const stopAnimations = () => {
     setIsPlaying(false);
-    // Restore all objects visibility
     canvas.getObjects().forEach((obj) => obj.set({ opacity: 1 }));
     canvas.renderAll();
   };
@@ -556,16 +563,12 @@ const About = () => {
 
   const updateAnimationDelay = (delay) => {
     setAnimationDelay(delay);
-
     if (selectedObject) {
       const queuedAnimation = animationsQueue.current.find(
         (item) => item.object === selectedObject
       );
       if (queuedAnimation) {
         queuedAnimation.delay = delay;
-        console.log(
-          `Updated delay to ${delay}ms for the selected object in the queue.`
-        );
       }
     }
   };
@@ -628,8 +631,6 @@ const About = () => {
       setSelectedObjectAnimations([]);
       setAnimationDelay(0);
       canvas.renderAll();
-
-      console.log("Selected object and all associated data removed.");
     }
   };
 
@@ -766,6 +767,113 @@ const About = () => {
           )}
         </div>
 
+        <div className="mt-6">
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+            onClick={playAllAnimations}
+          >
+            Play All Animations
+          </button>
+          <button
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mt-4"
+            onClick={stopAnimations}
+          >
+            Stop Playing
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 p-4">
+        <h1 className="text-3xl font-bold mb-4">
+          Text and Image Animation on Canvas
+        </h1>
+        <div className="flex justify-center mb-4">
+          <canvas
+            ref={canvasRef}
+            className="w-full h-80 border border-gray-300"
+          />
+        </div>
+      </div>
+      <div className="w-1/6 h-screen bg-gray-100 p-4">
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Font Size</h2>
+          <input
+            type="number"
+            value={fontSize}
+            onChange={(e) => {
+              setFontSize(Number(e.target.value));
+              if (selectedObject && selectedObject.type === "textbox") {
+                selectedObject.set({ fontSize: Number(e.target.value) });
+                canvas.renderAll();
+              }
+            }}
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        {/* Font Weight */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Font Weight</h2>
+          <select
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+            value={fontWeight}
+            onChange={(e) => {
+              setFontWeight(e.target.value);
+              if (selectedObject && selectedObject.type === "textbox") {
+                selectedObject.set({ fontWeight: e.target.value });
+                canvas.renderAll();
+              }
+            }}
+          >
+            <option value="normal">Normal</option>
+            <option value="bold">Bold</option>
+            <option value="lighter">Lighter</option>
+          </select>
+        </div>
+
+        {/* Font Family */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Font Family</h2>
+          <select
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+            value={fontFamily}
+            onChange={(e) => {
+              setFontFamily(e.target.value);
+              if (selectedObject && selectedObject.type === "textbox") {
+                selectedObject.set({ fontFamily: e.target.value });
+                canvas.renderAll();
+              }
+            }}
+          >
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+          </select>
+        </div>
+
+        {/* Text Color */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Text Color</h2>
+          <input
+            type="color"
+            value={textColor}
+            onChange={(e) => handleTextColorChange(e.target.value)}
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+
+        {/* Background Color */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold">Background Color</h2>
+          <input
+            type="color"
+            value={bgColor}
+            onChange={(e) => handleBgColorChange(e.target.value)}
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+
         {/* Current animations */}
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Current Animations</h2>
@@ -795,6 +903,7 @@ const About = () => {
           ))}
         </div>
 
+        {/* Delete Selected Object */}
         {isItemSelected && (
           <div className="mt-6">
             <button
@@ -805,72 +914,6 @@ const About = () => {
             </button>
           </div>
         )}
-
-        {/* Text alignment */}
-        {selectedObject && selectedObject.type === "textbox" && (
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold">Text Alignment</h2>
-            <div className="mt-2 flex justify-around">
-              <button
-                className={`px-4 py-2 rounded ${
-                  textAlign === "left"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300"
-                }`}
-                onClick={() => handleTextAlignChange("left")}
-              >
-                Left
-              </button>
-              <button
-                className={`px-4 py-2 rounded ${
-                  textAlign === "center"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300"
-                }`}
-                onClick={() => handleTextAlignChange("center")}
-              >
-                Center
-              </button>
-              <button
-                className={`px-4 py-2 rounded ${
-                  textAlign === "right"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-300"
-                }`}
-                onClick={() => handleTextAlignChange("right")}
-              >
-                Right
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6">
-          <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-            onClick={playAllAnimations} // Trigger sequential animations
-          >
-            Play All Animations
-          </button>
-          <button
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mt-4"
-            onClick={stopAnimations} // Stop all animations and reset
-          >
-            Stop Playing
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 p-4">
-        <h1 className="text-3xl font-bold mb-4">
-          Text and Image Animation on Canvas
-        </h1>
-        <div className="flex justify-center mb-4">
-          <canvas
-            ref={canvasRef}
-            className="w-full h-80 border border-gray-300"
-          />
-        </div>
       </div>
     </div>
   );
