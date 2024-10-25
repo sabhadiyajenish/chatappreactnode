@@ -4,6 +4,19 @@ import { useDropzone } from "react-dropzone";
 import "./about.css";
 import { MdDelete } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
+import { FiArrowUp, FiArrowDown } from "react-icons/fi";
+import { CiText } from "react-icons/ci";
+import { FaRegCirclePlay } from "react-icons/fa6";
+import { BsStopCircle } from "react-icons/bs";
+import { FaSquare, FaCircle, FaStar } from "react-icons/fa";
+import { MdRectangle } from "react-icons/md";
+import { IoTriangleSharp } from "react-icons/io5";
+import { BsFillPentagonFill } from "react-icons/bs";
+import { IoEllipseOutline } from "react-icons/io5";
+import { GiHeartBeats } from "react-icons/gi";
+import { TbDiamond } from "react-icons/tb";
+import { MdParagliding } from "react-icons/md";
+import { GiHexagonalNut } from "react-icons/gi";
 const About = () => {
   const [canvas, setCanvas] = useState(null);
   const [isItemSelected, setIsItemSelected] = useState(false);
@@ -16,11 +29,14 @@ const About = () => {
   const [selectedAnimation, setSelectedAnimation] = useState("none");
   const [textAlign, setTextAlign] = useState("left");
   const [animationDelay, setAnimationDelay] = useState(0);
+  const [shapeColor, setShapeColor] = useState("gray"); // New state for shape color
   const [editingAnimation, setEditingAnimation] = useState(null);
+  const [layers, setLayers] = useState([]);
   const canvasRef = useRef(null);
   const animationsQueue = useRef([]);
   const [selectedObjectAnimations, setSelectedObjectAnimations] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  console.log("layers", layers);
 
   useEffect(() => {
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
@@ -29,7 +45,9 @@ const About = () => {
       selection: true,
     });
     setCanvas(fabricCanvas);
-
+    const updateLayers = () => {
+      setLayers(fabricCanvas.getObjects());
+    };
     const onSelectionChange = () => {
       const activeObject = fabricCanvas.getActiveObject();
       setIsItemSelected(!!activeObject);
@@ -51,7 +69,9 @@ const About = () => {
         setSelectedObjectAnimations([]);
       }
     };
-
+    fabricCanvas.on("object:added", updateLayers);
+    fabricCanvas.on("object:removed", updateLayers);
+    fabricCanvas.on("object:modified", updateLayers);
     fabricCanvas.on("selection:created", onSelectionChange);
     fabricCanvas.on("selection:updated", onSelectionChange);
     fabricCanvas.on("selection:cleared", () => {
@@ -105,7 +125,35 @@ const About = () => {
     canvas.setActiveObject(text);
     canvas.renderAll();
   };
+  // Delete the selected layer
+  const handleDeleteLayer = (index) => {
+    const objToRemove = layers[index];
+    canvas.remove(objToRemove);
+    canvas.renderAll();
+  };
 
+  // Move layer up in z-order
+  const moveLayerUp = (index) => {
+    const object = layers[index];
+    if (index === 0) return; // Prevent moving the top layer further up
+    canvas.bringForward(object);
+    canvas.renderAll();
+    updateLayers(); // After the change, update layers state
+  };
+
+  // Move layer down in z-order
+  const moveLayerDown = (index) => {
+    const object = layers[index];
+    if (index === layers.length - 1) return; // Prevent moving the bottom layer further down
+    canvas.sendBackwards(object);
+    canvas.renderAll();
+    updateLayers(); // After the change, update layers state
+  };
+
+  // Update the layers after reordering
+  const updateLayers = () => {
+    setLayers(canvas.getObjects().reverse());
+  };
   const applyTextAnimation = (object, animation, resolve) => {
     resetTextProperties(object);
     switch (animation) {
@@ -658,32 +706,274 @@ const About = () => {
     },
     [canvas]
   );
+  const handleAddShape = (shapeType) => {
+    if (!canvas) return;
+
+    let shape;
+    switch (shapeType) {
+      case "rectangle":
+        shape = new fabric.Rect({
+          width: 100,
+          height: 60,
+          left: 100,
+          top: 100,
+          fill: shapeColor,
+        });
+        break;
+
+      case "square":
+        shape = new fabric.Rect({
+          width: 80,
+          height: 80,
+          left: 100,
+          top: 100,
+          fill: shapeColor,
+        });
+        break;
+
+      case "circle":
+        shape = new fabric.Circle({
+          radius: 50,
+          left: 100,
+          top: 100,
+          fill: shapeColor,
+        });
+        break;
+
+      case "triangle":
+        shape = new fabric.Triangle({
+          width: 100,
+          height: 100,
+          left: 100,
+          top: 100,
+          fill: shapeColor,
+        });
+        break;
+
+      case "ellipse":
+        shape = new fabric.Ellipse({
+          rx: 75,
+          ry: 50,
+          left: 100,
+          top: 100,
+          fill: shapeColor,
+        });
+        break;
+
+      case "pentagon":
+        shape = new fabric.Polygon(
+          [
+            { x: 50, y: 0 },
+            { x: 100, y: 38 },
+            { x: 81, y: 100 },
+            { x: 19, y: 100 },
+            { x: 0, y: 38 },
+          ],
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 1.5,
+            scaleY: 1.5,
+          }
+        );
+        break;
+
+      case "star":
+        shape = new fabric.Polygon(
+          [
+            { x: 50, y: 0 },
+            { x: 61, y: 35 },
+            { x: 98, y: 35 },
+            { x: 68, y: 57 },
+            { x: 79, y: 91 },
+            { x: 50, y: 70 },
+            { x: 21, y: 91 },
+            { x: 32, y: 57 },
+            { x: 2, y: 35 },
+            { x: 39, y: 35 },
+          ],
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 1.5,
+            scaleY: 1.5,
+          }
+        );
+        break;
+
+      case "hexagon":
+        shape = new fabric.Polygon(
+          [
+            { x: 50, y: 0 },
+            { x: 100, y: 25 },
+            { x: 100, y: 75 },
+            { x: 50, y: 100 },
+            { x: 0, y: 75 },
+            { x: 0, y: 25 },
+          ],
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 1.5,
+            scaleY: 1.5,
+          }
+        );
+        break;
+
+      case "heart":
+        shape = new fabric.Path(
+          "M 272 64 C 272 36.8 250.2 16 224 16 C 207.3 16 193.6 24.3 186.4 35.5 L 160 74.5 L 133.6 35.5 C 126.4 24.3 112.7 16 96 16 C 69.8 16 48 36.8 48 64 C 48 85.6 57.2 101.8 69.7 114.4 L 156.7 202.3 C 159.9 205.6 164.1 205.6 167.3 202.3 L 254.3 114.4 C 266.8 101.8 276 85.6 276 64 Z",
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 0.2,
+            scaleY: 0.2,
+          }
+        );
+        break;
+
+      case "parallelogram":
+        shape = new fabric.Polygon(
+          [
+            { x: 50, y: 0 },
+            { x: 120, y: 0 },
+            { x: 100, y: 50 },
+            { x: 30, y: 50 },
+          ],
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 1.5,
+            scaleY: 1.5,
+          }
+        );
+        break;
+
+      case "diamond":
+        shape = new fabric.Polygon(
+          [
+            { x: 50, y: 0 },
+            { x: 100, y: 50 },
+            { x: 50, y: 100 },
+            { x: 0, y: 50 },
+          ],
+          {
+            left: 100,
+            top: 100,
+            fill: shapeColor,
+            scaleX: 1.5,
+            scaleY: 1.5,
+          }
+        );
+        break;
+
+      default:
+        return;
+    }
+
+    canvas.add(shape);
+    canvas.setActiveObject(shape);
+    canvas.renderAll();
+  };
+
+  const handleShapeColorChange = (color) => {
+    setShapeColor(color);
+    if (selectedObject && selectedObject.type !== "textbox") {
+      selectedObject.set({ fill: color });
+      canvas.renderAll();
+    }
+  };
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className="flex">
-      <div className="w-1/6 h-screen bg-gray-100 p-4 overflow-y-scroll">
+    <div className="flex dark:bg-black">
+      <div className="w-1/6 h-screen bg-gray-100 dark:bg-gray-950 p-4 overflow-y-scroll">
         <div {...getRootProps()} className="dropzone">
           <input {...getInputProps()} />
-          <p className="text-center">
+          <p className="text-center dark:text-gray-400">
             Drag 'n' drop some Image here, or click to select Image
           </p>
         </div>
 
         {/* Add Text Button */}
         <div className="mt-6">
-          <button
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded mr-2"
+          <CiText
+            className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500"
             onClick={handleAddText}
-          >
-            Add Text
-          </button>
+          />
+          <h4 className="dark:text-gray-100 text-[16px] mt-3">Shapes</h4>
+
+          <div className="flex justify-start items-center flex-wrap mt-3 gap-x-1 w-full">
+            <FaSquare
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("square")}
+            />
+            <MdRectangle
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("rectangle")}
+            />
+            <FaCircle
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("circle")}
+            />
+            <IoTriangleSharp
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("triangle")}
+            />
+            <BsFillPentagonFill
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("pentagon")}
+            />
+            <IoEllipseOutline
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("ellipse")}
+            />
+            <FaStar
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("star")}
+            />
+            <TbDiamond
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("diamond")}
+            />
+            <MdParagliding
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("parallelogram")}
+            />
+            <GiHeartBeats
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("heart")}
+            />
+            <GiHexagonalNut
+              className="w-9 h-9 p-1 rounded-md border border-red-900 dark:border-gray-300 dark:text-white 
+             hover:border-red-700 dark:hover:border-gray-500 cursor-pointer"
+              onClick={() => handleAddShape("hexagon")}
+            />
+          </div>
         </div>
 
         {/* Animation options */}
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Select Animation</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-200">
+            Select Animation
+          </h2>
           <select
             className="mt-2 w-full p-2 border border-gray-300 rounded"
             value={selectedAnimation}
@@ -718,8 +1008,7 @@ const About = () => {
             <option value="bounceIn">Bounce In</option>
             <option value="fadeToColor">Fade to Color</option>
           </select>
-
-          <h2 className="text-lg font-semibold mt-4">
+          <h2 className="text-lg font-semibold mt-4 dark:text-gray-200">
             Set Animation Delay (ms)
           </h2>
           <input
@@ -729,7 +1018,6 @@ const About = () => {
             className="mt-2 w-full p-2 border border-gray-300 rounded"
             placeholder="Enter delay in milliseconds"
           />
-
           {editingAnimation ? (
             <button
               className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -768,36 +1056,36 @@ const About = () => {
           )}
         </div>
 
-        <div className="mt-6">
-          <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-            onClick={playAllAnimations}
-          >
-            Play All Animations
-          </button>
-          <button
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mt-4"
-            onClick={stopAnimations}
-          >
-            Stop Playing
-          </button>
+        <div className="mt-10">
+          <div className="flex justify-center gap-x-10  items-center">
+            <div className=" cursor-pointer" onClick={playAllAnimations}>
+              <FaRegCirclePlay className="w-10 h-10 dark:text-white" />
+              <p className="dark:text-gray-400 text-center">Play</p>
+            </div>
+            <div className=" cursor-pointer" onClick={stopAnimations}>
+              <BsStopCircle className="w-10 h-10 dark:text-white" />
+              <p className="dark:text-gray-400 text-center">Stop</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 p-4">
-        <h1 className="text-3xl font-bold mb-4">
+        <h1 className="text-3xl font-bold mb-4 dark:text-gray-400">
           Text and Image Animation on Canvas
         </h1>
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-4 ">
           <canvas
             ref={canvasRef}
-            className="w-full h-80 border border-gray-300"
+            className="w-full h-80 border border-gray-30"
           />
         </div>
       </div>
-      <div className="w-1/6 h-screen overflow-y-scroll  bg-gray-100 p-3">
+      <div className="w-1/6 h-screen overflow-y-scroll  bg-gray-100 dark:bg-gray-900 p-3">
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Font Size</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-200">
+            Font Size
+          </h2>
           <input
             type="number"
             value={fontSize}
@@ -817,7 +1105,7 @@ const About = () => {
         {/* Font Family */}
         <div className="w-full flex gap-x-2">
           <div className="mt-6 w-1/2">
-            <h2 className="text-lg font-semibold">Weight</h2>
+            <h2 className="text-lg font-semibold dark:text-gray-200">Weight</h2>
             <select
               className="mt-2 w-full p-2 border border-gray-300 rounded"
               value={fontWeight}
@@ -832,10 +1120,11 @@ const About = () => {
               <option value="normal">Normal</option>
               <option value="bold">Bold</option>
               <option value="lighter">Lighter</option>
+              <option value="italic">Italic</option>
             </select>
           </div>
           <div className="mt-6 w-1/2">
-            <h2 className="text-lg font-semibold">Family</h2>
+            <h2 className="text-lg font-semibold dark:text-gray-200">Family</h2>
             <select
               className="mt-2 w-full p-2 border border-gray-300 rounded"
               value={fontFamily}
@@ -856,7 +1145,9 @@ const About = () => {
         </div>
         <div className="w-full flex gap-x-2">
           <div className="mt-6 w-1/2">
-            <h2 className="text-lg font-semibold">Text Color</h2>
+            <h2 className="text-lg font-semibold dark:text-gray-200">
+              Text Color
+            </h2>
             <input
               type="color"
               value={textColor}
@@ -866,7 +1157,9 @@ const About = () => {
           </div>
           {/* Background Color */}
           <div className="mt-6 w-1/2">
-            <h2 className="text-lg font-semibold">Bg Color</h2>
+            <h2 className="text-lg font-semibold dark:text-gray-200">
+              Bg Color
+            </h2>
             <input
               type="color"
               value={bgColor}
@@ -875,27 +1168,73 @@ const About = () => {
             />
           </div>
         </div>
-        {/* Current animations */}
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Current Animations</h2>
-          {selectedObjectAnimations.map((anim, index) => (
+          <h2 className="text-lg font-semibold dark:text-gray-200">
+            Shape Color
+          </h2>
+          <input
+            type="color"
+            value={shapeColor}
+            onChange={(e) => handleShapeColorChange(e.target.value)}
+            className="mt-2 w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+        {/* Current animations */}
+        <h2 className="text-lg font-semibold dark:text-gray-200  mt-4">
+          Layers
+        </h2>
+        <div className="max-h-60 overflow-y-scroll">
+          {layers.map((layer, index) => (
             <div
               key={index}
-              className="flex justify-between bg-gray-200 px-2 py-1 mt-2"
+              className="flex justify-between items-center bg-gray-200 px-2 py-1 mt-2"
             >
-              <span>
-                {anim.animation} (Delay: {anim.delay}ms)
-              </span>
-              <div className="flex">
-                <FaEdit className=" w-5 h-6 text-[blue] cursor-pointer onClick={() => handleEditAnimation(anim)} " />
-
+              <span>Layer {index + 1}</span>
+              <div className="flex items-center">
+                <FiArrowUp
+                  className={`cursor-pointer ${
+                    index === 0 ? "opacity-50" : "opacity-100"
+                  }`}
+                  onClick={() => moveLayerDown(index)}
+                />
+                <FiArrowDown
+                  className={`cursor-pointer ml-2 ${
+                    index === layers.length - 1 ? "opacity-50" : "opacity-100"
+                  }`}
+                  onClick={() => moveLayerUp(index)}
+                />
                 <MdDelete
-                  className=" w-6 h-6 text-[red] cursor-pointer "
-                  onClick={() => removeAnimationFromQueue(anim)}
+                  className="ml-4 text-red-500 cursor-pointer"
+                  onClick={() => handleDeleteLayer(index)}
                 />
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold dark:text-gray-200">
+            Current Animations
+          </h2>
+          <div className="max-h-60 overflow-y-scroll">
+            {selectedObjectAnimations.map((anim, index) => (
+              <div
+                key={index}
+                className="flex justify-between bg-gray-200 px-2 py-1 mt-2"
+              >
+                <span>
+                  {anim.animation} (Delay: {anim.delay}ms)
+                </span>
+                <div className="flex">
+                  <FaEdit className=" w-5 h-6 text-[blue] cursor-pointer onClick={() => handleEditAnimation(anim)} " />
+
+                  <MdDelete
+                    className=" w-6 h-6 text-[red] cursor-pointer "
+                    onClick={() => removeAnimationFromQueue(anim)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Delete Selected Object */}
