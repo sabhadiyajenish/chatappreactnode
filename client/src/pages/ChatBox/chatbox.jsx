@@ -2560,7 +2560,7 @@ const Chatbox = () => {
         />
       )}
 
-      <div>
+      {/* <div>
         <h1>Audio Call</h1>
         <audio playsInline ref={myAudio} autoPlay />
         <audio playsInline ref={userAudio} autoPlay />
@@ -2573,7 +2573,7 @@ const Chatbox = () => {
         ) : null}
 
         <button onClick={() => callUser(me)}>Call User</button>
-      </div>
+      </div> */}
       {/* <div className="flex">
         <video ref={localVideoRef} width={300} height={200} autoPlay />
         <video

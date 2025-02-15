@@ -135,7 +135,7 @@ SocketEvents(io);
 
 app.get("/", (req, res) => {
   res.json(
-    "This Apis Working Perfectly in Vercel it is just for checking pupose only so dont mind."
+    "This Apis Working Perfectly in server it is just for checking pupose only so dont mind."
   );
 });
 

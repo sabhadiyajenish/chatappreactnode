@@ -32,7 +32,8 @@ const App = () => {
         dispatch(Login(JSON.parse(res)));
       })
       .catch((err) => {
-        console.log("Something is wrong in UsergetData apis catch block", err);
+        // console.log("Something is wrong in UsergetData apis catch block", err);
+        console.clear();
       })
       .finally(() => {
         // console.clear();
