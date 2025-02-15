@@ -1,0 +1,28 @@
+body,
+html {
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  /* overflow-y: hidden; Hide vertical scrollbar */
+}
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.canvas {
+  border: 1px solid #ddd;
+  width: 100%; /* Ensure canvas takes up full width */
+  height: 100%; /* Ensure canvas takes up full height */
+}
+.bg-slate-400 {
+  background-color: #cbd5e1; /* Adjust as needed */
+  padding: 10px 20px;
+  border: none;
+  color: #000;
+  cursor: pointer;
+}

@@ -7,6 +7,7 @@ import {
   refreshAccessToken,
   handleSocialLogin,
   getAllUserData,
+  UserGetWebapp,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -18,11 +19,11 @@ import { rateLimit } from "express-rate-limit";
 import { ApiError } from "../utils/ApiError.js";
 
 const loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 40000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 15 minutes
   limit: 2, // Limit each IP to 5 login requests per windowMs
   message: new ApiError(
     400,
-    "Too many requests for Login from this IP, please try again later."
+    "Too many requests for Login from this Website, please try again later."
   ),
   statusCode: "500",
 });
@@ -50,10 +51,20 @@ routes.route("/refresh-token").post(refreshAccessToken);
 
 //Secure Routes to use Auth Middleware
 routes.route("/logout").get(authMiddleWare, LogoutUser);
+routes.route("/getwebsitescript").get(UserGetWebapp);
 
 routes.route("/get-userdata").get(authMiddleWare, getUserData);
 routes.route("/get-Alluserdata").get(authMiddleWare, getAllUserData);
 
+routes
+  .route("/github/callback")
+  .get(
+    passport.authenticate("github", { failureRedirect: "/" }),
+    (req, res) => {
+      console.log("GitHub callback received");
+      handleSocialLogin(req, res);
+    }
+  );
 // SSO routes
 routes.route("/google").get(
   passport.authenticate("google", {
@@ -63,8 +74,17 @@ routes.route("/google").get(
     res.send("redirecting to google...");
   }
 );
-
 routes
   .route("/google/callback")
   .get(passport.authenticate("google"), handleSocialLogin);
+
+routes
+  .route("/github")
+  .get(
+    passport.authenticate("github", { scope: ["profile", "email"] }),
+    (req, res) => {
+      res.send("redirecting to github...");
+    }
+  );
+
 export default routes;

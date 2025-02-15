@@ -154,6 +154,20 @@ const Chatbox = () => {
   const modalRef = useRef(null);
   const messageRef = useRef(null);
 
+  const [me, setMe] = useState("");
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [stream, setStream] = useState();
+  const [callEnded, setCallEnded] = useState(false);
+  const [name, setName] = useState("");
+  const [receivingCall, setReceivingCall] = useState(false);
+  const [caller, setCaller] = useState("");
+  const [callerSignal, setCallerSignal] = useState();
+  const [call, setCall] = useState();
+
+  const myAudio = useRef();
+  const userAudio = useRef();
+  const connectionRef = useRef();
+
   const todayDate = new Date();
   const TodayDateOnly = todayDate.toISOString().split("T")[0];
   const yesterday = new Date(todayDate);
@@ -227,6 +241,77 @@ const Chatbox = () => {
     }
     return mainArray;
   }
+
+  useEffect(() => {
+    // Request access to the user's microphone
+    navigator.mediaDevices
+      .getUserMedia({ video: false, audio: true })
+      .then((currentStream) => {
+        setStream(currentStream);
+        myAudio.current.srcObject = currentStream;
+      })
+      .catch((err) => {
+        console.error("Error accessing media devices.", err);
+      });
+
+    // Listen for the 'me' event from the server to get the socket ID
+    socket?.on("me1", (id) => setMe(id));
+
+    // Listen for incoming calls
+    socket?.on("receive-call", ({ from, signal, name: callerName }) => {
+      setReceivingCall(true);
+      setCaller(from);
+      setCallerSignal(signal);
+      setName(callerName); // Optional: if you send the caller's name
+    });
+
+    // Clean up the socket? connection on component unmount
+    return () => {
+      socket?.off("me");
+      socket?.off("receive-call");
+    };
+  }, []);
+  const callUser = (id) => {
+    const peer = new SimplePeer({ initiator: true, trickle: false, stream });
+
+    peer?.on("signal", (data) => {
+      socket.emit("call-user1", {
+        userToCall: id,
+        signal: data,
+        from: me,
+        name,
+      });
+    });
+
+    peer?.on("stream", (userStream) => {
+      console.log(">>>>>>>>>>>>>>stream");
+
+      userAudio.current.srcObject = userStream;
+    });
+
+    socket.on("call-accepted1", (signal) => {
+      setCallAccepted(true);
+      peer?.signal(signal);
+    });
+
+    connectionRef.current = peer;
+  };
+
+  const answerCall = () => {
+    setCallAccepted(true);
+    const peer = new SimplePeer({ initiator: false, trickle: false, stream });
+
+    peer?.on("signal", (data) => {
+      socket.emit("answer-call1", { signal: data, to: caller });
+    });
+
+    peer?.on("stream", (userStream) => {
+      userAudio.current.srcObject = userStream;
+    });
+
+    peer?.signal(callerSignal);
+    connectionRef.current = peer;
+  };
 
   function moveOneMessageToTop(mainArray, notificationArray) {
     if (notificationArray) {
@@ -2474,6 +2559,21 @@ const Chatbox = () => {
           updateOrAddMessage={updateOrAddMessage}
         />
       )}
+
+      {/* <div>
+        <h1>Audio Call</h1>
+        <audio playsInline ref={myAudio} autoPlay />
+        <audio playsInline ref={userAudio} autoPlay />
+
+        {receivingCall && !callAccepted ? (
+          <div>
+            <h2>{name} is calling...</h2>
+            <button onClick={answerCall}>Answer</button>
+          </div>
+        ) : null}
+
+        <button onClick={() => callUser(me)}>Call User</button>
+      </div> */}
       {/* <div className="flex">
         <video ref={localVideoRef} width={300} height={200} autoPlay />
         <video

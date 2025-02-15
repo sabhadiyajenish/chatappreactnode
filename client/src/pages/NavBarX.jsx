@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
@@ -20,12 +22,27 @@ export default function NavBar() {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem("Theme");
+    return savedMode === "dark" ? true : false; // Convert string to boolean
+  });
   const { authUser } = useSelector((state) => {
     return state.counter;
   });
   const { notificationDatas } = useSelector((state) => state.notificationData);
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("Theme", "dark"); // Save dark mode preference
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("Theme", "light"); // Save light mode preference
+    }
+  }, [darkMode]);
 
+  const toggleDarkMode = () => {
+    setDarkMode((prevMode) => !prevMode); // Toggle dark mode
+  };
   const LogoutUser = () => {
     localStorage.removeItem("token");
 
@@ -135,15 +152,15 @@ export default function NavBar() {
                       </Menu.Item>
                       <Menu.Item>
                         {({ active }) => (
-                          <NavLink
-                            to="/user"
+                          <button
+                            onClick={toggleDarkMode}
                             className={classNames(
-                              active ? "w-full bg-gray-100" : "",
-                              "w-full block px-4 py-2 text-sm text-gray-700"
+                              active ? "w-full  bg-gray-100" : "",
+                              "w-full block px-4 py-2 text-sm text-gray-700 text-start"
                             )}
                           >
-                            Security
-                          </NavLink>
+                            Theme
+                          </button>
                         )}
                       </Menu.Item>
                       {authUser && (
@@ -169,7 +186,7 @@ export default function NavBar() {
           </div>
 
           <Disclosure.Panel className="sm:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2">
+            <div className="space-y-1 px-2 pb-3 pt-2 overflow-x-scroll">
               {navigation.map((item) => (
                 <NavLink
                   active={true}

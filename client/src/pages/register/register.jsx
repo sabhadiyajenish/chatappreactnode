@@ -74,11 +74,11 @@ const Register = () => {
     <div className="w-full h-full">
       <section className="w-full flex flex-col md:flex-row items-center">
         <div
-          className="bg-white w-full sm:max-w-md md:max-w-md lg:max-w-full md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12
+          className="dark:bg-gray-900 w-full sm:max-w-md md:max-w-md lg:max-w-full md:mx-0 md:w-1/2 xl:w-1/3 h-screen px-6 lg:px-16 xl:px-12
                                     flex items-center justify-center"
         >
           <div className="w-full h-100">
-            <h1 className="text-xl md:text-2xl font-bold leading-tight mt-3">
+            <h1 className="text-xl md:text-2xl font-bold leading-tight mt-10 dark:text-white">
               Create new account{" "}
             </h1>
 
@@ -96,7 +96,7 @@ const Register = () => {
                   <p className="errorMsg">{errors.userName.message}</p>
                 )}
               </div>
-              <div className="mt-2">
+              <div className="mt-4">
                 <Input
                   label="fullName*"
                   placeholder="Enter fullName"
@@ -108,7 +108,7 @@ const Register = () => {
                   <p className="errorMsg">{errors.fullName.message}</p>
                 )}
               </div>
-              <div className="mt-2">
+              <div className="mt-4">
                 <Input
                   label="Email Address*"
                   type="email"
@@ -121,7 +121,7 @@ const Register = () => {
                   <p className="errorMsg">{errors.email.message}</p>
                 )}
               </div>
-              <div className="mt-2">
+              <div className="mt-4">
                 <Input
                   label="Password*"
                   type="password"
@@ -145,7 +145,7 @@ const Register = () => {
                   </p>
                 )}
               </div>
-              <div className="mt-2 flex">
+              <div className="mt-4 flex">
                 <Input
                   label="Profile Image*"
                   type="file"
@@ -183,7 +183,7 @@ const Register = () => {
               <Button
                 type="submit"
                 className="w-full block bg-blue-500 hover:bg-blue-400 focus:bg-blue-400 text-white font-semibold rounded-lg
-                                        px-4 py-2.5 mt-6"
+                                        px-4 py-2.5 mt-10"
               >
                 {" "}
                 Register User
@@ -192,7 +192,7 @@ const Register = () => {
 
             {/* <hr className="my-6  border-gray-300 w-full" /> */}
 
-            <p className="mt-4">
+            <p className="mt-4 dark:text-white">
               Already have account?{" "}
               <NavLink
                 to="/login"

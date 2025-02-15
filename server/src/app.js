@@ -1,4 +1,4 @@
-import express from "express";
+import express, { json } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
@@ -135,7 +135,7 @@ SocketEvents(io);
 
 app.get("/", (req, res) => {
   res.json(
-    "This Apis Working Perfectly in Vercel it is just for checking pupose only so dont mind."
+    "This Apis Working Perfectly in server it is just for checking pupose only so dont mind."
   );
 });
 
@@ -150,7 +150,7 @@ app.use((err, req, res, next) => {
   // Handle other types of errors or forward to default error handler
   return res.status(500).json({
     statusCode: 500,
-    message: "Internal Server Error",
+    message: `Internal Server Error${err}`,
     success: false,
   });
 });
