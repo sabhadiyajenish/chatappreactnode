@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import { SOCKET_URL } from "../../utils/constant";
 
-const socket = io(SOCKET_URL); // Replace with your backend URL
+const socket = io("http://localhost:5000"); // Replace with your backend URL
 
 export default function Home() {
   const pcRef = useRef(null);
