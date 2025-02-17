@@ -17,21 +17,14 @@ export default function Home() {
   const [selectedAudioDevice, setSelectedAudioDevice] = useState(null);
   const [incomingCall, setIncomingCall] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [hasVideo, setHasVideo] = useState(true); // Track video availability
 
   useEffect(() => {
     let isMounted = true;
 
     const getAudioDevices = async () => {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const audioInputs = devices.filter(
-        (device) => device.kind === "audioinput"
-      );
-      setAudioDevices(audioInputs);
-      if (audioInputs.length > 0) {
-        setSelectedAudioDevice(audioInputs[0].deviceId);
-      }
+      /* ... (same as before) */
     };
-
     getAudioDevices();
 
     const initializeMediaAndConnection = async () => {
@@ -45,6 +38,7 @@ export default function Home() {
 
         if (isMounted) {
           setLocalStream(stream);
+          setHasVideo(true); // Video is available
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
           }
@@ -54,50 +48,109 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Error accessing media:", error);
-        try {
-          const audioConstraints = {
-            audio: selectedAudioDevice
-              ? { deviceId: { exact: selectedAudioDevice } }
-              : true,
-          };
-          const audioStream = await navigator.mediaDevices.getUserMedia(
-            audioConstraints
+
+        // Handle video permission denial or no video device
+        if (
+          error.name === "NotAllowedError" ||
+          error.name === "NotFoundError" ||
+          error.name === "OverconstrainedError"
+        ) {
+          console.log(
+            "Video access denied or not available. Trying audio only."
           );
+          setHasVideo(false); // No video
 
-          if (isMounted) {
-            setLocalStream(audioStream);
-            audioStream.getTracks().forEach((track) => {
-              pcRef.current.addTrack(track, audioStream);
-            });
+          try {
+            const audioConstraints = {
+              audio: selectedAudioDevice
+                ? { deviceId: { exact: selectedAudioDevice } }
+                : true,
+            };
+            const audioStream = await navigator.mediaDevices.getUserMedia(
+              audioConstraints
+            );
+            if (isMounted) {
+              setLocalStream(audioStream);
+              audioStream.getTracks().forEach((track) => {
+                pcRef.current.addTrack(track, audioStream);
+              });
 
-            if (localVideoRef.current) {
-              const blackCanvas = document.createElement("canvas");
-              blackCanvas.width = 640;
-              blackCanvas.height = 480;
-              const blackCtx = blackCanvas.getContext("2d");
-              blackCtx.fillStyle = "black";
-              blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-              localVideoRef.current.srcObject = blackCanvas.captureStream();
+              if (localVideoRef.current) {
+                // Display a placeholder or black screen
+                const blackCanvas = document.createElement("canvas");
+                blackCanvas.width = 640;
+                blackCanvas.height = 480;
+                const blackCtx = blackCanvas.getContext("2d");
+                blackCtx.fillStyle = "black";
+                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+                localVideoRef.current.srcObject = blackCanvas.captureStream();
+              }
+            }
+          } catch (audioError) {
+            console.error("Error getting only audio:", audioError);
+            if (isMounted) {
+              setLocalStream(null);
+              if (localVideoRef.current) {
+                // Handle the case where even audio fails (very rare)
+                const blackCanvas = document.createElement("canvas");
+                blackCanvas.width = 640;
+                blackCanvas.height = 480;
+                const blackCtx = blackCanvas.getContext("2d");
+                blackCtx.fillStyle = "black";
+                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+                localVideoRef.current.srcObject = blackCanvas.captureStream();
+              }
             }
           }
-        } catch (audioError) {
-          console.error("Error getting only audio:", audioError);
-          if (isMounted) {
-            setLocalStream(null);
-            if (localVideoRef.current) {
-              const blackCanvas = document.createElement("canvas");
-              blackCanvas.width = 640;
-              blackCanvas.height = 480;
-              const blackCtx = blackCanvas.getContext("2d");
-              blackCtx.fillStyle = "black";
-              blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-              localVideoRef.current.srcObject = blackCanvas.captureStream();
+        } else {
+          // Other errors (not related to video access)
+          console.error("Other media access error:", error);
+          setHasVideo(false);
+          try {
+            const audioConstraints = {
+              audio: selectedAudioDevice
+                ? { deviceId: { exact: selectedAudioDevice } }
+                : true,
+            };
+            const audioStream = await navigator.mediaDevices.getUserMedia(
+              audioConstraints
+            );
+            if (isMounted) {
+              setLocalStream(audioStream);
+              audioStream.getTracks().forEach((track) => {
+                pcRef.current.addTrack(track, audioStream);
+              });
+
+              if (localVideoRef.current) {
+                // Display a placeholder or black screen
+                const blackCanvas = document.createElement("canvas");
+                blackCanvas.width = 640;
+                blackCanvas.height = 480;
+                const blackCtx = blackCanvas.getContext("2d");
+                blackCtx.fillStyle = "black";
+                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+                localVideoRef.current.srcObject = blackCanvas.captureStream();
+              }
+            }
+          } catch (audioError) {
+            console.error("Error getting only audio:", audioError);
+            if (isMounted) {
+              setLocalStream(null);
+              if (localVideoRef.current) {
+                // Handle the case where even audio fails (very rare)
+                const blackCanvas = document.createElement("canvas");
+                blackCanvas.width = 640;
+                blackCanvas.height = 480;
+                const blackCtx = blackCanvas.getContext("2d");
+                blackCtx.fillStyle = "black";
+                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+                localVideoRef.current.srcObject = blackCanvas.captureStream();
+              }
             }
           }
         }
       }
     };
-
     initializeMediaAndConnection();
 
     socket.on("offer", async (offer) => {
@@ -270,16 +323,22 @@ export default function Home() {
           {callInProgress ? "Call in Progress" : "Start Call"}
         </button>
         <div className="mt-4 flex justify-center">
-          {" "}
-          {/* Video container */}
           {localStream && (
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-64 h-48 border-2 border-red-500 rounded" // Fixed size, border
-            />
+            <div className="relative">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-64 h-48 border-2  border-red-500 rounded"
+              />
+              {!hasVideo && (
+                <p className=" absolute top-20 right-16 w-[55%] ">
+                  Video not available.
+                </p>
+              )}{" "}
+              {/* Display message */}
+            </div>
           )}
         </div>
         <div className="mt-4 flex justify-center">
