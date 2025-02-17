@@ -15,6 +15,8 @@ export default function Home() {
   const [callInProgress, setCallInProgress] = useState(false);
   const [audioDevices, setAudioDevices] = useState([]);
   const [selectedAudioDevice, setSelectedAudioDevice] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,7 +28,7 @@ export default function Home() {
       );
       setAudioDevices(audioInputs);
       if (audioInputs.length > 0) {
-        setSelectedAudioDevice(audioInputs[0].deviceId); // Select the first one by default
+        setSelectedAudioDevice(audioInputs[0].deviceId);
       }
     };
 
@@ -46,11 +48,10 @@ export default function Home() {
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
           }
+          stream.getTracks().forEach((track) => {
+            pcRef.current.addTrack(track, stream);
+          });
         }
-
-        stream.getTracks().forEach((track) => {
-          pcRef.current.addTrack(track, stream);
-        });
       } catch (error) {
         console.error("Error accessing media:", error);
         try {
@@ -124,7 +125,49 @@ export default function Home() {
         console.error("Error handling answer:", error);
       }
     });
+    socket.on("incoming-call", () => {
+      setIncomingCall(true);
+    });
 
+    socket.on("call-accepted", async () => {
+      const pc = pcRef.current;
+      if (!pc || pc.signalingState === "closed") {
+        pcRef.current = initializePeerConnection(); // Reinitialize if needed
+
+        // Important: Add tracks *before* creating the offer
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+          });
+
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+          stream.getTracks().forEach((track) => {
+            pcRef.current.addTrack(track, stream);
+          });
+        } catch (error) {
+          console.error("Error accessing media:", error);
+        }
+      }
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("offer", offer);
+        setIsCallActive(true);
+      } catch (error) {
+        console.error("Error creating/setting offer:", error);
+        setCallInProgress(false);
+        setIsCallActive(false);
+      }
+    });
+
+    socket.on("call-denied", () => {
+      setCallInProgress(false);
+      setIsCallActive(false);
+      alert("Call was rejected");
+    });
     socket.on("ice-candidate", (candidate) => {
       const pc = pcRef.current;
       if (!pc) {
@@ -156,7 +199,6 @@ export default function Home() {
       setIsCallActive(false);
     };
   }, []);
-
   useEffect(() => {
     if (remoteStream && remoteAudioRef.current && remoteVideoRef.current) {
       remoteAudioRef.current.srcObject = remoteStream;
@@ -201,25 +243,17 @@ export default function Home() {
 
   const startCall = async () => {
     if (callInProgress) return;
-
     setCallInProgress(true);
-    const pc = pcRef.current;
-    if (!pc || pc.signalingState === "closed") {
-      console.warn("Reinitializing peer connection...");
-      pcRef.current = initializePeerConnection();
-    }
-    try {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      socket.emit("offer", offer);
-      setIsCallActive(true);
-    } catch (error) {
-      console.error("Error creating or setting offer:", error);
-      setCallInProgress(false);
-      setIsCallActive(false);
-    }
+    socket.emit("call-request");
   };
 
+  const toggleMute = () => {
+    if (localStream) {
+      const audioTracks = localStream.getAudioTracks();
+      audioTracks.forEach((track) => (track.enabled = !isMuted));
+      setIsMuted(!isMuted);
+    }
+  };
   return (
     <div className="h-screen bg-gray-100 flex flex-col items-center justify-center">
       {" "}
@@ -265,11 +299,44 @@ export default function Home() {
                 controls
                 className="mt-2"
               ></audio>{" "}
+              <button
+                onClick={toggleMute}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4"
+              >
+                {isMuted ? "Unmute" : "Mute"}
+              </button>
               {/* Audio controls below video */}
             </div>
           )}
         </div>
       </div>
+      {incomingCall && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg text-center">
+            <h2 className="text-xl font-bold mb-4">Incoming Call!</h2>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  socket.emit("call-accepted");
+                  setIncomingCall(false);
+                }}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => {
+                  socket.emit("call-denied");
+                  setIncomingCall(false);
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

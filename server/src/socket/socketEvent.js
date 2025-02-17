@@ -21,7 +21,17 @@ const SocketEvents = (io) => {
       socket.join(roomId);
       console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
+    socket.on("call-request", () => {
+      socket.broadcast.emit("incoming-call");
+    });
 
+    socket.on("call-accepted", () => {
+      socket.broadcast.emit("call-accepted");
+    });
+
+    socket.on("call-denied", () => {
+      socket.broadcast.emit("call-denied");
+    });
     // Handle WebRTC signaling for audio call
     socket.on("offer", (data) => {
       socket.broadcast.emit("offer", data);
