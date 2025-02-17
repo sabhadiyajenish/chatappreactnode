@@ -26,7 +26,9 @@ const SocketEvents = (io) => {
     socket.on("call-request", () => {
       socket.broadcast.emit("incoming-call");
     });
-
+    socket.on("end-call", () => {
+      socket.broadcast.emit("end-call");
+    });
     socket.on("call-accepted", () => {
       socket.broadcast.emit("call-accepted");
     });

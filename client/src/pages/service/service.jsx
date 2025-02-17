@@ -342,7 +342,7 @@ export default function Home() {
               {!hasVideo && (
                 <div>
                   <p>Video not available.</p>
-                  {/* {localVideoError && <p>Error: {localVideoError}</p>} */}
+                  {localVideoError && <p>Error: {localVideoError}</p>}
                   {/* Display error message */}
                 </div>
               )}
