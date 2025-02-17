@@ -12,6 +12,8 @@ const SocketEvents = (io) => {
       if (!isUser) {
         const user = { userId, socketId: socket.id };
         users.push(user);
+        console.log("users uis<<", users);
+
         io.emit("getUser", users, lastSeen);
       }
       console.log("Connected users:", users);
