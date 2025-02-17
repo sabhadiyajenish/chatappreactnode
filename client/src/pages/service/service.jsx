@@ -199,7 +199,7 @@ export default function Home() {
 
       {localStream && (
         <video
-          className="bg-black"
+          // className="bg-black"
           ref={localVideoRef}
           autoPlay
           muted
@@ -213,7 +213,7 @@ export default function Home() {
             ref={remoteVideoRef}
             autoPlay
             playsInline
-            className="bg-black"
+            // className="bg-black"
           ></video>
           <audio ref={remoteAudioRef} autoPlay controls></audio>
         </div>
