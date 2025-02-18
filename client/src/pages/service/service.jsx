@@ -19,7 +19,15 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false);
   const [hasVideo, setHasVideo] = useState(true); // Track video availability
   const [localVideoError, setLocalVideoError] = useState(null); // Store video error
-
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+      // Ensure video plays on mobile
+      localVideoRef.current.play().catch((error) => {
+        console.error("Error playing local video:", error);
+      });
+    }
+  }, [localStream]);
   useEffect(() => {
     let isMounted = true;
 
@@ -44,116 +52,60 @@ export default function Home() {
           audio: true,
           video: true,
         });
-
         if (isMounted) {
           setLocalStream(stream);
           setHasVideo(true);
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-          }
-          stream.getTracks().forEach((track) => {
-            pcRef.current.addTrack(track, stream);
-          });
+          // Removed direct assignment to srcObject here
         }
+        // Add tracks to peer connection
+        stream.getTracks().forEach((track) => {
+          pcRef.current.addTrack(track, stream);
+        });
       } catch (error) {
         console.error("Error accessing media:", error);
-        setLocalVideoError(error.message); // Store the error message
+        setLocalVideoError(error.message);
 
-        if (
-          error.name === "NotAllowedError" ||
-          error.name === "NotFoundError" ||
-          error.name === "OverconstrainedError"
-        ) {
-          console.log(
-            "Video access denied or not available. Trying audio only."
+        // Fallback to audio with canvas video
+        try {
+          const audioConstraints = {
+            audio: selectedAudioDevice
+              ? { deviceId: { exact: selectedAudioDevice } }
+              : true,
+          };
+          const audioStream = await navigator.mediaDevices.getUserMedia(
+            audioConstraints
           );
-          setHasVideo(false);
 
-          try {
-            const audioConstraints = {
-              audio: selectedAudioDevice
-                ? { deviceId: { exact: selectedAudioDevice } }
-                : true,
-            };
-            const audioStream = await navigator.mediaDevices.getUserMedia(
-              audioConstraints
-            );
+          // Create canvas with continuous updates
+          const blackCanvas = document.createElement("canvas");
+          blackCanvas.width = 640;
+          blackCanvas.height = 480;
+          const blackCtx = blackCanvas.getContext("2d");
 
-            if (isMounted) {
-              setLocalStream(audioStream);
-              audioStream.getTracks().forEach((track) => {
-                pcRef.current.addTrack(track, audioStream);
-              });
+          const drawBlack = () => {
+            blackCtx.fillStyle = "black";
+            blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
+            requestAnimationFrame(drawBlack);
+          };
+          drawBlack();
 
-              if (localVideoRef.current) {
-                const blackCanvas = document.createElement("canvas");
-                blackCanvas.width = 640;
-                blackCanvas.height = 480;
-                const blackCtx = blackCanvas.getContext("2d");
-                blackCtx.fillStyle = "black";
-                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-                localVideoRef.current.srcObject = blackCanvas.captureStream();
-              }
-            }
-          } catch (audioError) {
-            console.error("Error getting only audio:", audioError);
-            if (isMounted) {
-              setLocalStream(null);
-              if (localVideoRef.current) {
-                const blackCanvas = document.createElement("canvas");
-                blackCanvas.width = 640;
-                blackCanvas.height = 480;
-                const blackCtx = blackCanvas.getContext("2d");
-                blackCtx.fillStyle = "black";
-                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-                localVideoRef.current.srcObject = blackCanvas.captureStream();
-              }
-            }
+          const canvasStream = blackCanvas.captureStream();
+          const videoTrack = canvasStream.getVideoTracks()[0];
+          const combinedStream = new MediaStream([
+            ...audioStream.getTracks(),
+            videoTrack,
+          ]);
+
+          if (isMounted) {
+            setLocalStream(combinedStream);
+            setHasVideo(false); // Indicate video is simulated
+            combinedStream.getTracks().forEach((track) => {
+              pcRef.current.addTrack(track, combinedStream);
+            });
           }
-        } else {
-          console.error("Other media access error:", error);
-          setHasVideo(false);
-          try {
-            const audioConstraints = {
-              audio: selectedAudioDevice
-                ? { deviceId: { exact: selectedAudioDevice } }
-                : true,
-            };
-            const audioStream = await navigator.mediaDevices.getUserMedia(
-              audioConstraints
-            );
-
-            if (isMounted) {
-              setLocalStream(audioStream);
-              audioStream.getTracks().forEach((track) => {
-                pcRef.current.addTrack(track, audioStream);
-              });
-
-              if (localVideoRef.current) {
-                const blackCanvas = document.createElement("canvas");
-                blackCanvas.width = 640;
-                blackCanvas.height = 480;
-                const blackCtx = blackCanvas.getContext("2d");
-                blackCtx.fillStyle = "black";
-                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-                localVideoRef.current.srcObject = blackCanvas.captureStream();
-              }
-            }
-          } catch (audioError) {
-            console.error("Error getting only audio:", audioError);
-            if (isMounted) {
-              setLocalStream(null);
-              if (localVideoRef.current) {
-                const blackCanvas = document.createElement("canvas");
-                blackCanvas.width = 640;
-                blackCanvas.height = 480;
-                const blackCtx = blackCanvas.getContext("2d");
-                blackCtx.fillStyle = "black";
-                blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-                localVideoRef.current.srcObject = blackCanvas.captureStream();
-              }
-            }
-          }
+        } catch (audioError) {
+          console.error("Error getting audio:", audioError);
+          // Handle audio failure (show error, etc.)
         }
       }
     };
