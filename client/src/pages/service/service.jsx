@@ -19,6 +19,9 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false);
   const [hasVideo, setHasVideo] = useState(true); // Track video availability
   const [localVideoError, setLocalVideoError] = useState(null); // Store video error
+  const audioRef = useRef(new Audio("/iphone.mp3"));
+  const [isRingtonePlaying, setIsRingtonePlaying] = useState(false);
+
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
@@ -139,9 +142,11 @@ export default function Home() {
     });
     socket.on("incoming-call", () => {
       setIncomingCall(true);
+      playRingtone();
     });
 
     socket.on("call-accepted", async () => {
+      stopRingtone();
       const pc = pcRef.current;
       if (!pc || pc.signalingState === "closed") {
         pcRef.current = initializePeerConnection(); // Reinitialize if needed
@@ -176,6 +181,7 @@ export default function Home() {
     });
 
     socket.on("call-denied", () => {
+      stopRingtone();
       setCallInProgress(false);
       setIsCallActive(false);
       alert("Call was rejected");
@@ -209,6 +215,7 @@ export default function Home() {
       }
       setCallInProgress(false);
       setIsCallActive(false);
+      stopRingtone();
     };
   }, []);
   useEffect(() => {
@@ -251,6 +258,24 @@ export default function Home() {
     };
 
     return pc;
+  };
+
+  const playRingtone = () => {
+    if (!isRingtonePlaying) {
+      audioRef.current.loop = true; // Set loop *after* initializing
+      audioRef.current
+        .play()
+        .then(() => setIsRingtonePlaying(true))
+        .catch((error) => console.log("Audio play failed:", error));
+    }
+  };
+
+  const stopRingtone = () => {
+    if (isRingtonePlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsRingtonePlaying(false); // Update *before* setting to null for proper state management
+    }
   };
 
   const startCall = async () => {
@@ -339,6 +364,8 @@ export default function Home() {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
+                  stopRingtone();
+
                   setIncomingCall(false);
                   socket.emit("call-accepted");
                 }}
@@ -348,6 +375,8 @@ export default function Home() {
               </button>
               <button
                 onClick={() => {
+                  stopRingtone();
+
                   setIncomingCall(false);
                   socket.emit("call-denied");
                 }}
