@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { SOCKET_URL } from "../../utils/constant";
-
+import { FaCamera, FaCameraRetro } from "react-icons/fa";
 const socket = io(SOCKET_URL);
 
 export default function Home() {
@@ -21,6 +21,80 @@ export default function Home() {
   const [localVideoError, setLocalVideoError] = useState(null); // Store video error
   const audioRef = useRef(new Audio("/iphone.mp3"));
   const [isRingtonePlaying, setIsRingtonePlaying] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [currentFacingMode, setCurrentFacingMode] = useState("environment");
+  // Check permissions on component mount
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        // Attempt to get media to check permissions
+        const testStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        testStream.getTracks().forEach((track) => track.stop());
+        setPermissionDenied(false);
+      } catch (error) {
+        console.log("M<<<<<<<<<<<<<<<<<<<", error.name);
+
+        if (
+          error.name === "NotAllowedError" ||
+          error.name === "NotFoundError"
+        ) {
+          setPermissionDenied(true);
+        }
+      }
+    };
+
+    checkPermissions();
+  }, []);
+  // Request permissions when the user clicks "Allow Permissions"
+  const requestPermissions = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true, // Add video permission request
+      });
+      setLocalStream(stream);
+      setPermissionDenied(false);
+
+      // Add tracks to peer connection (important!)
+      stream.getTracks().forEach((track) => {
+        pcRef.current?.addTrack(track, stream);
+      });
+    } catch (error) {
+      console.error("Error requesting permissions:", error);
+      if (error.name === "NotAllowedError") {
+        setPermissionDenied(true);
+      }
+    }
+  };
+  const renderPermissionRequest = () => {
+    return (
+      <div className="mt-4 text-center">
+        <p className="text-red-500">
+          {permissionDenied
+            ? "Permissions denied. Please allow access to microphone and camera."
+            : "Permissions required for video calls"}
+        </p>
+
+        <button
+          onClick={requestPermissions}
+          className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          {permissionDenied ? "Retry Permissions" : "Allow Permissions"}
+        </button>
+
+        {permissionDenied && (
+          <div className="mt-2 text-sm text-gray-600">
+            <p>If permissions are blocked:</p>
+            <p>1. Click the lock icon in the address bar</p>
+            <p>2. Set Camera/Microphone to "Allow"</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
@@ -108,6 +182,7 @@ export default function Home() {
           }
         } catch (audioError) {
           console.error("Error getting audio:", audioError);
+
           // Handle audio failure (show error, etc.)
         }
       }
@@ -186,6 +261,11 @@ export default function Home() {
       setIsCallActive(false);
       alert("Call was rejected");
     });
+
+    socket.on("call-ended", () => {
+      handleCallEnded("Call ended by the other party.");
+    });
+
     socket.on("ice-candidate", (candidate) => {
       const pc = pcRef.current;
       if (!pc) {
@@ -209,6 +289,7 @@ export default function Home() {
       socket.off("offer");
       socket.off("answer");
       socket.off("ice-candidate");
+      socket.off("call-ended");
 
       if (localStream) {
         localStream.getTracks().forEach((track) => track.stop());
@@ -250,6 +331,7 @@ export default function Home() {
         pc.iceConnectionState === "disconnected"
       ) {
         console.error("ICE connection failed or disconnected. Restarting...");
+        handleCallEnded("Connection failed.");
         setCallInProgress(false);
         pc.close();
         pcRef.current = initializePeerConnection();
@@ -258,6 +340,27 @@ export default function Home() {
     };
 
     return pc;
+  };
+  const handleCallEnded = (reason) => {
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null; // Important: Reset pcRef
+    }
+
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
+    }
+    setRemoteStream(null);
+    setIsCallActive(false);
+    setCallInProgress(false);
+    setCallEnded(true); // Set callEnded to true
+    stopRingtone();
+
+    alert(reason); // Display the reason for the call ending
+
+    // Reset callEnded after a short delay to allow the alert to show
+    setTimeout(() => setCallEnded(false), 500);
   };
 
   const playRingtone = () => {
@@ -283,7 +386,12 @@ export default function Home() {
     setCallInProgress(true);
     socket.emit("call-request");
   };
-
+  const endCall = () => {
+    if (isCallActive) {
+      socket.emit("end-call"); // Notify the other peer
+      handleCallEnded("Call ended.");
+    }
+  };
   const toggleMute = () => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks();
@@ -291,41 +399,110 @@ export default function Home() {
       setIsMuted(!isMuted);
     }
   };
+  const switchCamera = async () => {
+    if (!localStream) return;
+
+    const newFacingMode =
+      currentFacingMode === "environment" ? "user" : "environment";
+    setCurrentFacingMode(newFacingMode);
+
+    try {
+      // 1. Get current video track
+      const videoTrack = localStream.getVideoTracks()[0];
+
+      // 2. Create new stream with desired facing mode
+      const constraints = {
+        video: { facingMode: newFacingMode }, // Use facingMode constraint
+      };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // 3. Replace the track in the existing stream
+      await videoTrack.applyConstraints({ stop: true }); //stop the video track
+      localStream.removeTrack(videoTrack);
+      localStream.addTrack(newStream.getVideoTracks()[0]);
+      localVideoRef.current.srcObject = localStream;
+
+      // 4. Update the sender in the peer connection (if call is active)
+      if (pcRef.current && isCallActive) {
+        const sender = pcRef.current
+          .getSenders()
+          .find((s) => s.track && s.track.kind === "video");
+        if (sender) {
+          await sender.replaceTrack(newStream.getVideoTracks()[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Error switching camera:", error);
+    }
+  };
+  // Render local video or fallback UI
+  const renderLocalVideo = () => {
+    if (permissionDenied) {
+      return renderPermissionRequest();
+    }
+
+    if (localStream) {
+      return (
+        <div>
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-64 border-2 border-green-500 rounded-xl"
+          />
+          {!hasVideo && (
+            <div className="text-center text-sm text-gray-600 mt-2">
+              <p>Video not available.</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center sm:p-4 p-3">
-      <h1 className="text-3xl font-bold mb-4 text-center">
+      <h1 className="sm:text-3xl text-lg font-bold mb-4 text-center">
         Audio/Video Call App
       </h1>
 
       <div className="bg-white rounded-lg shadow-lg sm:p-6 p-2 w-full max-w-md">
         <button
           onClick={startCall}
-          disabled={callInProgress}
+          disabled={callInProgress || permissionDenied}
           className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400"
         >
           {callInProgress ? "Call in Progress" : "Start Call"}
         </button>
+        {isCallActive && (
+          <button
+            onClick={endCall}
+            className="w-full mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            End Call
+          </button>
+        )}
 
         {/* Local Video */}
-        <div className="mt-4 flex justify-center">
-          {localStream && (
-            <div>
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-64 border-2 border-green-500 rounded-xl"
-              />
-              {!hasVideo && (
-                <div className="text-center text-sm text-gray-600 mt-2">
-                  <p>Video not available.</p>
-                  {/* {localVideoError && (
-                    <p className="text-red-500">Error: {localVideoError}</p>
-                  )} */}
-                </div>
+        <div className="mt-4 flex justify-center relative">
+          {" "}
+          {/* Add relative for positioning */}
+          {renderLocalVideo()}
+          {localStream && ( // Only show button if there's a local stream
+            <button
+              onClick={switchCamera}
+              disabled={!hasVideo}
+              className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-2 hover:bg-opacity-90"
+            >
+              {currentFacingMode === "environment" ? (
+                <FaCamera /> // Back camera icon
+              ) : (
+                <FaCameraRetro /> // Front camera icon
               )}
-            </div>
+            </button>
           )}
         </div>
 
@@ -337,7 +514,7 @@ export default function Home() {
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
-                className="w-full  h-64  border-2 border-blue-500 rounded-xl"
+                className="w-full h-64 border-2 border-blue-500 rounded-xl"
               />
               <audio
                 ref={remoteAudioRef}
@@ -365,7 +542,6 @@ export default function Home() {
               <button
                 onClick={() => {
                   stopRingtone();
-
                   setIncomingCall(false);
                   socket.emit("call-accepted");
                 }}
@@ -376,7 +552,6 @@ export default function Home() {
               <button
                 onClick={() => {
                   stopRingtone();
-
                   setIncomingCall(false);
                   socket.emit("call-denied");
                 }}

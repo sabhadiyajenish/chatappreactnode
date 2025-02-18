@@ -338,7 +338,7 @@ const SocketEvents = (io) => {
       socket.broadcast.emit("incoming-call");
     });
     socket.on("end-call", () => {
-      socket.broadcast.emit("end-call");
+      socket.broadcast.emit("call-ended");
     });
     socket.on("call-accepted", () => {
       socket.broadcast.emit("call-accepted");
@@ -377,7 +377,9 @@ const SocketEvents = (io) => {
     socket.on("ice-candidate", (data) => {
       socket.broadcast.emit("ice-candidate", data);
     });
-
+    socket.on("end-call", () => {
+      socket.broadcast.emit("end-call"); // Broadcast the end-call event to the other user in the room
+    });
     socket.on("disconnect", () => {
       const user = users.find((user) => user.socketId === socket.id);
       if (user) {

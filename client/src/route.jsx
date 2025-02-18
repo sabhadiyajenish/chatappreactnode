@@ -9,7 +9,7 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import About from "./pages/about/about.jsx";
 const AuthHome = withAuth(Home, false);
-const AuthService = withAuth(Service, true);
+const AuthService = Service;
 const AuthUser = withAuth(User, true);
 const AuthLogin = withAuth(Login, false);
 const AuthRegister = withAuth(Register, false);
