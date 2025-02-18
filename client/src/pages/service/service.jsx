@@ -267,20 +267,21 @@ export default function Home() {
     }
   };
   return (
-    <div className="h-screen bg-gray-100 flex flex-col items-center justify-center">
-      {" "}
-      {/* Full screen, centered */}
-      <h1 className="text-3xl font-bold mb-4">Audio/Video Call App</h1>
-      <div className="bg-white rounded-lg shadow-md p-6 w-96">
-        {" "}
-        {/* Card-like container */}
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center sm:p-4 p-3">
+      <h1 className="text-3xl font-bold mb-4 text-center">
+        Audio/Video Call App
+      </h1>
+
+      <div className="bg-white rounded-lg shadow-lg sm:p-6 p-2 w-full max-w-md">
         <button
           onClick={startCall}
           disabled={callInProgress}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400"
         >
           {callInProgress ? "Call in Progress" : "Start Call"}
         </button>
+
+        {/* Local Video */}
         <div className="mt-4 flex justify-center">
           {localStream && (
             <div>
@@ -289,55 +290,57 @@ export default function Home() {
                 autoPlay
                 muted
                 playsInline
-                className="w-64 h-48 border-2 border-red-500 rounded"
+                className="w-full h-64 border-2 border-green-500 rounded-xl"
               />
               {!hasVideo && (
-                <div>
+                <div className="text-center text-sm text-gray-600 mt-2">
                   <p>Video not available.</p>
-                  {localVideoError && <p>Error: {localVideoError}</p>}
-                  {/* Display error message */}
+                  {/* {localVideoError && (
+                    <p className="text-red-500">Error: {localVideoError}</p>
+                  )} */}
                 </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Remote Video & Audio */}
         <div className="mt-4 flex justify-center">
-          {" "}
-          {/* Video container */}
           {remoteStream && (
             <div>
               <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
-                className="w-64 h-48 border-2 border-blue-500 rounded" // Fixed size, border
+                className="w-full  h-64  border-2 border-blue-500 rounded-xl"
               />
               <audio
                 ref={remoteAudioRef}
                 autoPlay
                 controls
-                className="mt-2"
-              ></audio>{" "}
+                className="mt-2 w-full"
+              />
               <button
                 onClick={toggleMute}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4"
+                className="w-full mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
               >
                 {isMuted ? "Unmute" : "Mute"}
               </button>
-              {/* Audio controls below video */}
             </div>
           )}
         </div>
       </div>
+
+      {/* Incoming Call Popup */}
       {incomingCall && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-lg text-center shadow-xl">
             <h2 className="text-xl font-bold mb-4">Incoming Call!</h2>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
-                  socket.emit("call-accepted");
                   setIncomingCall(false);
+                  socket.emit("call-accepted");
                 }}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
               >
@@ -345,8 +348,8 @@ export default function Home() {
               </button>
               <button
                 onClick={() => {
-                  socket.emit("call-denied");
                   setIncomingCall(false);
+                  socket.emit("call-denied");
                 }}
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
               >
