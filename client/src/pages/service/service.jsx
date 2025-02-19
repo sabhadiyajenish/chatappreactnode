@@ -395,7 +395,7 @@ export default function Home() {
   const toggleMute = () => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks();
-      audioTracks.forEach((track) => (track.enabled = !isMuted));
+      audioTracks.forEach((track) => (track.enabled = isMuted));
       setIsMuted(!isMuted);
     }
   };
@@ -486,35 +486,51 @@ export default function Home() {
           </button>
         )}
 
-        {/* Local Video */}
-        <div className="mt-4 flex justify-center relative">
-          {" "}
-          {/* Add relative for positioning */}
-          {renderLocalVideo()}
-          {localStream && ( // Only show button if there's a local stream
-            <button
-              onClick={switchCamera}
-              disabled={!hasVideo}
-              className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-2 hover:bg-opacity-90"
-            >
-              {currentFacingMode === "environment" ? (
-                <FaCamera /> // Back camera icon
-              ) : (
-                <FaCameraRetro /> // Front camera icon
-              )}
-            </button>
-          )}
-        </div>
+        {!remoteStream && (
+          <div className="mt-4 flex justify-center relative">
+            {renderLocalVideo()}
+            {localStream && ( // Only show button if there's a local stream
+              <button
+                onClick={switchCamera}
+                disabled={!hasVideo}
+                className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-2 hover:bg-opacity-90"
+              >
+                {currentFacingMode === "environment" ? (
+                  <FaCamera /> // Back camera icon
+                ) : (
+                  <FaCameraRetro /> // Front camera icon
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Remote Video & Audio */}
         <div className="mt-4 flex justify-center">
           {remoteStream && (
-            <div>
+            <div className=" relative">
+              <div className=" sm:hidden w-40 h-auto z-20 absolute bottom-5 right-0 flex justify-center">
+                {renderLocalVideo()}
+                {localStream && ( // Only show button if there's a local stream
+                  <button
+                    onClick={switchCamera}
+                    disabled={!hasVideo}
+                    className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-2 hover:bg-opacity-90"
+                  >
+                    {currentFacingMode === "environment" ? (
+                      <FaCamera /> // Back camera icon
+                    ) : (
+                      <FaCameraRetro /> // Front camera icon
+                    )}
+                  </button>
+                )}
+              </div>
+
               <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
-                className="w-full h-64 border-2 border-blue-500 rounded-xl"
+                className="w-full h-[550px] border-2 border-blue-500 rounded-xl"
               />
               <audio
                 ref={remoteAudioRef}
