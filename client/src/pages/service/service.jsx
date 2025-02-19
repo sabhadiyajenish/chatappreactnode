@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { SOCKET_URL } from "../../utils/constant";
-import { FaCamera, FaCameraRetro } from "react-icons/fa";
+import {
+  FaCamera,
+  FaCameraRetro,
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaVideo, // Import Video Icon
+  FaVideoSlash, // Import Video Slash Icon
+} from "react-icons/fa";
 const socket = io(SOCKET_URL);
 
 export default function Home() {
@@ -24,6 +31,7 @@ export default function Home() {
   const [callEnded, setCallEnded] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [currentFacingMode, setCurrentFacingMode] = useState("environment");
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   // Check permissions on component mount
   useEffect(() => {
     const checkPermissions = async () => {
@@ -407,34 +415,67 @@ export default function Home() {
     setCurrentFacingMode(newFacingMode);
 
     try {
-      // 1. Get current video track
+      // 1. Get current video track and its sender
       const videoTrack = localStream.getVideoTracks()[0];
+      const sender = pcRef.current
+        ?.getSenders()
+        .find((s) => s.track === videoTrack);
 
-      // 2. Create new stream with desired facing mode
-      const constraints = {
-        video: { facingMode: newFacingMode }, // Use facingMode constraint
-      };
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (!videoTrack || !sender) {
+        console.error("Video track or sender not found.");
+        return; // Handle the error appropriately
+      }
+
+      // 2. Create new stream with desired facing mode.  Crucially, stop the old track first.
+      await videoTrack.stop(); // Stop the old track before getting the new one.
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacingMode },
+        audio: true, // Include audio to avoid issues.
+      });
+
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (!newVideoTrack) {
+        console.error("New video track not found.");
+        return;
+      }
 
       // 3. Replace the track in the existing stream
-      await videoTrack.applyConstraints({ stop: true }); //stop the video track
-      localStream.removeTrack(videoTrack);
-      localStream.addTrack(newStream.getVideoTracks()[0]);
-      localVideoRef.current.srcObject = localStream;
+      localStream.removeTrack(videoTrack); // Remove old track
+      localStream.addTrack(newVideoTrack); // Add new track
+      localVideoRef.current.srcObject = localStream; // Update local video element.
 
       // 4. Update the sender in the peer connection (if call is active)
+      if (pcRef.current && isCallActive) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+
+      // Stop all other video tracks in the new stream.
+      newStream
+        .getVideoTracks()
+        .slice(1)
+        .forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Error switching camera:", error);
+    }
+  };
+  const toggleVideo = () => {
+    if (localStream) {
+      const videoTracks = localStream.getVideoTracks();
+      videoTracks.forEach((track) => (track.enabled = isVideoEnabled));
+      setIsVideoEnabled(!isVideoEnabled);
+
+      // Update the sender in the peer connection (if call is active)
       if (pcRef.current && isCallActive) {
         const sender = pcRef.current
           .getSenders()
           .find((s) => s.track && s.track.kind === "video");
         if (sender) {
-          await sender.replaceTrack(newStream.getVideoTracks()[0]);
+          sender.replaceTrack(videoTracks[0]); // Replace track with the current track (enabled or disabled)
         }
       }
-    } catch (error) {
-      console.error("Error switching camera:", error);
     }
   };
+
   // Render local video or fallback UI
   const renderLocalVideo = () => {
     if (permissionDenied) {
@@ -538,12 +579,28 @@ export default function Home() {
                 controls
                 className="mt-2 w-full"
               />
-              <button
-                onClick={toggleMute}
-                className="w-full mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-              >
-                {isMuted ? "Unmute" : "Mute"}
-              </button>
+              <div className="flex items-center justify-center gap-x-5">
+                <button
+                  onClick={toggleMute}
+                  className="flex items-center justify-center gap-2 w-16 h-16 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-700 transition-all duration-200"
+                >
+                  {isMuted ? (
+                    <FaMicrophoneSlash size={24} />
+                  ) : (
+                    <FaMicrophone size={24} />
+                  )}
+                </button>
+                <button
+                  onClick={toggleVideo}
+                  className="flex items-center justify-center gap-2 w-16 h-16 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-700 transition-all duration-200"
+                >
+                  {isVideoEnabled ? (
+                    <FaVideo size={24} />
+                  ) : (
+                    <FaVideoSlash size={24} />
+                  )}
+                </button>
+              </div>
             </div>
           )}
         </div>
