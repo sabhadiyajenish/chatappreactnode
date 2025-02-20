@@ -380,9 +380,7 @@ const SocketEvents = (io) => {
     socket.on("end-call", () => {
       socket.broadcast.emit("end-call"); // Broadcast the end-call event to the other user in the room
     });
-    socket.on("just-for-uploasd", () => {
-      socket.broadcast.emit("end-call"); // Broadcast the end-call event to the other user in the room
-    });
+
     socket.on("disconnect", () => {
       const user = users.find((user) => user.socketId === socket.id);
       if (user) {
