@@ -457,15 +457,14 @@ export default function Home() {
       </div>
 
       {/* Incoming Call Popup */}
-      {incomingCall &&
-        callStatus === "incoming" && ( // Show popup only if incoming and status is correct
-          <AcceptOrRejectPopup
-            stopRingtone={stopRingtone}
-            setIncomingCall={setIncomingCall}
-            socket={socket}
-            setCallStatus={setCallStatus} // Pass setCallStatus to the popup
-          />
-        )}
+      {incomingCall && callStatus === "incoming" && (
+        <AcceptOrRejectPopup
+          stopRingtone={stopRingtone}
+          setIncomingCall={setIncomingCall}
+          socket={socket}
+          setCallStatus={setCallStatus}
+        />
+      )}
     </div>
   );
 }
