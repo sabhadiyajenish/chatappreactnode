@@ -1,7 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { SOCKET_URL } from "../../utils/constant";
-
+import {
+  FaCamera,
+  FaCameraRetro,
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaPhone,
+  FaPhoneSlash,
+  FaVideo, // Import Video Icon
+  FaVideoSlash, // Import Video Slash Icon
+} from "react-icons/fa";
+import RenderRemoteComponent, {
+  AcceptOrRejectPopup,
+  renderLocalVideo,
+} from "./etraComponent";
 const socket = io(SOCKET_URL);
 
 export default function Home() {
@@ -19,6 +32,40 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false);
   const [hasVideo, setHasVideo] = useState(true); // Track video availability
   const [localVideoError, setLocalVideoError] = useState(null); // Store video error
+  const audioRef = useRef(new Audio("/iphone.mp3"));
+  const [isRingtonePlaying, setIsRingtonePlaying] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const [currentFacingMode, setCurrentFacingMode] = useState("environment");
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [callStatus, setCallStatus] = useState("idle");
+
+  // Check permissions on component mount
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        // Attempt to get media to check permissions
+        const testStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        testStream.getTracks().forEach((track) => track.stop());
+        setPermissionDenied(false);
+      } catch (error) {
+        console.log("M<<<<<<<<<<<<<<<<<<<", error.name);
+
+        if (
+          error.name === "NotAllowedError" ||
+          error.name === "NotFoundError"
+        ) {
+          setPermissionDenied(true);
+        }
+      }
+    };
+
+    checkPermissions();
+  }, []);
+  // Request permissions when the user clicks "Allow Permissions"
+
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
@@ -105,6 +152,7 @@ export default function Home() {
           }
         } catch (audioError) {
           console.error("Error getting audio:", audioError);
+
           // Handle audio failure (show error, etc.)
         }
       }
@@ -139,9 +187,13 @@ export default function Home() {
     });
     socket.on("incoming-call", () => {
       setIncomingCall(true);
+      playRingtone();
+      setCallStatus("incoming"); // Update call status
     });
 
     socket.on("call-accepted", async () => {
+      stopRingtone();
+      setCallStatus("in-progress");
       const pc = pcRef.current;
       if (!pc || pc.signalingState === "closed") {
         pcRef.current = initializePeerConnection(); // Reinitialize if needed
@@ -176,10 +228,16 @@ export default function Home() {
     });
 
     socket.on("call-denied", () => {
+      stopRingtone();
+      setCallStatus("idle"); // Update call status
       setCallInProgress(false);
       setIsCallActive(false);
       alert("Call was rejected");
     });
+    socket.on("call-ended", (reason) => {
+      handleCallEnded(reason || "Call ended by the other party.");
+    });
+
     socket.on("ice-candidate", (candidate) => {
       const pc = pcRef.current;
       if (!pc) {
@@ -203,12 +261,15 @@ export default function Home() {
       socket.off("offer");
       socket.off("answer");
       socket.off("ice-candidate");
+      socket.off("call-ended");
 
       if (localStream) {
         localStream.getTracks().forEach((track) => track.stop());
       }
       setCallInProgress(false);
       setIsCallActive(false);
+      setCallStatus("idle");
+      stopRingtone();
     };
   }, []);
   useEffect(() => {
@@ -243,6 +304,7 @@ export default function Home() {
         pc.iceConnectionState === "disconnected"
       ) {
         console.error("ICE connection failed or disconnected. Restarting...");
+        handleCallEnded("Connection failed.");
         setCallInProgress(false);
         pc.close();
         pcRef.current = initializePeerConnection();
@@ -252,110 +314,158 @@ export default function Home() {
 
     return pc;
   };
+  const handleCallEnded = (reason) => {
+    if (pcRef.current) {
+      pcRef.current.close();
+      pcRef.current = null; // Important: Reset pcRef
+    }
+
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+      setLocalStream(null);
+    }
+    setRemoteStream(null);
+    setIsCallActive(false);
+    setCallInProgress(false);
+    setCallEnded(true); // Set callEnded to true
+    stopRingtone();
+
+    alert(reason); // Display the reason for the call ending
+    setCallStatus("idle");
+    // Reset callEnded after a short delay to allow the alert to show
+    setTimeout(() => setCallEnded(false), 500);
+    window?.location.reload();
+  };
+
+  const playRingtone = () => {
+    if (!isRingtonePlaying) {
+      audioRef.current.loop = true; // Set loop *after* initializing
+      audioRef.current
+        .play()
+        .then(() => setIsRingtonePlaying(true))
+        .catch((error) => console.log("Audio play failed:", error));
+    }
+  };
+
+  const stopRingtone = () => {
+    if (isRingtonePlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsRingtonePlaying(false); // Update *before* setting to null for proper state management
+    }
+  };
 
   const startCall = async () => {
-    if (callInProgress) return;
-    setCallInProgress(true);
+    if (callStatus !== "idle") return; // Use callStatus instead of callInProgress
+    setCallStatus("calling"); // Update call status
     socket.emit("call-request");
   };
 
-  const toggleMute = () => {
-    if (localStream) {
-      const audioTracks = localStream.getAudioTracks();
-      audioTracks.forEach((track) => (track.enabled = !isMuted));
-      setIsMuted(!isMuted);
+  const endCall = () => {
+    if (callStatus === "in-progress") {
+      // Check if call is in progress
+      socket.emit("end-call");
+      handleCallEnded("Call ended.");
     }
   };
+
   return (
-    <div className="h-screen bg-gray-100 flex flex-col items-center justify-center">
-      {" "}
-      {/* Full screen, centered */}
-      <h1 className="text-3xl font-bold mb-4">Audio/Video Call App</h1>
-      <div className="bg-white rounded-lg shadow-md p-6 w-96">
-        {" "}
-        {/* Card-like container */}
-        <button
-          onClick={startCall}
-          disabled={callInProgress}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          {callInProgress ? "Call in Progress" : "Start Call"}
-        </button>
-        <div className="mt-4 flex justify-center">
-          {localStream && (
-            <div>
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-64 h-48 border-2 border-red-500 rounded"
-              />
-              {!hasVideo && (
-                <div>
-                  <p>Video not available.</p>
-                  {localVideoError && <p>Error: {localVideoError}</p>}
-                  {/* Display error message */}
-                </div>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center sm:p-4 p-3">
+      <h1 className="sm:text-3xl text-lg font-bold mb-4 text-center">
+        Audio/Video Call App
+      </h1>
+
+      <div className="bg-white rounded-lg shadow-lg sm:p-6 p-2 w-full max-w-md">
+        <div className="flex  items-center justify-center pt-3 ">
+          {/* Start Call Button */}
+          <div className=" flex flex-col items-center justify-center gap-2">
+            <button
+              onClick={startCall}
+              disabled={callStatus !== "idle" || permissionDenied}
+              className={`relative flex items-center justify-center md:w-16 w-12 md:h-16 h-12 rounded-full transition-all 
+          ${
+            callStatus === "calling"
+              ? "bg-yellow-500 animate-pulse"
+              : callStatus === "in-progress"
+              ? "bg-green-500 hover:bg-green-700"
+              : "bg-blue-500 hover:bg-blue-700"
+          } 
+          text-white font-bold shadow-lg disabled:bg-gray-400`}
+            >
+              {callStatus === "calling" || callStatus === "in-progress" ? (
+                <FaPhone className="md:text-2xl text-xl animate-spin-slow" />
+              ) : (
+                <FaPhone className="md:text-2xl text-xl" />
               )}
-            </div>
-          )}
-        </div>
-        <div className="mt-4 flex justify-center">
-          {" "}
-          {/* Video container */}
-          {remoteStream && (
-            <div>
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-64 h-48 border-2 border-blue-500 rounded" // Fixed size, border
-              />
-              <audio
-                ref={remoteAudioRef}
-                autoPlay
-                controls
-                className="mt-2"
-              ></audio>{" "}
-              <button
-                onClick={toggleMute}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4"
-              >
-                {isMuted ? "Unmute" : "Mute"}
-              </button>
-              {/* Audio controls below video */}
-            </div>
-          )}
-        </div>
-      </div>
-      {incomingCall && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg text-center">
-            <h2 className="text-xl font-bold mb-4">Incoming Call!</h2>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => {
-                  socket.emit("call-accepted");
-                  setIncomingCall(false);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => {
-                  socket.emit("call-denied");
-                  setIncomingCall(false);
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-              >
-                Decline
-              </button>
-            </div>
+            </button>
+
+            {/* Call Status Text */}
+            <p className="md:text-lg text-sm font-semibold text-center px-4 ">
+              {callStatus === "calling"
+                ? "Calling..."
+                : callStatus === "in-progress"
+                ? "Call in Progress"
+                : "Start Call"}
+            </p>
           </div>
+          {/* End Call Button (Only when in-progress) */}
+          {callStatus === "in-progress" && (
+            <div className=" flex flex-col items-center justify-center gap-2">
+              <button
+                onClick={endCall}
+                className="relative flex items-center justify-center  md:w-16 w-12 md:h-16 h-12  rounded-full bg-red-500 hover:bg-red-700 text-white font-bold shadow-lg transition-all"
+              >
+                <FaPhoneSlash className="md:text-2xl text-xl" />
+              </button>
+              <p className="md:text-lg text-sm font-semibold text-center px-4 ">
+                End Call
+              </p>
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="mt-4 flex justify-center relative">
+          {renderLocalVideo(
+            permissionDenied,
+            localStream,
+            localVideoRef,
+            hasVideo,
+            currentFacingMode,
+
+            setLocalStream,
+            setPermissionDenied,
+            pcRef,
+            setCurrentFacingMode,
+            isCallActive
+          )}
+        </div>
+
+        {/* Remote Video & Audio */}
+        <RenderRemoteComponent
+          remoteStream={remoteStream}
+          remoteVideoRef={remoteVideoRef}
+          remoteAudioRef={remoteAudioRef}
+          isMuted={isMuted}
+          isVideoEnabled={isVideoEnabled}
+          isCallActive={isCallActive}
+          pcRef={pcRef}
+          setIsVideoEnabled={setIsVideoEnabled}
+          localStream={localStream}
+          setIsMuted={setIsMuted}
+          hasVideo={hasVideo}
+        />
+      </div>
+
+      {/* Incoming Call Popup */}
+      {incomingCall &&
+        callStatus === "incoming" && ( // Show popup only if incoming and status is correct
+          <AcceptOrRejectPopup
+            stopRingtone={stopRingtone}
+            setIncomingCall={setIncomingCall}
+            socket={socket}
+            setCallStatus={setCallStatus} // Pass setCallStatus to the popup
+          />
+        )}
     </div>
   );
 }
