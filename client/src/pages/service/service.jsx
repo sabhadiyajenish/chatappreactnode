@@ -1,20 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { FaPhone, FaPhoneSlash } from "react-icons/fa";
 import io from "socket.io-client";
 import { SOCKET_URL } from "../../utils/constant";
-import {
-  FaCamera,
-  FaCameraRetro,
-  FaMicrophone,
-  FaMicrophoneSlash,
-  FaPhone,
-  FaPhoneSlash,
-  FaVideo, // Import Video Icon
-  FaVideoSlash, // Import Video Slash Icon
-} from "react-icons/fa";
 import RenderRemoteComponent, {
   AcceptOrRejectPopup,
   renderLocalVideo,
 } from "./etraComponent";
+import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
 const socket = io(SOCKET_URL);
 
 export default function Home() {
@@ -39,7 +31,8 @@ export default function Home() {
   const [currentFacingMode, setCurrentFacingMode] = useState("environment");
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [callStatus, setCallStatus] = useState("idle");
-
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenShareStream, setScreenShareStream] = useState(null);
   // Check permissions on component mount
   useEffect(() => {
     const checkPermissions = async () => {
@@ -334,6 +327,7 @@ export default function Home() {
     setCallStatus("idle");
     // Reset callEnded after a short delay to allow the alert to show
     setTimeout(() => setCallEnded(false), 500);
+    stopScreenSharing();
     window?.location.reload();
   };
 
@@ -366,6 +360,58 @@ export default function Home() {
       // Check if call is in progress
       socket.emit("end-call");
       handleCallEnded("Call ended.");
+    }
+  };
+  const toggleScreenSharing = async () => {
+    if (!isScreenSharing) {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false, // You might want to include audio from the screen as well
+        });
+
+        setScreenShareStream(stream);
+        setIsScreenSharing(true);
+
+        // Replace the local video track with the screen share track
+        const videoTrack = stream.getVideoTracks()[0];
+        const sender = pcRef.current
+          .getSenders()
+          .find((s) => s.track.kind === "video");
+        if (sender) {
+          sender.replaceTrack(videoTrack, stream);
+          setLocalStream(stream); // Update local stream for display
+          setHasVideo(true); // Ensure the video icon is displayed
+        }
+
+        stream.oninactive = () => {
+          stopScreenSharing();
+        };
+      } catch (err) {
+        console.error("Error sharing screen:", err);
+        stopScreenSharing(); // Ensure state is reset on error
+      }
+    } else {
+      stopScreenSharing();
+    }
+  };
+
+  const stopScreenSharing = () => {
+    if (screenShareStream) {
+      const videoTrack = screenShareStream.getVideoTracks()[0];
+      const sender = pcRef.current
+        .getSenders()
+        .find((s) => s.track.kind === "video");
+
+      if (sender && localStream) {
+        const originalVideoTrack = localStream.getVideoTracks()[0];
+        sender.replaceTrack(originalVideoTrack, localStream);
+        setLocalStream(localStream); // Restore original local stream
+      }
+      screenShareStream.getTracks().forEach((track) => track.stop());
+      setScreenShareStream(null);
+      setIsScreenSharing(false);
+      setHasVideo(true); // Ensure the video icon is displayed
     }
   };
 
@@ -436,9 +482,29 @@ export default function Home() {
             setPermissionDenied,
             pcRef,
             setCurrentFacingMode,
-            isCallActive
+            isCallActive,
+            isScreenSharing
           )}
         </div>
+        {/* Share Screen Button */}
+        {callStatus === "in-progress" && (
+          <button
+            onClick={toggleScreenSharing}
+            className={`relative flex items-center justify-center md:w-16 w-12 md:h-16 h-12 rounded-full 
+            ${
+              isScreenSharing
+                ? "bg-orange-500 hover:bg-orange-700"
+                : "bg-gray-500 hover:bg-gray-700"
+            }
+            text-white font-bold shadow-lg transition-all mt-4`} // Added margin-top
+          >
+            {isScreenSharing ? (
+              <LuScreenShareOff className="md:text-2xl text-xl" />
+            ) : (
+              <LuScreenShare className="md:text-2xl text-xl" />
+            )}
+          </button>
+        )}
 
         {/* Remote Video & Audio */}
         <RenderRemoteComponent
