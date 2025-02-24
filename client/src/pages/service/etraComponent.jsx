@@ -123,29 +123,29 @@ export const renderLocalVideo = (
 
   if (localStream) {
     return (
-      <div>
+      <div className="relative w-full h-full border-[1px] border-green-400 bg-black  rounded-lg overflow-hidden ">
         <video
           ref={localVideoRef}
           autoPlay
           muted
           playsInline
-          className="w-full h-auto border-2 border-green-500 rounded-xl"
+          className="w-full h-full object-cover"
         />
         {!hasVideo && (
-          <div className="text-center text-sm text-gray-600 mt-2">
-            <p>Video not available.</p>
+          <div className="absolute inset-0 flex items-center justify-center text-white">
+            <p>Video not available</p>
           </div>
         )}
-        {localStream && ( // Only show button if there's a local stream
+        {localStream && (
           <button
             onClick={switchCamera}
             disabled={!hasVideo}
             className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-2 hover:bg-opacity-90"
           >
             {currentFacingMode === "environment" ? (
-              <FaCamera /> // Back camera icon
+              <FaCamera size={16} />
             ) : (
-              <FaCameraRetro /> // Front camera icon
+              <FaCameraRetro size={16} />
             )}
           </button>
         )}
@@ -210,9 +210,11 @@ const RenderRemoteComponent = ({
 }) => {
   const toggleVideo = () => {
     if (localStream) {
+      console.log("come in toggle video<<<<");
+
       const videoTracks = localStream.getVideoTracks();
-      videoTracks.forEach((track) => (track.enabled = isVideoEnabled));
-      setIsVideoEnabled(!isVideoEnabled);
+      videoTracks.forEach((track) => (track.enabled = !isVideoEnabled));
+      setIsVideoEnabled((prev) => !prev);
 
       // Update the sender in the peer connection (if call is active)
       if (pcRef.current && isCallActive) {
@@ -232,47 +234,50 @@ const RenderRemoteComponent = ({
       setIsMuted(!isMuted);
     }
   };
+
   return (
-    <div className="mt-4 flex justify-center">
-      {remoteStream && (
-        <div className=" ">
+    <div className="relative h-full w-full border-[1px] border-blue-400 rounded-lg">
+      {remoteStream ? (
+        <>
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
-            className="w-full h-auto border-2 border-blue-500 rounded-xl"
+            className="w-full h-[calc(100vh-120px)] object-cover bg-black rounded-lg"
           />
-          <audio
-            ref={remoteAudioRef}
-            autoPlay
-            controls
-            className="mt-2 w-full"
-          />
-          <div className="flex items-center justify-center gap-x-5">
+          <audio ref={remoteAudioRef} autoPlay className="hidden" />
+          {/* Controls overlay */}
+          <div className="absolute bottom-16 left-4 flex gap-2">
             <button
               onClick={toggleMute}
-              className="flex items-center justify-center gap-2 w-16 h-16 rounded-full bg-gray-800 text-white shadow-lg hover:bg-gray-700 transition-all duration-200"
+              className={`w-10 h-10 rounded-full bg-gray-800 bg-opacity-70 text-white flex items-center justify-center hover:bg-opacity-90`}
             >
               {isMuted ? (
-                <FaMicrophoneSlash size={24} />
+                <FaMicrophoneSlash size={20} />
               ) : (
-                <FaMicrophone size={24} />
+                <FaMicrophone size={20} />
               )}
             </button>
             <button
               onClick={toggleVideo}
               disabled={!hasVideo}
-              className={`${
-                !hasVideo ? "bg-gray-500 " : "bg-gray-800 hover:bg-gray-700"
-              } flex items-center justify-center gap-2 w-16 h-16 rounded-full  text-white shadow-lg  transition-all duration-200`}
+              className={`w-10 h-10 rounded-full ${
+                !hasVideo ? "bg-gray-500" : "bg-gray-800 hover:bg-opacity-90"
+              } bg-opacity-70 text-white flex items-center justify-center`}
             >
               {isVideoEnabled ? (
-                <FaVideo size={24} />
+                <FaVideo size={20} />
               ) : (
-                <FaVideoSlash size={24} />
+                <FaVideoSlash size={20} />
               )}
             </button>
           </div>
+        </>
+      ) : (
+        <div className="w-full h-[calc(100vh-120px)] bg-black flex items-center justify-center rounded-lg">
+          <span className="text-white text-lg">
+            Waiting for remote video...
+          </span>
         </div>
       )}
     </div>

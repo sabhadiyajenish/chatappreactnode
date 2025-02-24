@@ -152,7 +152,6 @@ export default function Home() {
     };
 
     initializeMediaAndConnection();
-
     socket.on("offer", async (offer) => {
       const pc = pcRef.current;
       if (!pc || pc.signalingState === "closed") {
@@ -163,7 +162,16 @@ export default function Home() {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
+        console.log("Sending answer...");
         socket.emit("answer", answer);
+        console.log("Answer sent.");
+
+        if (remoteVideoRef.current && remoteStream) {
+          console.log("Resetting remote video srcObject...");
+          remoteVideoRef.current.srcObject = null;
+          remoteVideoRef.current.srcObject = remoteStream;
+          console.log("Remote video srcObject reset complete.");
+        }
       } catch (error) {
         console.error("Error handling offer:", error);
       }
@@ -365,23 +373,47 @@ export default function Home() {
   const toggleScreenSharing = async () => {
     if (!isScreenSharing) {
       try {
+        // Check for browser support FIRST
+        if (
+          !(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)
+        ) {
+          alert("Screen sharing is not supported on this browser/device.");
+          return; // Exit early if not supported
+        }
+
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          audio: false, // You might want to include audio from the screen as well
+          audio: false,
         });
 
         setScreenShareStream(stream);
         setIsScreenSharing(true);
 
-        // Replace the local video track with the screen share track
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pcRef.current
-          .getSenders()
-          .find((s) => s.track.kind === "video");
-        if (sender) {
-          sender.replaceTrack(videoTrack, stream);
-          setLocalStream(stream); // Update local stream for display
-          setHasVideo(true); // Ensure the video icon is displayed
+
+        // Handle the case where the peer connection might not be initialized yet
+        if (pcRef.current) {
+          // Check if pcRef.current exists
+          const sender = pcRef.current
+            .getSenders()
+            .find((s) => s.track?.kind === "video"); // Optional chaining
+
+          if (sender) {
+            sender.replaceTrack(videoTrack, stream);
+            setLocalStream(stream);
+            setHasVideo(true);
+          } else {
+            console.warn(
+              "Sender not found. Peer connection might not be fully established."
+            );
+            // Consider adding the track directly if the sender isn't available yet:
+            // pcRef.current.addTrack(videoTrack, stream);  // Add track to pc
+            // setLocalStream(stream);
+            // setHasVideo(true);
+          }
+        } else {
+          console.warn("Peer connection is not initialized yet.");
+          // Handle appropriately:  e.g., inform user, retry later
         }
 
         stream.oninactive = () => {
@@ -389,137 +421,157 @@ export default function Home() {
         };
       } catch (err) {
         console.error("Error sharing screen:", err);
-        stopScreenSharing(); // Ensure state is reset on error
+        stopScreenSharing();
+        // Provide more user-friendly error messages:
+        if (err.name === "NotAllowedError") {
+          alert("Screen sharing permission was denied.");
+        } else {
+          alert("An error occurred during screen sharing: " + err.message);
+        }
       }
     } else {
       stopScreenSharing();
     }
   };
-
-  const stopScreenSharing = () => {
+  const stopScreenSharing = async () => {
     if (screenShareStream) {
       const videoTrack = screenShareStream.getVideoTracks()[0];
       const sender = pcRef.current
         .getSenders()
-        .find((s) => s.track.kind === "video");
+        .find((s) => s.track?.kind === "video");
 
       if (sender && localStream) {
+        console.log("Replacing track...");
+        // Get the original video track from localStream
         const originalVideoTrack = localStream.getVideoTracks()[0];
         sender.replaceTrack(originalVideoTrack, localStream);
-        setLocalStream(localStream); // Restore original local stream
+        setLocalStream(localStream);
+        console.log("Track replaced.");
       }
+
       screenShareStream.getTracks().forEach((track) => track.stop());
       setScreenShareStream(null);
       setIsScreenSharing(false);
-      setHasVideo(true); // Ensure the video icon is displayed
+      setHasVideo(true);
+
+      // Force Re-negotiation
+      try {
+        console.log("Creating offer for re-negotiation...");
+        const offer = await pcRef.current.createOffer();
+        await pcRef.current.setLocalDescription(offer);
+        console.log("Sending offer for re-negotiation...");
+        socket.emit("offer", offer);
+        console.log("Offer sent.");
+      } catch (error) {
+        console.error("Error re-negotiating:", error);
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center sm:p-4 p-3">
-      <h1 className="sm:text-3xl text-lg font-bold mb-4 text-center">
-        Audio/Video Call App
-      </h1>
+    <div className="min-h-screen  bg-gray-900 flex flex-col">
+      {/* Main Video Area */}
+      <div className=" relative">
+        <div className="flex-1 flex flex-col md:flex-row gap-4 p-4">
+          {/* Local Video - Picture-in-Picture style */}
+          <div className="relative md:absolute md:bottom-10 md:right-7 md:w-1/5 w-full h-48 md:h-40 z-10">
+            {renderLocalVideo(
+              permissionDenied,
+              localStream,
+              localVideoRef,
+              hasVideo,
+              currentFacingMode,
+              setLocalStream,
+              setPermissionDenied,
+              pcRef,
+              setCurrentFacingMode,
+              isCallActive,
+              isScreenSharing
+            )}
+          </div>
 
-      <div className="bg-white rounded-lg shadow-lg sm:p-6 p-2 w-full max-w-md">
-        <div className="flex  items-center justify-center pt-3 ">
+          {/* Remote Video - Full screen */}
+          <div className="flex-1 w-full">
+            <RenderRemoteComponent
+              remoteStream={remoteStream}
+              remoteVideoRef={remoteVideoRef}
+              remoteAudioRef={remoteAudioRef}
+              isMuted={isMuted}
+              isVideoEnabled={isVideoEnabled}
+              isCallActive={isCallActive}
+              pcRef={pcRef}
+              setIsVideoEnabled={setIsVideoEnabled}
+              localStream={localStream}
+              setIsMuted={setIsMuted}
+              hasVideo={hasVideo}
+            />
+          </div>
+        </div>
+        {/* Control Bar */}
+        <div className=" p-4 flex justify-center absolute bottom-4 mx-auto w-full items-center gap-4 ">
           {/* Start Call Button */}
-          <div className=" flex flex-col items-center justify-center gap-2">
+          <div className="flex flex-col items-center">
             <button
               onClick={startCall}
               disabled={callStatus !== "idle" || permissionDenied}
-              className={`relative flex items-center justify-center md:w-16 w-12 md:h-16 h-12 rounded-full transition-all 
-          ${
-            callStatus === "calling"
-              ? "bg-yellow-500 animate-pulse"
-              : callStatus === "in-progress"
-              ? "bg-green-500 hover:bg-green-700"
-              : "bg-blue-500 hover:bg-blue-700"
-          } 
-          text-white font-bold shadow-lg disabled:bg-gray-400`}
+              className={`flex items-center justify-center w-12 h-12 rounded-full transition-all 
+              ${
+                callStatus === "calling"
+                  ? "bg-yellow-500 animate-pulse"
+                  : callStatus === "in-progress"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } 
+              text-white disabled:bg-gray-500`}
             >
-              {callStatus === "calling" || callStatus === "in-progress" ? (
-                <FaPhone className="md:text-2xl text-xl animate-spin-slow" />
-              ) : (
-                <FaPhone className="md:text-2xl text-xl" />
-              )}
+              <FaPhone className="text-xl" />
             </button>
-
-            {/* Call Status Text */}
-            <p className="md:text-lg text-sm font-semibold text-center px-4 ">
+            <span className="text-white text-sm mt-1">
               {callStatus === "calling"
                 ? "Calling..."
                 : callStatus === "in-progress"
-                ? "Call in Progress"
-                : "Start Call"}
-            </p>
+                ? "Active"
+                : "Start"}
+            </span>
           </div>
-          {/* End Call Button (Only when in-progress) */}
+
+          {/* End Call Button */}
           {callStatus === "in-progress" && (
-            <div className=" flex flex-col items-center justify-center gap-2">
+            <div className="flex flex-col items-center">
               <button
                 onClick={endCall}
-                className="relative flex items-center justify-center  md:w-16 w-12 md:h-16 h-12  rounded-full bg-red-500 hover:bg-red-700 text-white font-bold shadow-lg transition-all"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white"
               >
-                <FaPhoneSlash className="md:text-2xl text-xl" />
+                <FaPhoneSlash className="text-xl" />
               </button>
-              <p className="md:text-lg text-sm font-semibold text-center px-4 ">
-                End Call
-              </p>
+              <span className="text-white text-sm mt-1">End</span>
+            </div>
+          )}
+
+          {/* Screen Share Button */}
+          {callStatus === "in-progress" && (
+            <div className="flex flex-col items-center">
+              <button
+                onClick={toggleScreenSharing}
+                className={`flex items-center justify-center w-12 h-12 rounded-full 
+                ${
+                  isScreenSharing
+                    ? "bg-orange-600 hover:bg-orange-700"
+                    : "bg-gray-600 hover:bg-gray-700"
+                } text-white`}
+              >
+                {isScreenSharing ? (
+                  <LuScreenShareOff className="text-xl" />
+                ) : (
+                  <LuScreenShare className="text-xl" />
+                )}
+              </button>
+              <span className="text-white text-sm mt-1">
+                {isScreenSharing ? "Stop Share" : "Share"}
+              </span>
             </div>
           )}
         </div>
-
-        <div className="mt-4 flex justify-center relative">
-          {renderLocalVideo(
-            permissionDenied,
-            localStream,
-            localVideoRef,
-            hasVideo,
-            currentFacingMode,
-
-            setLocalStream,
-            setPermissionDenied,
-            pcRef,
-            setCurrentFacingMode,
-            isCallActive,
-            isScreenSharing
-          )}
-        </div>
-        {/* Share Screen Button */}
-        {callStatus === "in-progress" && (
-          <button
-            onClick={toggleScreenSharing}
-            className={`relative flex items-center justify-center md:w-16 w-12 md:h-16 h-12 rounded-full 
-            ${
-              isScreenSharing
-                ? "bg-orange-500 hover:bg-orange-700"
-                : "bg-gray-500 hover:bg-gray-700"
-            }
-            text-white font-bold shadow-lg transition-all mt-4`} // Added margin-top
-          >
-            {isScreenSharing ? (
-              <LuScreenShareOff className="md:text-2xl text-xl" />
-            ) : (
-              <LuScreenShare className="md:text-2xl text-xl" />
-            )}
-          </button>
-        )}
-
-        {/* Remote Video & Audio */}
-        <RenderRemoteComponent
-          remoteStream={remoteStream}
-          remoteVideoRef={remoteVideoRef}
-          remoteAudioRef={remoteAudioRef}
-          isMuted={isMuted}
-          isVideoEnabled={isVideoEnabled}
-          isCallActive={isCallActive}
-          pcRef={pcRef}
-          setIsVideoEnabled={setIsVideoEnabled}
-          localStream={localStream}
-          setIsMuted={setIsMuted}
-          hasVideo={hasVideo}
-        />
       </div>
 
       {/* Incoming Call Popup */}
