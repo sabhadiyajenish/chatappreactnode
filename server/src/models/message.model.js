@@ -66,4 +66,9 @@ const MessageSchema = mongoose.Schema({
   },
 });
 MessageSchema.plugin(aggregatePaginate);
+MessageSchema.index({ conversationId: 1, createdAt: -1 }); // Fast retrieval by conversation & sorting
+MessageSchema.index({ senderId: 1, reciverId: 1 }); // Optimized lookups for sender-receiver
+MessageSchema.index({ userDelete: 1, reciverDelete: 1 }); // Optimize filtering deleted messages
+MessageSchema.index({ seen: 1 }); // Optimized unread message queries
+
 export default mongoose.model("messages", MessageSchema);

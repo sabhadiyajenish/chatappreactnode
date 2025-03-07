@@ -6,4 +6,6 @@ const CoversationSchema = mongoose.Schema({
   members: [],
 });
 
+CoversationSchema.index({ members: 1 }); // Optimizes lookups for conversations between members
+
 export default mongoose.model("conversations", CoversationSchema);

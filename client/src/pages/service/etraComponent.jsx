@@ -27,23 +27,26 @@ export const renderLocalVideo = (
     setCurrentFacingMode(newFacingMode);
 
     try {
-      // 1. Get current video track and its sender
+      console.log("Switching camera to:", newFacingMode);
+
+      // Get the current video track and its sender
       const videoTrack = localStream.getVideoTracks()[0];
       const sender = pcRef.current
         ?.getSenders()
         .find((s) => s.track === videoTrack);
 
       if (!videoTrack || !sender) {
-        console.error("Video track or sender not found.");
-        return; // Handle the error appropriately
+        console.warn("No video track or sender found.");
+        return;
       }
 
-      // 2. Create new stream with desired facing mode.  Crucially, stop the old track first.
-      await videoTrack.stop(); // Stop the old track before getting the new one.
+      // Stop only after getting the new stream to prevent camera delay issues
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: newFacingMode },
-        audio: true, // Include audio to avoid issues.
+        audio: { echoCancellation: true, noiseSuppression: true },
       });
+
+      console.log("New stream obtained:", newStream);
 
       const newVideoTrack = newStream.getVideoTracks()[0];
       if (!newVideoTrack) {
@@ -51,25 +54,24 @@ export const renderLocalVideo = (
         return;
       }
 
-      // 3. Replace the track in the existing stream
-      localStream.removeTrack(videoTrack); // Remove old track
-      localStream.addTrack(newVideoTrack); // Add new track
-      localVideoRef.current.srcObject = localStream; // Update local video element.
+      // Replace the track in the peer connection
+      await sender.replaceTrack(newVideoTrack);
+      console.log("Track replaced in peer connection");
 
-      // 4. Update the sender in the peer connection (if call is active)
-      if (pcRef.current && isCallActive) {
-        await sender.replaceTrack(newVideoTrack);
-      }
+      // Stop the old track *after* replacing
+      videoTrack.stop();
 
-      // Stop all other video tracks in the new stream.
-      newStream
-        .getVideoTracks()
-        .slice(1)
-        .forEach((track) => track.stop());
+      // Update local stream
+      localStream.removeTrack(videoTrack);
+      localStream.addTrack(newVideoTrack);
+
+      // Set the new stream to the video element
+      localVideoRef.current.srcObject = localStream;
     } catch (error) {
       console.error("Error switching camera:", error);
     }
   };
+
   const renderPermissionRequest = () => {
     const requestPermissions = async () => {
       try {
@@ -91,6 +93,7 @@ export const renderLocalVideo = (
         }
       }
     };
+
     return (
       <div className="mt-4 text-center">
         <p className="text-red-500">

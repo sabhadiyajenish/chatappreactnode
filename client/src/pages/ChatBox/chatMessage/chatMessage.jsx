@@ -177,11 +177,11 @@ const ChatMessage = ({
             <div className="you_chat md:pl-20 pl-12" key={indexKey}>
               {dt.message ? (
                 <p
-                  className={`you_chat_text sm:text-[20px] text-[15px] pl-2 text-start pr-2 py-1 chat_time ${
+                  className={`you_chat_text sm:text-[20px] text-[15px] pl-2 pr-2 py-1 text-start chat_time ${
                     modeTheme === "dark"
                       ? "bg-[#27374D] text-[#DDE6ED]"
                       : "bg-[#25d366] text-white"
-                  } `}
+                  }`}
                   ref={
                     date === latestDate &&
                     indexKey === lastMessageIndex &&
@@ -190,16 +190,18 @@ const ChatMessage = ({
                       : null
                   }
                 >
-                  {isExpanded ? dt.message : dt.message.slice(0, 300)}
-                  {dt.message.length > 300 && (
-                    <span
-                      className="text-blue-500 cursor-pointer"
-                      onClick={toggleReadMore}
-                    >
-                      {isExpanded ? " read Less" : "... read More"}
-                    </span>
-                  )}{" "}
-                  <span className="sm:text-[11px] text-[9px] text-gray-200 ml-1">
+                  <span>
+                    {isExpanded ? dt.message : dt.message.slice(0, 300)}
+                    {dt.message.length > 300 && (
+                      <span
+                        className="text-blue-500 cursor-pointer"
+                        onClick={toggleReadMore}
+                      >
+                        {isExpanded ? " read Less" : "... read More"}
+                      </span>
+                    )}
+                  </span>
+                  <span className="float-right sm:text-[11px] text-[9px] text-gray-200 mt-[11px] ml-2 whitespace-nowrap">
                     {dt.createdAt && formatDate(dt.createdAt)}
                   </span>
                 </p>
@@ -498,25 +500,25 @@ const ChatMessage = ({
             </Menu>
             {dt?.message ? (
               <p
-                className={`you_chat_text1 sm:text-[20px] text-[15px]  text-start chat_time1 ${
+                className={`you_chat_text1 sm:text-[20px] text-[15px]  py-1 text-start chat_time1 flex justify-between items-end ${
                   modeTheme === "dark"
                     ? "bg-[#526D82] text-[#DDE6ED]"
                     : "bg-[#075e54] text-white"
-                } `}
+                }`}
               >
-                {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
-                {dt?.message?.length > 300 && (
-                  <span
-                    className="text-blue-500 cursor-pointer"
-                    onClick={toggleReadMore}
-                  >
-                    {isExpanded ? " read Less" : "... read More"}
-                  </span>
-                )}
-
-                <span className="text-[11px] text-gray-200 ml-2">
+                <span className="flex-1 break-words">
+                  {isExpanded ? dt?.message : dt?.message?.slice(0, 300)}
+                  {dt?.message?.length > 300 && (
+                    <span
+                      className="text-blue-500 cursor-pointer"
+                      onClick={toggleReadMore}
+                    >
+                      {isExpanded ? " read Less" : "... read More"}
+                    </span>
+                  )}
+                </span>
+                <span className="sm:text-[11px] text-[9px] text-gray-200 ml-2 whitespace-nowrap">
                   {dt?.createdAt && formatDate(dt?.createdAt)}
-                  {/* {isSeen && lastMessageIndex && "seen"} */}
                 </span>
               </p>
             ) : dt?.avatar ? (
