@@ -250,6 +250,7 @@ const SocketEvents = (io) => {
         ]);
       }
     });
+
     socket.on(
       "addUserNew",
       ({ email, _id, avatar, userName, senderId, reciverId }) => {
@@ -377,6 +378,7 @@ const SocketEvents = (io) => {
     socket.on("ice-candidate", (data) => {
       socket.broadcast.emit("ice-candidate", data);
     });
+
     socket.on("end-call", () => {
       socket.broadcast.emit("end-call"); // Broadcast the end-call event to the other user in the room
     });
