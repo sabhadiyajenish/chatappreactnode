@@ -145,7 +145,7 @@ app.use("/api/v1/notification", messageNotificationRoutes);
 
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
-    return res.status(err.statusCode).json(err.toJSON());
+    return res.status(err.statusCode).json(err);
   }
   // Handle other types of errors or forward to default error handler
   return res.status(500).json({

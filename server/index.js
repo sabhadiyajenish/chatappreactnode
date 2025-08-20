@@ -1,9 +1,9 @@
 import doteenv from "dotenv";
-import app from "./src/app.js";
-import connection from "./src/db/connection.js";
 doteenv.config({
   path: "./.env",
 });
+import app from "./src/app.js";
+import connection from "./src/db/connection.js";
 
 connection()
   .then(() => {

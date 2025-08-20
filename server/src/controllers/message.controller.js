@@ -366,81 +366,69 @@ const updateSeenStatus = asyncHandler(async (req, res, next) => {
 });
 
 const getMessage = asyncHandler(async (req, res, next) => {
-  try {
-    const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
-
-    // Check cache first
-    const cacheKey = `messages:${reciverId}:${senderId}:${limit}:${skip}`;
-    if (nodeCache.has(cacheKey)) {
-      const cachedData = JSON.parse(nodeCache.get(cacheKey));
-      const encryptedData = encrypt(JSON.stringify(cachedData));
-      return res
-        .status(200)
-        .json(new ApiResponse(200, encryptedData, "Fetched from cache"));
-    }
-
-    // Fetch conversation ID
-    const userData = await Coversation.findOne({
+  const { senderId, reciverId, skip = 0, limit = 20 } = req.body;
+  // let messagesByDate;
+  let lengthAllMessages;
+  let obj = {};
+  if (nodeCache.has(`messages:${reciverId}:${senderId}:${limit}:${skip}`)) {
+    const dt = JSON.parse(
+      nodeCache.get(`messages:${reciverId}:${senderId}:${limit}:${skip}`)
+    );
+    obj = dt.messagesByDate;
+    lengthAllMessages = dt.lengthAllMessages;
+  } else {
+    const userData = await Coversation.find({
       members: { $all: [senderId, reciverId] },
-    }).select("_id");
-
+    });
     if (!userData) {
       return res
-        .status(404)
-        .json(new ApiResponse(404, "Conversation not found"));
+        .status(200)
+        .json(new ApiResponse(500, "something is wrong in conversation id"));
     }
+    let allMessages = await Message.find({
+      conversationId: userData[0]?._id,
+      $or: [{ userDelete: false }, { reciverDelete: false }],
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sort in descending order by createdAt
 
-    const conversationId = userData._id;
-
-    // Get messages using aggregation for faster grouping
-    const messagesPipeline = [
-      {
-        $match: {
-          conversationId,
-          $or: [{ userDelete: false }, { reciverDelete: false }],
-        },
-      },
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          messages: { $push: "$$ROOT" },
-        },
-      },
-      { $sort: { _id: -1 } }, // Sort by date descending
-    ];
-
-    const allMessages = await Message.aggregate(messagesPipeline);
-
-    // Count total messages more efficiently
-    const lengthAllMessages = await Message.countDocuments({
-      conversationId,
+    const allLength = await Message.find({
+      conversationId: userData[0]?._id,
       $or: [{ userDelete: false }, { reciverDelete: false }],
     });
+    lengthAllMessages = allLength.length;
+    const formatDate = (date) => date.toISOString().split("T")[0];
 
-    const responseData = {
-      messagesByDate: Object.fromEntries(
-        allMessages.map((d) => [d._id, d.messages])
-      ),
-      lengthAllMessages,
-    };
+    // Organize messages by date
 
-    // Cache the result
-    nodeCache.set(cacheKey, JSON.stringify(responseData), 300); // Cache for 5 minutes
-
-    // Encrypt and send response
-    const encryptedData = encrypt(JSON.stringify(responseData));
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, encryptedData, "Fetched messages successfully")
-      );
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    return res.status(500).json(new ApiResponse(500, "Internal Server Error"));
+    allMessages?.map((dt) => {
+      const date = formatDate(new Date(dt.createdAt));
+      obj[date] = [];
+    });
+    allMessages
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .reduce((acc, message) => {
+        const date = formatDate(new Date(message.createdAt));
+        if (!obj[date]) {
+          obj[date] = [];
+        }
+        obj[date].push(message);
+        return acc;
+      }, {});
+    nodeCache.set(
+      `messages:${reciverId}:${senderId}:${limit}:${skip}`,
+      JSON.stringify({ messagesByDate: obj, lengthAllMessages })
+    );
   }
+  const data = JSON.stringify({
+    messagesByDate: obj,
+    lengthAllMessages,
+  });
+  const encryptedData = encrypt(data);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, encryptedData, "get all message successfully"));
 });
 
 const Clearseensent = asyncHandler(async (req, res) => {

@@ -1,6 +1,17 @@
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
+const keyHex = process.env.ENCRYPTION_KEY;
+if (!keyHex) {
+  throw new Error(
+    "ENCRYPTION_KEY is not set. Provide a 64-character hex string (32 bytes) in your .env file."
+  );
+}
+if (!/^[0-9a-fA-F]+$/.test(keyHex) || keyHex.length !== 64) {
+  throw new Error(
+    "ENCRYPTION_KEY must be a 64-character hexadecimal string representing 32 bytes (AES-256)."
+  );
+}
+const ENCRYPTION_KEY = Buffer.from(keyHex, "hex");
 const IV_LENGTH = 16; // 16 bytes for AES
 
 function encrypt(text) {
